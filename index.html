@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chamada Escolar</title>
+<title>Chamada Fácil</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:sans-serif;background:#f3f4f6;min-height:100vh}
@@ -29,6 +29,10 @@ body{font-family:sans-serif;background:#f3f4f6;min-height:100vh}
 .btn-secondary{width:100%;padding:9px;background:#fff;color:#111;border:1px solid #ccc;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px}
 .btn-secondary:hover{background:#f5f5f5}
 .btn-danger{width:100%;padding:8px;background:#fff;color:#b03030;border:1px solid #f09090;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px}
+.btn-wpp{width:100%;padding:11px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-wpp:hover{background:#1da851}
+.btn-pdf{width:100%;padding:11px;background:#e53e3e;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-pdf:hover{background:#c53030}
 .sc{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;transition:border-color .15s}
 .sc.clickable{cursor:pointer}.sc.clickable:hover{border-color:#aaa}
 .sc.present-card{border-left:3px solid #1D9E75}
@@ -45,8 +49,8 @@ body{font-family:sans-serif;background:#f3f4f6;min-height:100vh}
 .chk{width:36px;height:36px;border-radius:50%;border:1.5px solid #ccc;background:#f5f5f5;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:#aaa;transition:all .15s;font-weight:700}
 .chk.present{background:#1D9E75;border-color:#1D9E75;color:#fff}
 .chk.absent{background:#D85A30;border-color:#D85A30;color:#fff}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:flex-end;justify-content:center}
-.modal{background:#fff;border-radius:12px 12px 0 0;padding:20px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:#fff;border-radius:12px 12px 0 0;padding:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
 .modal-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;color:#111}
 .cls{background:#fff;border:none;font-size:22px;cursor:pointer;color:#888;padding:2px 6px;line-height:1}
 .fl{margin-bottom:12px}
@@ -72,21 +76,32 @@ textarea.fi{resize:vertical;min-height:70px;font-family:sans-serif}
 .beta-btn:last-child{margin-bottom:0}
 .beta-btn:hover{background:#f5f5f5}
 .beta-hint{font-size:11px;color:#999}
+.timeline{padding:4px 0}
+.tl-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.tl-item:last-child{border:none}
+.tl-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
+.tl-present{background:#dcfce7}.tl-absent{background:#ffe4e6}.tl-obs{background:#fef9c3}
+.tl-body{flex:1}
+.tl-date{font-size:11px;color:#999;margin-bottom:2px}
+.tl-text{font-size:13px;color:#111}
+.obs-input-row{display:flex;gap:8px;margin-top:10px}
+.obs-input-row input{flex:1;padding:8px 11px;font-size:13px;border:1px solid #ccc;border-radius:8px}
+.obs-input-row button{padding:8px 14px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700}
+.perfil-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.perfil-stat{background:#f5f5f5;border-radius:8px;padding:10px;text-align:center}
+.perfil-stat-n{font-size:18px;font-weight:700;color:#111}
+.perfil-stat-l{font-size:10px;color:#888;margin-top:1px}
 </style>
 </head>
 <body>
 <div class="app" id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-// ── STORAGE (localStorage para versão publicada) ──────────────
+const DATA_KEY='chamada_v5';const ADM_KEY='chamada_adm_v5';
 const storage={
-  async get(k){try{const v=localStorage.getItem(k);return v?{value:v}:null;}catch{return null;}},
-  async set(k,v){try{localStorage.setItem(k,v);return{value:v};}catch{return null;}},
+  async get(k){try{const v=localStorage.getItem(k);return v?{value:v}:null}catch{return null}},
+  async set(k,v){try{localStorage.setItem(k,v);return{value:v}}catch{return null}}
 };
-window.storage=storage;
-
-const DATA_KEY='chamada_data_v4';
-const ADM_KEY='chamada_adm_v4';
-
 function uid(){return Math.random().toString(36).slice(2,9)}
 function initials(n){return(n||'?').split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase()}
 function nowStr(){return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
@@ -94,21 +109,17 @@ function today(){return new Date().toLocaleDateString('pt-BR',{weekday:'long',da
 function hash(s){let h=0;for(let i=0;i<s.length;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0}return h.toString(36)}
 function fc(f,lim){if(f===0)return'ok';if(f>=lim)return'bad';if(f>=lim-2)return'warn';return'ok'}
 function getParam(k){try{return new URLSearchParams(window.location.search).get(k)}catch{return null}}
+function saudacao(){const h=new Date().getHours();if(h>=5&&h<12)return'Bom dia';if(h>=12&&h<18)return'Boa tarde';return'Boa noite';}
 
-let S={
-  screen:'loading',authRole:null,authProfId:null,
-  turmaAtiva:null,tab:'chamada',modal:null,loginErr:'',
-  admPassHash:hash('admin123'),turmas:{},professores:{},editBuf:{},profBuffer:{}
-};
+let S={screen:'loading',authRole:null,authProfId:null,turmaAtiva:null,tab:'chamada',modal:null,loginErr:'',admPassHash:hash('admin123'),turmas:{},professores:{},editBuf:{},profBuffer:{}};
 
 async function loadData(){
-  try{
-    const [r1,r2]=await Promise.all([storage.get(DATA_KEY),storage.get(ADM_KEY)]);
+  try{const[r1,r2]=await Promise.all([storage.get(DATA_KEY),storage.get(ADM_KEY)]);
     if(r1?.value){const d=JSON.parse(r1.value);S.turmas=d.turmas||{};S.professores=d.professores||{};}
     if(r2?.value){S.admPassHash=r2.value;}
   }catch(e){}
   const tid=getParam('turma');
-  const sess=sessionStorage.getItem('auth_v4');
+  const sess=sessionStorage.getItem('auth_v5');
   if(sess){const p=JSON.parse(sess);S.authRole=p.role;S.authProfId=p.profId;
     if(tid&&S.turmas[tid])S.turmaAtiva=tid;
     else if(p.role==='prof'){const pr=S.professores[p.profId];S.turmaAtiva=pr?.turmaId||null;}
@@ -116,23 +127,20 @@ async function loadData(){
   }else{if(tid&&S.turmas[tid])S.turmaAtiva=tid;S.screen='login';}
   render();
 }
-async function save(){
-  await storage.set(DATA_KEY,JSON.stringify({turmas:S.turmas,professores:S.professores}));
-  await storage.set(ADM_KEY,S.admPassHash);
-}
-function setSession(role,profId=null){S.authRole=role;S.authProfId=profId;sessionStorage.setItem('auth_v4',JSON.stringify({role,profId}));}
-function logout(){S.authRole=null;S.authProfId=null;S.turmaAtiva=null;S.screen='login';sessionStorage.removeItem('auth_v4');render();}
+async function save(){await storage.set(DATA_KEY,JSON.stringify({turmas:S.turmas,professores:S.professores}));await storage.set(ADM_KEY,S.admPassHash);}
+function setSession(r,p=null){S.authRole=r;S.authProfId=p;sessionStorage.setItem('auth_v5',JSON.stringify({role:r,profId:p}));}
+function logout(){S.authRole=null;S.authProfId=null;S.turmaAtiva=null;S.screen='login';sessionStorage.removeItem('auth_v5');render();}
 
 function tryLogin(user,pass){
   S.loginErr='';
   if(!user||!pass){S.loginErr='Preencha usuário e senha.';render();return;}
   if(user.toLowerCase()==='adm'||user.toLowerCase()==='admin'){
     if(hash(pass)===S.admPassHash){setSession('adm');S.screen='relatorio';S.tab='relatorio';render();return;}
-    S.loginErr='Senha de administrador incorreta.';render();return;
+    S.loginErr='Senha incorreta.';render();return;
   }
   const prof=Object.values(S.professores).find(p=>p.email.toLowerCase()===user.toLowerCase());
   if(!prof){S.loginErr='Usuário não encontrado.';render();return;}
-  if(prof.status==='pendente'){S.loginErr='Cadastro aguardando aprovação do ADM.';render();return;}
+  if(prof.status==='pendente'){S.loginErr='Aguardando aprovação do ADM.';render();return;}
   if(hash(pass)!==prof.passHash){S.loginErr='Senha incorreta.';render();return;}
   setSession('prof',prof.id);S.turmaAtiva=prof.turmaId||null;S.screen='chamada';S.tab='chamada';render();
 }
@@ -140,11 +148,11 @@ function tryRegister(){
   const{nome,email,senha,senha2,turmaId}=S.profBuffer;
   if(!nome?.trim()||!email?.trim()||!senha?.trim()){S.loginErr='Preencha todos os campos.';render();return;}
   if(senha!==senha2){S.loginErr='As senhas não coincidem.';render();return;}
-  if(senha.length<4){S.loginErr='Senha deve ter ao menos 4 caracteres.';render();return;}
+  if(senha.length<4){S.loginErr='Mínimo 4 caracteres.';render();return;}
   if(Object.values(S.professores).find(p=>p.email.toLowerCase()===email.toLowerCase())){S.loginErr='E-mail já cadastrado.';render();return;}
   const id=uid();
   S.professores[id]={id,nome:nome.trim(),email:email.trim(),passHash:hash(senha),turmaId:turmaId||S.turmaAtiva||null,status:'pendente'};
-  save();S.loginErr='';S.screen='login';showToast('Cadastro enviado! Aguarde aprovação.');render();
+  save();S.loginErr='';S.screen='login';showToast('Cadastro enviado!');render();
 }
 function entrarDemo(tipo){
   if(tipo==='adm'){tryLogin('adm','admin123');return;}
@@ -153,11 +161,11 @@ function entrarDemo(tipo){
   if(!prof){
     const pid=uid();const tid=uid();
     S.turmas[tid]={id:tid,nome:'9º Ano A — Matemática',profId:pid,limiteFaltas:6,alunos:[
-      {id:uid(),nome:'Ana Beatriz Costa',obs:'Muito participativa. Destaque na turma.',faltas:2,presente:null,cor:0},
-      {id:uid(),nome:'Bruno Lima Santos',obs:'Dificuldades em álgebra. Acompanhar de perto.',faltas:5,presente:null,cor:1},
-      {id:uid(),nome:'Carla Ferreira',obs:'Faltou nas últimas semanas. Verificar situação.',faltas:7,presente:null,cor:2},
-      {id:uid(),nome:'Diego Souza',obs:'Transferido recentemente. Adaptando bem.',faltas:1,presente:null,cor:3},
-      {id:uid(),nome:'Eduarda Mendes',obs:'TDAH diagnosticado. Sentar na frente.',faltas:0,presente:null,cor:4},
+      {id:uid(),nome:'Ana Beatriz Costa',obs:'Muito participativa. Destaque na turma.',faltas:2,presente:null,cor:0,historico:[]},
+      {id:uid(),nome:'Bruno Lima Santos',obs:'Dificuldades em álgebra. Acompanhar de perto.',faltas:5,presente:null,cor:1,historico:[]},
+      {id:uid(),nome:'Carla Ferreira',obs:'Faltou nas últimas semanas. Verificar situação.',faltas:7,presente:null,cor:2,historico:[]},
+      {id:uid(),nome:'Diego Souza',obs:'Transferido recentemente. Adaptando bem.',faltas:1,presente:null,cor:3,historico:[]},
+      {id:uid(),nome:'Eduarda Mendes',obs:'TDAH diagnosticado. Sentar na frente.',faltas:0,presente:null,cor:4,historico:[]},
     ],history:[],criada:nowStr()};
     S.professores[pid]={id:pid,nome:'Prof. João Silva',email:EMAIL,passHash:hash('demo123'),turmaId:tid,status:'ativo'};
     prof=S.professores[pid];save();
@@ -183,53 +191,56 @@ function salvarChamada(){
   const presentes=t.alunos.filter(a=>a.presente===true);
   const ausentes=t.alunos.filter(a=>a.presente===false);
   if(!presentes.length&&!ausentes.length){showToast('Marque ao menos um aluno.');return;}
-  t.history.unshift({id:uid(),data:nowStr(),presentes:presentes.map(a=>a.nome),ausentes:ausentes.map(a=>a.nome),total:t.alunos.length});
+  const dataAtual=nowStr();
+  t.history.unshift({id:uid(),data:dataAtual,presentes:presentes.map(a=>a.nome),ausentes:ausentes.map(a=>a.nome),total:t.alunos.length});
   if(t.history.length>60)t.history=t.history.slice(0,60);
-  t.alunos=t.alunos.map(a=>({...a,presente:null}));
-  save();render();showToast('✓ Chamada salva!');
+  t.alunos=t.alunos.map(a=>{
+    if(a.presente===null)return a;
+    const entrada={tipo:a.presente===true?'presente':'ausente',data:dataAtual};
+    return{...a,presente:null,historico:[entrada,...(a.historico||[])].slice(0,100)};
+  });
+  save();render();showToast('Chamada salva!');
+}
+function adicionarObservacao(aid,texto){
+  if(!texto?.trim())return;
+  const t=getTurma();if(!t)return;
+  t.alunos=t.alunos.map(a=>{
+    if(a.id!==aid)return a;
+    return{...a,historico:[{tipo:'obs',data:nowStr(),texto:texto.trim()},...(a.historico||[])].slice(0,100)};
+  });
+  save();render();showToast('Observação salva!');
 }
 function salvarAluno(){
   const{nome,obs,turmaId,faltas}=S.editBuf;
-  if(!nome?.trim()){showToast('Digite o nome do aluno.');return;}
+  if(!nome?.trim()){showToast('Digite o nome.');return;}
   if(S.modal?.type==='novoAluno'){
     const tid=S.authRole==='adm'?turmaId:getTurma()?.id;
     if(!tid){showToast('Selecione uma turma.');return;}
-    S.turmas[tid].alunos.push({id:uid(),nome:nome.trim(),obs:obs?.trim()||'',faltas:0,presente:null,cor:S.turmas[tid].alunos.length%5});
-  }else if(S.modal?.type==='editAluno'){
+    S.turmas[tid].alunos.push({id:uid(),nome:nome.trim(),obs:obs?.trim()||'',faltas:0,presente:null,cor:S.turmas[tid].alunos.length%5,historico:[]});
+  }else{
     const t=getTurma();if(!t)return;
     t.alunos=t.alunos.map(a=>a.id===S.modal.aid?{...a,nome:nome.trim(),obs:obs?.trim()||'',faltas:parseInt(faltas)||a.faltas}:a);
   }
-  save();closeModal();showToast('Aluno salvo!');
+  save();closeModal();showToast('Salvo!');
 }
-function removerAluno(){
-  if(!confirm('Remover este aluno?'))return;
-  const t=getTurma();if(!t)return;
-  t.alunos=t.alunos.filter(a=>a.id!==S.modal.aid);
-  save();closeModal();
-}
+function removerAluno(){if(!confirm('Remover?'))return;const t=getTurma();if(!t)return;t.alunos=t.alunos.filter(a=>a.id!==S.modal.aid);save();closeModal();}
 function criarTurma(){
-  const{nome,profId,lim}=S.editBuf;
-  if(!nome?.trim()){showToast('Digite o nome da turma.');return;}
-  const id=uid();
-  S.turmas[id]={id,nome:nome.trim(),profId:profId||null,limiteFaltas:parseInt(lim)||6,alunos:[],history:[],criada:nowStr()};
+  const{nome,profId,lim}=S.editBuf;if(!nome?.trim()){showToast('Digite o nome.');return;}
+  const id=uid();S.turmas[id]={id,nome:nome.trim(),profId:profId||null,limiteFaltas:parseInt(lim)||6,alunos:[],history:[],criada:nowStr()};
   if(profId&&S.professores[profId]){S.professores[profId].turmaId=id;S.professores[profId].status='ativo';}
   save();closeModal();showToast('Turma criada!');
 }
 function aprovarProf(pid){
   const p=S.professores[pid];p.status='ativo';
   if(!p.turmaId){const tid=uid();S.turmas[tid]={id:tid,nome:'Turma de '+p.nome.split(' ')[0],profId:pid,limiteFaltas:6,alunos:[],history:[],criada:nowStr()};p.turmaId=tid;}
-  save();render();showToast('Professor aprovado!');
+  save();render();showToast('Aprovado!');
 }
-function rejeitarProf(pid){if(confirm('Rejeitar este cadastro?')){delete S.professores[pid];save();render();}}
-function resetarSenha(pid){
-  const p=S.professores[pid];const nova=Math.random().toString(36).slice(2,8);
-  p.passHash=hash(nova);save();S.modal={type:'senhaReset',nome:p.nome,senha:nova};render();
-}
+function rejeitarProf(pid){if(confirm('Rejeitar?')){delete S.professores[pid];save();render();}}
+function resetarSenha(pid){const p=S.professores[pid];const nova=Math.random().toString(36).slice(2,8);p.passHash=hash(nova);save();S.modal={type:'senhaReset',nome:p.nome,senha:nova};render();}
 function trocarSenhaAdm(){
   const p1=document.getElementById('np1')?.value;const p2=document.getElementById('np2')?.value;
-  if(!p1||p1.length<4){showToast('Senha muito curta.');return;}
-  if(p1!==p2){showToast('Senhas não coincidem.');return;}
-  S.admPassHash=hash(p1);save();showToast('Senha ADM alterada!');
+  if(!p1||p1.length<4){showToast('Senha curta.');return;}if(p1!==p2){showToast('Não coincidem.');return;}
+  S.admPassHash=hash(p1);save();showToast('Senha alterada!');
 }
 function atribuirProfTurma(turmaId,profId){
   if(turmaId&&S.turmas[turmaId])S.turmas[turmaId].profId=profId||null;
@@ -239,16 +250,65 @@ function atribuirProfTurma(turmaId,profId){
 function getLinkTurma(id){return window.location.href.split('?')[0]+'?turma='+id}
 function copyLink(id){try{navigator.clipboard.writeText(getLinkTurma(id));showToast('Link copiado!');}catch(e){}}
 function closeModal(){S.modal=null;render();}
-function openEditAluno(aid){
-  const a=getTurma()?.alunos.find(x=>x.id===aid);if(!a)return;
-  S.modal={type:'editAluno',aid};S.editBuf={nome:a.nome,obs:a.obs||'',faltas:a.faltas};render();
-}
+function openEditAluno(aid){const a=getTurma()?.alunos.find(x=>x.id===aid);if(!a)return;S.modal={type:'perfilAluno',aid};render();}
 function admCriarProf(){
-  const{nome,email,senha}=S.editBuf;
-  if(!nome?.trim()||!email?.trim()||!senha?.trim()){showToast('Preencha todos os campos.');return;}
-  const id=uid();
-  S.professores[id]={id,nome:nome.trim(),email:email.trim(),passHash:hash(senha),turmaId:null,status:'ativo'};
+  const{nome,email,senha}=S.editBuf;if(!nome?.trim()||!email?.trim()||!senha?.trim()){showToast('Preencha tudo.');return;}
+  const id=uid();S.professores[id]={id,nome:nome.trim(),email:email.trim(),passHash:hash(senha),turmaId:null,status:'ativo'};
   save();closeModal();showToast('Professor criado!');
+}
+function compartilharWpp(aid){
+  const t=getTurma();if(!t)return;const a=t.alunos.find(x=>x.id===aid);if(!a)return;
+  const prof=getProf()||{nome:'Escola'};const lim=t.limiteFaltas||6;
+  const hist=a.historico||[];const total=hist.filter(h=>h.tipo==='presente'||h.tipo==='ausente').length;
+  const pres=hist.filter(h=>h.tipo==='presente').length;
+  const freq=total>0?Math.round(pres/total*100):100;
+  const obsRec=hist.filter(h=>h.tipo==='obs').slice(0,3);
+  let msg=`${saudacao()}! 🎓\n\nEspero que esteja bem.\n\nAqui é *${prof.nome}*, professor(a) da turma *${t.nome}*.\n\nGostaria de transmitir algumas informações sobre *${a.nome}*:\n\n`;
+  msg+=`📊 *Situação atual:*\n• Faltas: *${a.faltas}*${a.faltas>=lim?' ⚠️ (atingiu o limite)':''}\n• Frequência: *${freq}%*\n• Turma: ${t.nome}\n\n`;
+  if(obsRec.length>0){msg+=`📝 *Observações recentes:*\n`;obsRec.forEach(o=>{msg+=`• ${o.texto} _(${o.data})_\n`;});msg+='\n';}
+  if(a.obs){msg+=`📌 *Perfil:* ${a.obs}\n\n`;}
+  msg+=`Qualquer dúvida estou à disposição. 😊\n\n_${prof.nome} — ${t.nome}_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+function gerarPDF(aid){
+  const t=getTurma();if(!t)return;const a=t.alunos.find(x=>x.id===aid);if(!a)return;
+  const prof=getProf()||{nome:'Escola'};const lim=t.limiteFaltas||6;
+  const hist=a.historico||[];const total=hist.filter(h=>h.tipo==='presente'||h.tipo==='ausente').length;
+  const pres=hist.filter(h=>h.tipo==='presente').length;const freq=total>0?Math.round(pres/total*100):100;
+  try{
+    const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210;let y=20;
+    doc.setFillColor(15,110,86);doc.rect(0,0,W,32,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont('helvetica','bold');
+    doc.text('Relatório Individual do Aluno',W/2,14,{align:'center'});
+    doc.setFontSize(10);doc.setFont('helvetica','normal');
+    doc.text(`${t.nome} — Gerado em ${nowStr()}`,W/2,24,{align:'center'});y=44;
+    doc.setTextColor(17,17,17);doc.setFontSize(15);doc.setFont('helvetica','bold');doc.text(a.nome,14,y);y+=8;
+    doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);
+    doc.text(`Professor(a): ${prof.nome}   |   Turma: ${t.nome}`,14,y);y+=10;
+    doc.setFillColor(245,245,245);doc.roundedRect(14,y,55,22,3,3,'F');doc.roundedRect(75,y,55,22,3,3,'F');doc.roundedRect(136,y,60,22,3,3,'F');
+    doc.setTextColor(17,17,17);doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.text(String(a.faltas),41,y+10,{align:'center'});doc.text(`${freq}%`,102,y+10,{align:'center'});doc.text(String(total),166,y+10,{align:'center'});
+    doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);
+    doc.text('Faltas',41,y+17,{align:'center'});doc.text('Frequência',102,y+17,{align:'center'});doc.text('Aulas',166,y+17,{align:'center'});y+=30;
+    if(a.faltas>=lim){doc.setFillColor(255,237,213);doc.roundedRect(14,y,W-28,10,2,2,'F');doc.setTextColor(180,80,0);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(`Atencao: aluno atingiu o limite de ${lim} faltas.`,W/2,y+7,{align:'center'});doc.setTextColor(17,17,17);y+=16;}
+    if(a.obs){doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(17,17,17);doc.text('Perfil do aluno',14,y);y+=6;doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);const lines=doc.splitTextToSize(a.obs,W-28);doc.text(lines,14,y);y+=lines.length*5+6;}
+    if(hist.length>0){
+      doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(17,17,17);doc.text('Historico',14,y);y+=7;
+      hist.slice(0,30).forEach(h=>{
+        if(y>270){doc.addPage();y=20;}
+        const icon=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':'Observacao';
+        const cor=h.tipo==='presente'?[10,122,78]:h.tipo==='ausente'?[176,48,48]:[100,80,0];
+        doc.setFillColor(...(h.tipo==='presente'?[220,252,231]:h.tipo==='ausente'?[255,228,230]:[254,249,195]));
+        doc.roundedRect(14,y-4,W-28,h.tipo==='obs'?12:8,2,2,'F');
+        doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...cor);doc.text(icon,18,y+1);
+        doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.text(h.data,W-14,y+1,{align:'right'});
+        if(h.tipo==='obs'&&h.texto){doc.setTextColor(60,60,60);const tl=doc.splitTextToSize(h.texto,W-60);doc.text(tl,18,y+6);y+=tl.length*4+2;}
+        y+=10;
+      });
+    }
+    doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text(`Chamada Facil — ${nowStr()} — ${prof.nome}`,W/2,290,{align:'center'});
+    doc.save(`relatorio_${a.nome.replace(/\s+/g,'_')}.pdf`);showToast('PDF gerado!');
+  }catch(e){showToast('Erro ao gerar PDF.');console.error(e);}
 }
 function showToast(msg){
   let t=document.getElementById('_toast');
@@ -258,21 +318,26 @@ function showToast(msg){
 
 function render(){
   const root=document.getElementById('root');
-  if(S.screen==='loading'){root.innerHTML='<div class="empty-state">⏳ Carregando...</div>';return;}
+  if(S.screen==='loading'){root.innerHTML='<div class="empty-state">Carregando...</div>';return;}
   let html='';
-
   if(S.screen==='login'){
-    html=`<div style="max-width:360px;margin:32px auto 0">
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:32px;margin-bottom:6px">📋</div>
-        <div style="font-size:22px;font-weight:700;color:#111">Chamada Escolar</div>
-        <div style="font-size:12px;color:#888;margin-top:4px">Sistema de controle de presença</div>
+    html=`<div style="max-width:400px;margin:0 auto">
+      <div style="background:#1a1a2e;border-radius:20px;padding:36px 24px 28px;margin-bottom:12px">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:#16213e;border:1px solid #0f3460;border-radius:20px;padding:5px 14px;font-size:11px;color:#7ab3ef;margin-bottom:20px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block"></span>Sistema ativo</div>
+        <div style="font-size:28px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:10px">Controle de<br>presença <span style="color:#1D9E75">escolar</span></div>
+        <div style="font-size:13px;color:#9ca3af;line-height:1.6;margin-bottom:24px">Plataforma completa para professores e diretores.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:13px 12px"><div style="font-size:18px;margin-bottom:5px">📋</div><div style="font-size:12px;font-weight:700;color:#e2e8f0">Chamada digital</div><div style="font-size:10px;color:#6b7280">Marque com 1 toque</div></div>
+          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:13px 12px"><div style="font-size:18px;margin-bottom:5px">📊</div><div style="font-size:12px;font-weight:700;color:#e2e8f0">Relatórios</div><div style="font-size:10px;color:#6b7280">Visão do diretor</div></div>
+          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:13px 12px"><div style="font-size:18px;margin-bottom:5px">🔔</div><div style="font-size:12px;font-weight:700;color:#e2e8f0">Alertas</div><div style="font-size:10px;color:#6b7280">Faltas automáticas</div></div>
+          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:13px 12px"><div style="font-size:18px;margin-bottom:5px">🔐</div><div style="font-size:12px;font-weight:700;color:#e2e8f0">Seguro</div><div style="font-size:10px;color:#6b7280">Senhas protegidas</div></div>
+        </div>
       </div>
       <div class="card">
         <div class="fl"><label>E-mail (ou "adm")</label><input class="fi" id="lu" type="text" placeholder="professor@escola.com" oninput="S._lu=this.value" onkeydown="if(event.key==='Enter')tryLogin(S._lu||'',S._lp||'')"></div>
         <div class="fl"><label>Senha</label><input class="fi" type="password" placeholder="••••••" oninput="S._lp=this.value" onkeydown="if(event.key==='Enter')tryLogin(S._lu||'',S._lp||'')"></div>
         ${S.loginErr?`<div class="err">⚠ ${S.loginErr}</div>`:''}
-        <button class="btn-primary" onclick="tryLogin(S._lu||'',S._lp||'')">Entrar</button>
+        <button class="btn-primary" onclick="tryLogin(S._lu||'',S._lp||'')">Entrar no sistema</button>
         <button class="btn-secondary" onclick="S.screen='register';S.loginErr='';S.profBuffer={};render()">Sou professor — criar minha conta</button>
         <div class="beta-box">
           <div class="beta-title">🧪 Acesso de teste</div>
@@ -282,179 +347,129 @@ function render(){
       </div>
     </div>`;
   }
-
   else if(S.screen==='register'){
     const turmas=Object.values(S.turmas);
     html=`<div style="max-width:360px;margin:24px auto 0"><div class="card">
       <div style="font-size:16px;font-weight:700;margin-bottom:14px">Cadastro de Professor</div>
-      <div class="fl"><label>Nome completo *</label><input class="fi" placeholder="Seu nome" oninput="S.profBuffer.nome=this.value"></div>
+      <div class="fl"><label>Nome *</label><input class="fi" placeholder="Seu nome" oninput="S.profBuffer.nome=this.value"></div>
       <div class="fl"><label>E-mail *</label><input class="fi" type="email" placeholder="professor@escola.com" oninput="S.profBuffer.email=this.value"></div>
-      <div class="fl"><label>Turma</label><select class="fi" onchange="S.profBuffer.turmaId=this.value"><option value="">Aguardar ADM atribuir</option>${turmas.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('')}</select></div>
-      <div class="fl"><label>Senha *</label><input class="fi" type="password" placeholder="Mínimo 4 caracteres" oninput="S.profBuffer.senha=this.value"></div>
-      <div class="fl"><label>Confirmar senha *</label><input class="fi" type="password" placeholder="Repita" oninput="S.profBuffer.senha2=this.value"></div>
+      <div class="fl"><label>Turma</label><select class="fi" onchange="S.profBuffer.turmaId=this.value"><option value="">Aguardar ADM</option>${turmas.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('')}</select></div>
+      <div class="fl"><label>Senha *</label><input class="fi" type="password" placeholder="Mín. 4 caracteres" oninput="S.profBuffer.senha=this.value"></div>
+      <div class="fl"><label>Confirmar *</label><input class="fi" type="password" placeholder="Repita" oninput="S.profBuffer.senha2=this.value"></div>
       ${S.loginErr?`<div class="err">⚠ ${S.loginErr}</div>`:''}
       <button class="btn-primary" onclick="tryRegister()">Enviar cadastro</button>
       <button class="btn-secondary" onclick="S.screen='login';S.loginErr='';render()">← Voltar</button>
     </div></div>`;
   }
-
   else if(S.screen==='chamada'){
     const prof=getProf();const t=getTurma();const lim=t?.limiteFaltas||6;
     const presentes=t?.alunos.filter(a=>a.presente===true).length||0;
     const ausentes=t?.alunos.filter(a=>a.presente===false).length||0;
     const alerts=t?.alunos.filter(a=>a.faltas>=lim)||[];
-    html+=`<div class="card"><div class="header-top">
-      <div><div class="page-title">${t?t.nome:'Aguardando turma'}</div><div class="sub-info">${prof?prof.nome+' · ':''} ${today()}</div></div>
-      <div style="display:flex;gap:6px">
-        ${S.authRole==='adm'?`<button class="btn-xs" onclick="S.screen='relatorio';S.tab='relatorio';render()">← ADM</button>`:''}
-        <button class="btn-xs" onclick="logout()">Sair</button>
-      </div></div>
+    html+=`<div class="card"><div class="header-top"><div><div class="page-title">${t?t.nome:'Aguardando turma'}</div><div class="sub-info">${prof?prof.nome+' · ':''} ${today()}</div></div>
+      <div style="display:flex;gap:6px">${S.authRole==='adm'?`<button class="btn-xs" onclick="S.screen='relatorio';S.tab='relatorio';render()">← ADM</button>`:''}<button class="btn-xs" onclick="logout()">Sair</button></div></div>
       ${t?`<div class="stats-row"><div class="stat"><div class="stat-num">${t.alunos.length}</div><div class="stat-label">Alunos</div></div><div class="stat"><div class="stat-num g">${presentes}</div><div class="stat-label">Presentes</div></div><div class="stat"><div class="stat-num r">${ausentes}</div><div class="stat-label">Ausentes</div></div></div>`:''}
     </div>`;
-    if(!t){html+=`<div class="empty-state">⏳ Aguarde o ADM atribuir sua turma.</div>`;}
+    if(!t){html+=`<div class="empty-state">Aguarde o ADM atribuir sua turma.</div>`;}
     else{
       if(alerts.length>0&&S.tab==='chamada')html+=`<div class="alert-banner">⚠️ <strong>${alerts.length} aluno(s)</strong> com ${lim}+ faltas: ${alerts.map(a=>a.nome.split(' ')[0]).join(', ')}</div>`;
       html+=`<div class="tabs"><button class="tab ${S.tab==='chamada'?'active':''}" onclick="S.tab='chamada';render()">📋 Chamada</button><button class="tab ${S.tab==='alunos'?'active':''}" onclick="S.tab='alunos';render()">👥 Alunos</button><button class="tab ${S.tab==='historico'?'active':''}" onclick="S.tab='historico';render()">📅 Histórico</button></div>`;
       if(S.tab==='chamada'){
         html+=`<div class="sec-hdr"><span class="sec-title">Marque a presença</span><button class="btn-xs" style="background:#1D9E75;color:#fff;border-color:#1D9E75" onclick="salvarChamada()">💾 Salvar chamada</button></div>`;
-        if(!t.alunos.length)html+=`<div class="empty-state">Nenhum aluno. Vá à aba 👥 Alunos.</div>`;
+        if(!t.alunos.length)html+=`<div class="empty-state">Nenhum aluno. Vá à aba Alunos.</div>`;
         t.alunos.forEach(a=>{
           let cc='sc clickable';
           if(a.presente===true)cc+=' present-card';else if(a.presente===false)cc+=' absent-card';else if(a.faltas>=lim)cc+=' alert-card';
           const ck=a.presente===true?'present':a.presente===false?'absent':'';
           const ci=a.presente===true?'✓':a.presente===false?'✗':'·';
-          html+=`<div class="${cc}" onclick="openEditAluno('${a.id}')"><div class="av av${a.cor%5}">${initials(a.nome)}</div><div class="si"><div class="sn">${a.nome}</div><div class="sm"><span class="fb ${fc(a.faltas,lim)}">${a.faltas} falta${a.faltas!==1?'s':''}</span>${a.obs?'<span>📝</span>':''}</div></div><button class="chk ${ck}" onclick="event.stopPropagation();togglePresente('${a.id}')">${ci}</button></div>`;
+          html+=`<div class="${cc}" onclick="openEditAluno('${a.id}')"><div class="av av${a.cor%5}">${initials(a.nome)}</div><div class="si"><div class="sn">${a.nome}</div><div class="sm"><span class="fb ${fc(a.faltas,lim)}">${a.faltas}f</span>${a.obs?'<span>📝</span>':''}</div></div><button class="chk ${ck}" onclick="event.stopPropagation();togglePresente('${a.id}')">${ci}</button></div>`;
         });
-        html+=`<div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">Toque no ○ · Uma vez = presente · Duas = ausente · Três = limpar</div>`;
+        html+=`<div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">Toque no ○ · 1x = presente · 2x = ausente · 3x = limpar</div>`;
       }
       if(S.tab==='alunos'){
-        html+=`<div class="sec-hdr"><span class="sec-title">Alunos</span><button class="btn-xs" onclick="S.modal={type:'novoAluno'};S.editBuf={};render()">+ Novo aluno</button></div>`;
-        if(!t.alunos.length)html+=`<div class="empty-state">Nenhum aluno cadastrado.</div>`;
+        html+=`<div class="sec-hdr"><span class="sec-title">Alunos</span><button class="btn-xs" onclick="S.modal={type:'novoAluno'};S.editBuf={};render()">+ Novo</button></div>`;
+        if(!t.alunos.length)html+=`<div class="empty-state">Nenhum aluno.</div>`;
         t.alunos.forEach(a=>{html+=`<div class="sc clickable" onclick="openEditAluno('${a.id}')"><div class="av av${a.cor%5}">${initials(a.nome)}</div><div class="si"><div class="sn">${a.nome}</div><div class="sm">${a.obs||'<em>Sem observações</em>'}</div></div><span class="fb ${fc(a.faltas,lim)}">${a.faltas}f</span></div>`;});
       }
       if(S.tab==='historico'){
         html+=`<div class="sec-hdr"><span class="sec-title">Chamadas salvas</span></div>`;
-        if(!t.history.length)html+=`<div class="empty-state">Nenhuma chamada salva ainda.</div>`;
-        t.history.forEach(h=>{
-          const pct=h.total>0?Math.round(h.presentes.length/h.total*100):0;
+        if(!t.history.length)html+=`<div class="empty-state">Nenhuma chamada salva.</div>`;
+        t.history.forEach(h=>{const pct=h.total>0?Math.round(h.presentes.length/h.total*100):0;
           html+=`<div class="hist-item"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:600">${h.data}</span><span style="font-size:12px;font-weight:600;color:${pct>=75?'#0a7a4e':'#b03030'}">${h.presentes.length}/${h.total} (${pct}%)</span></div>${h.ausentes.length?`<div style="font-size:11px;color:#888;margin-top:3px">Ausentes: ${h.ausentes.join(', ')}</div>`:''}<div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pct>=75?'#1D9E75':'#D85A30'}"></div></div></div>`;
         });
       }
     }
   }
-
   else if(S.screen==='relatorio'){
     const turmas=Object.values(S.turmas);const profs=Object.values(S.professores);
     const pendentes=profs.filter(p=>p.status==='pendente');
-    const totalAlertas=turmas.reduce((s,t)=>s+t.alunos.filter(a=>a.faltas>=(t.limiteFaltas||6)).length,0);
+    const totalAl=turmas.reduce((s,t)=>s+t.alunos.filter(a=>a.faltas>=(t.limiteFaltas||6)).length,0);
     html+=`<div class="card"><div class="header-top"><div><div class="page-title">👑 Painel do Diretor</div><div class="sub-info">${today()}</div></div><button class="btn-xs" onclick="logout()">Sair</button></div>
-      <div class="stats-row"><div class="stat"><div class="stat-num">${turmas.length}</div><div class="stat-label">Turmas</div></div><div class="stat"><div class="stat-num g">${profs.filter(p=>p.status==='ativo').length}</div><div class="stat-label">Professores</div></div><div class="stat"><div class="stat-num r">${totalAlertas}</div><div class="stat-label">Em alerta</div></div></div>
+      <div class="stats-row"><div class="stat"><div class="stat-num">${turmas.length}</div><div class="stat-label">Turmas</div></div><div class="stat"><div class="stat-num g">${profs.filter(p=>p.status==='ativo').length}</div><div class="stat-label">Professores</div></div><div class="stat"><div class="stat-num r">${totalAl}</div><div class="stat-label">Alertas</div></div></div>
     </div>`;
     html+=`<div class="tabs"><button class="tab ${S.tab==='relatorio'?'active':''}" onclick="S.tab='relatorio';render()">📊 Relatórios</button><button class="tab ${S.tab==='turmas'?'active':''}" onclick="S.tab='turmas';render()">🏫 Turmas</button><button class="tab ${S.tab==='professores'?'active':''}" onclick="S.tab='professores';render()">👨‍🏫 Professores${pendentes.length?` <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:0 6px;font-size:11px">${pendentes.length}</span>`:''}</button><button class="tab ${S.tab==='config'?'active':''}" onclick="S.tab='config';render()">⚙️ Config</button></div>`;
-
     if(S.tab==='relatorio'){
-      if(!turmas.length)html+=`<div class="empty-state">Nenhuma turma criada.</div>`;
-      turmas.forEach(t=>{
-        const lim=t.limiteFaltas||6;const al=t.alunos.filter(a=>a.faltas>=lim);
-        const mf=t.alunos.length?(t.alunos.reduce((s,a)=>s+a.faltas,0)/t.alunos.length).toFixed(1):0;
-        const mfq=t.history.length?Math.round(t.history.reduce((s,h)=>s+(h.presentes.length/(h.total||1)*100),0)/t.history.length):null;
-        const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';
-        html+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div><div style="font-size:14px;font-weight:700">${t.nome}</div><div style="font-size:11px;color:#888">${profNome}</div></div><button class="btn-xs" onclick="S.turmaAtiva='${t.id}';S.tab='chamada';S.screen='chamada';render()">Ver chamada</button></div>
-          <div class="rel-row"><span>Alunos</span><span>${t.alunos.length}</span></div>
-          <div class="rel-row"><span>Chamadas</span><span>${t.history.length}</span></div>
-          <div class="rel-row"><span>Média de faltas</span><span>${mf}</span></div>
-          <div class="rel-row"><span>Frequência média</span><span style="font-weight:700;color:${mfq===null?'#888':mfq>=75?'#0a7a4e':'#b03030'}">${mfq!==null?mfq+'%':'—'}</span></div>
-          ${al.length?`<div class="rel-row"><span style="color:#b03030">⚠ Alertas</span><span style="color:#b03030;font-weight:700">${al.length}: ${al.map(a=>a.nome.split(' ')[0]).join(', ')}</span></div>`:''}
+      if(!turmas.length)html+=`<div class="empty-state">Nenhuma turma.</div>`;
+      turmas.forEach(t=>{const lim=t.limiteFaltas||6;const al=t.alunos.filter(a=>a.faltas>=lim);const mf=t.alunos.length?(t.alunos.reduce((s,a)=>s+a.faltas,0)/t.alunos.length).toFixed(1):0;const mfq=t.history.length?Math.round(t.history.reduce((s,h)=>s+(h.presentes.length/(h.total||1)*100),0)/t.history.length):null;const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';
+        html+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div><div style="font-size:14px;font-weight:700">${t.nome}</div><div style="font-size:11px;color:#888">${profNome}</div></div><button class="btn-xs" onclick="S.turmaAtiva='${t.id}';S.tab='chamada';S.screen='chamada';render()">Ver</button></div>
+          <div class="rel-row"><span>Alunos</span><span>${t.alunos.length}</span></div><div class="rel-row"><span>Chamadas</span><span>${t.history.length}</span></div><div class="rel-row"><span>Média faltas</span><span>${mf}</span></div><div class="rel-row"><span>Frequência</span><span style="font-weight:700;color:${mfq===null?'#888':mfq>=75?'#0a7a4e':'#b03030'}">${mfq!==null?mfq+'%':'—'}</span></div>
+          ${al.length?`<div class="rel-row"><span style="color:#b03030">⚠ Alertas</span><span style="color:#b03030;font-weight:700">${al.map(a=>a.nome.split(' ')[0]).join(', ')}</span></div>`:''}
           ${mfq!==null?`<div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${mfq}%;background:${mfq>=75?'#1D9E75':'#D85A30'}"></div></div>`:''}
         </div>`;
       });
     }
     if(S.tab==='turmas'){
-      html+=`<div class="sec-hdr"><span class="sec-title">Turmas</span><button class="btn-xs" onclick="S.modal={type:'novaTurma'};S.editBuf={};render()">+ Nova turma</button></div>`;
+      html+=`<div class="sec-hdr"><span class="sec-title">Turmas</span><button class="btn-xs" onclick="S.modal={type:'novaTurma'};S.editBuf={};render()">+ Nova</button></div>`;
       if(!turmas.length)html+=`<div class="empty-state">Nenhuma turma.</div>`;
-      turmas.forEach(t=>{
-        const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';
-        html+=`<div class="sc clickable" onclick="S.modal={type:'editTurma',tid:'${t.id}'};S.editBuf={nome:'${t.nome.replace(/'/g,"\\'")}',lim:${t.limiteFaltas||6},profId:'${t.profId||''}'};render()"><div class="av av0">T</div><div class="si"><div class="sn">${t.nome}</div><div class="sm">${profNome} · ${t.alunos.length} alunos</div></div><span class="fb ok">lim ${t.limiteFaltas||6}f</span></div>`;
-      });
+      turmas.forEach(t=>{const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';html+=`<div class="sc clickable" onclick="S.modal={type:'editTurma',tid:'${t.id}'};S.editBuf={};render()"><div class="av av0">T</div><div class="si"><div class="sn">${t.nome}</div><div class="sm">${profNome} · ${t.alunos.length} alunos</div></div><span class="fb ok">lim ${t.limiteFaltas||6}f</span></div>`;});
     }
     if(S.tab==='professores'){
-      if(pendentes.length){
-        html+=`<div class="sec-hdr"><span class="sec-title" style="color:#b06000">⏳ Pendentes (${pendentes.length})</span></div>`;
-        pendentes.forEach(p=>{html+=`<div class="sc"><div class="av av2">${initials(p.nome)}</div><div class="si"><div class="sn">${p.nome}</div><div class="sm">${p.email}</div></div><div style="display:flex;gap:5px"><button class="btn-xs" style="color:#0a7a4e;border-color:#1D9E75" onclick="aprovarProf('${p.id}')">✓ Aprovar</button><button class="btn-xs" style="color:#b03030;border-color:#f09090" onclick="rejeitarProf('${p.id}')">✗</button></div></div>`;});
-        html+=`<hr class="divider">`;
-      }
+      if(pendentes.length){html+=`<div class="sec-hdr"><span class="sec-title" style="color:#b06000">⏳ Pendentes</span></div>`;pendentes.forEach(p=>{html+=`<div class="sc"><div class="av av2">${initials(p.nome)}</div><div class="si"><div class="sn">${p.nome}</div><div class="sm">${p.email}</div></div><div style="display:flex;gap:5px"><button class="btn-xs" style="color:#0a7a4e;border-color:#1D9E75" onclick="aprovarProf('${p.id}')">✓</button><button class="btn-xs" style="color:#b03030;border-color:#f09090" onclick="rejeitarProf('${p.id}')">✗</button></div></div>`;});html+=`<hr class="divider">`;}
       html+=`<div class="sec-hdr"><span class="sec-title">Ativos</span><button class="btn-xs" onclick="S.modal={type:'novoProf'};S.editBuf={};render()">+ Novo</button></div>`;
       const ativos=profs.filter(p=>p.status==='ativo');
-      if(!ativos.length)html+=`<div class="empty-state">Nenhum professor ativo.</div>`;
-      ativos.forEach(p=>{const turma=p.turmaId?S.turmas[p.turmaId]:null;html+=`<div class="sc clickable" onclick="S.modal={type:'editProf',pid:'${p.id}'};render()"><div class="av av1">${initials(p.nome)}</div><div class="si"><div class="sn">${p.nome}</div><div class="sm">${p.email}${turma?' · '+turma.nome:' · Sem turma'}</div></div><span class="fb ok">ativo</span></div>`;});
+      if(!ativos.length)html+=`<div class="empty-state">Nenhum.</div>`;
+      ativos.forEach(p=>{const turma=p.turmaId?S.turmas[p.turmaId]:null;html+=`<div class="sc clickable" onclick="S.modal={type:'editProf',pid:'${p.id}'};render()"><div class="av av1">${initials(p.nome)}</div><div class="si"><div class="sn">${p.nome}</div><div class="sm">${p.email}${turma?' · '+turma.nome:''}</div></div><span class="fb ok">ativo</span></div>`;});
     }
-    if(S.tab==='config'){
-      html+=`<div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:12px">🔐 Alterar senha ADM</div>
-        <div class="fl"><label>Nova senha</label><input class="fi" type="password" id="np1" placeholder="Mínimo 4 caracteres"></div>
-        <div class="fl"><label>Confirmar</label><input class="fi" type="password" id="np2" placeholder="Repita"></div>
-        <button class="btn-primary" onclick="trocarSenhaAdm()">Alterar senha</button></div>`;
-    }
+    if(S.tab==='config'){html+=`<div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:12px">🔐 Senha ADM</div><div class="fl"><label>Nova senha</label><input class="fi" type="password" id="np1" placeholder="Mín. 4 caracteres"></div><div class="fl"><label>Confirmar</label><input class="fi" type="password" id="np2" placeholder="Repita"></div><button class="btn-primary" onclick="trocarSenhaAdm()">Alterar</button></div>`;}
   }
 
   if(S.modal){
     let mc='';const m=S.modal;
+    if(m.type==='perfilAluno'){
+      const t=getTurma();const a=t?.alunos.find(x=>x.id===m.aid);
+      if(a){const lim=t.limiteFaltas||6;const hist=a.historico||[];const totalH=hist.filter(h=>h.tipo==='presente'||h.tipo==='ausente').length;const pres=hist.filter(h=>h.tipo==='presente').length;const freq=totalH>0?Math.round(pres/totalH*100):100;
+        mc=`<div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="av av${a.cor%5}" style="width:40px;height:40px;font-size:14px">${initials(a.nome)}</div><div><div style="font-size:15px;font-weight:700">${a.nome}</div><div style="font-size:11px;color:#888">${t.nome}</div></div></div><button class="cls" onclick="closeModal()">×</button></div>
+        <div class="perfil-stats"><div class="perfil-stat"><div class="perfil-stat-n" style="color:${a.faltas>=lim?'#b03030':'#111'}">${a.faltas}</div><div class="perfil-stat-l">Faltas</div></div><div class="perfil-stat"><div class="perfil-stat-n" style="color:${freq>=75?'#0a7a4e':'#b03030'}">${freq}%</div><div class="perfil-stat-l">Frequência</div></div><div class="perfil-stat"><div class="perfil-stat-n">${totalH}</div><div class="perfil-stat-l">Aulas</div></div></div>
+        ${a.faltas>=lim?`<div style="background:#ffe4e6;border-radius:8px;padding:8px 12px;font-size:12px;color:#9f1239;margin-bottom:12px">⚠️ Atingiu o limite de ${lim} faltas!</div>`:''}
+        ${a.obs?`<div style="background:#f5f5f5;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;margin-bottom:12px"><strong>Perfil:</strong> ${a.obs}</div>`:''}
+        <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Adicionar observação</div>
+        <div class="obs-input-row"><input id="nova-obs-${a.id}" type="text" placeholder="Digite uma observação..." onkeydown="if(event.key==='Enter'){adicionarObservacao('${a.id}',this.value);this.value=''}"><button onclick="adicionarObservacao('${a.id}',document.getElementById('nova-obs-${a.id}').value);document.getElementById('nova-obs-${a.id}').value=''">+</button></div>
+        <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px">Histórico individual</div>
+        <div class="timeline">${hist.length===0?'<div style="font-size:13px;color:#aaa;text-align:center;padding:12px">Nenhum registro ainda.</div>':''}${hist.slice(0,20).map(h=>{const icon=h.tipo==='presente'?'✓':h.tipo==='ausente'?'✗':'📝';const cls=h.tipo==='presente'?'tl-present':h.tipo==='ausente'?'tl-absent':'tl-obs';const txt=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':(h.texto||'Obs.');return`<div class="tl-item"><div class="tl-icon ${cls}">${icon}</div><div class="tl-body"><div class="tl-date">${h.data}</div><div class="tl-text">${txt}</div></div></div>`;}).join('')}</div>
+        <button class="btn-wpp" onclick="compartilharWpp('${a.id}')"><span style="font-size:18px">💬</span> Compartilhar via WhatsApp</button>
+        <button class="btn-pdf" onclick="gerarPDF('${a.id}')"><span style="font-size:18px">📄</span> Exportar PDF</button>
+        <button class="btn-secondary" onclick="S.modal={type:'editAluno',aid:'${a.id}'};S.editBuf={nome:'${a.nome.replace(/'/g,"\\'")}',obs:decodeURIComponent('${encodeURIComponent(a.obs||'')}'),faltas:${a.faltas}};render()">✏️ Editar dados</button>`;
+      }
+    }
     if(m.type==='novoAluno'||m.type==='editAluno'){
-      const isEdit=m.type==='editAluno';const a=isEdit?getTurma()?.alunos.find(x=>x.id===m.aid):null;
-      const turmas2=S.authRole==='adm'?Object.values(S.turmas):[];
+      const isEdit=m.type==='editAluno';const a=isEdit?getTurma()?.alunos.find(x=>x.id===m.aid):null;const turmas2=S.authRole==='adm'?Object.values(S.turmas):[];
       mc=`<div class="modal-title">${isEdit?'Editar aluno':'Novo aluno'}<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome completo *</label><input class="fi" value="${S.editBuf.nome||''}" placeholder="Nome do aluno" oninput="S.editBuf.nome=this.value"></div>
-        <div class="fl"><label>Observações</label><textarea class="fi" placeholder="Saúde, comportamento, necessidades especiais..." oninput="S.editBuf.obs=this.value">${S.editBuf.obs||''}</textarea></div>
+        <div class="fl"><label>Nome *</label><input class="fi" value="${S.editBuf.nome||''}" placeholder="Nome" oninput="S.editBuf.nome=this.value"></div>
+        <div class="fl"><label>Observações</label><textarea class="fi" placeholder="Saúde, comportamento, necessidades..." oninput="S.editBuf.obs=this.value">${S.editBuf.obs||''}</textarea></div>
         ${isEdit?`<div class="fl"><label>Faltas</label><input class="ni" type="number" min="0" value="${a?.faltas||0}" oninput="S.editBuf.faltas=this.value"></div>`:''}
         ${S.authRole==='adm'&&!isEdit?`<div class="fl"><label>Turma</label><select class="fi" onchange="S.editBuf.turmaId=this.value"><option value="">Selecione</option>${turmas2.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('')}</select></div>`:''}
         <button class="btn-primary" onclick="salvarAluno()">Salvar</button>
-        ${isEdit?`<button class="btn-danger" onclick="removerAluno()">Remover aluno</button>`:''}`;
+        ${isEdit?`<button class="btn-danger" onclick="removerAluno()">Remover</button>`:''}`;
     }
-    if(m.type==='novaTurma'){
-      const profs2=Object.values(S.professores).filter(p=>p.status==='ativo');
-      mc=`<div class="modal-title">Nova turma<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome *</label><input class="fi" placeholder="Ex: 9º Ano A — Matemática" oninput="S.editBuf.nome=this.value"></div>
-        <div class="fl"><label>Professor</label><select class="fi" onchange="S.editBuf.profId=this.value"><option value="">Sem professor ainda</option>${profs2.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select></div>
-        <div class="fl"><label>Limite de faltas</label><input class="ni" type="number" min="1" value="6" oninput="S.editBuf.lim=this.value"></div>
-        <button class="btn-primary" onclick="criarTurma()">Criar turma</button>`;
-    }
-    if(m.type==='editTurma'){
-      const t2=S.turmas[m.tid];const profs2=Object.values(S.professores).filter(p=>p.status==='ativo');
-      mc=`<div class="modal-title">Editar turma<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome</label><input class="fi" value="${t2.nome}" oninput="S.turmas['${m.tid}'].nome=this.value;save()"></div>
-        <div class="fl"><label>Professor</label><select class="fi" onchange="atribuirProfTurma('${m.tid}',this.value)"><option value="">Sem professor</option>${profs2.map(p=>`<option value="${p.id}"${t2.profId===p.id?' selected':''}>${p.nome}</option>`).join('')}</select></div>
-        <div class="fl"><label>Limite de faltas</label><input class="ni" type="number" min="1" value="${t2.limiteFaltas||6}" oninput="S.turmas['${m.tid}'].limiteFaltas=parseInt(this.value)||6;save()"></div>
-        <div class="fl"><label>🔗 Link do professor</label><div class="link-box" onclick="copyLink('${m.tid}')">Clique para copiar o link desta turma</div></div>
-        <button class="btn-primary" onclick="closeModal()">Fechar</button>
-        <button class="btn-danger" onclick="if(confirm('Remover turma?')){delete S.turmas['${m.tid}'];save();closeModal();}">Remover turma</button>`;
-    }
-    if(m.type==='editProf'){
-      const p2=S.professores[m.pid];const turmas2=Object.values(S.turmas);
-      mc=`<div class="modal-title">${p2.nome}<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome</label><input class="fi" value="${p2.nome}" oninput="S.professores['${m.pid}'].nome=this.value;save()"></div>
-        <div class="fl"><label>E-mail</label><input class="fi" value="${p2.email}" oninput="S.professores['${m.pid}'].email=this.value;save()"></div>
-        <div class="fl"><label>Turma</label><select class="fi" onchange="atribuirProfTurma(this.value,'${m.pid}')"><option value="">Sem turma</option>${turmas2.map(t=>`<option value="${t.id}"${p2.turmaId===t.id?' selected':''}>${t.nome}</option>`).join('')}</select></div>
-        <button class="btn-primary" onclick="resetarSenha('${m.pid}')">🔑 Resetar senha</button>
-        <button class="btn-danger" onclick="if(confirm('Remover?')){delete S.professores['${m.pid}'];save();closeModal();}">Remover professor</button>`;
-    }
-    if(m.type==='novoProf'){
-      mc=`<div class="modal-title">Novo professor<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome *</label><input class="fi" oninput="S.editBuf.nome=this.value" placeholder="Nome completo"></div>
-        <div class="fl"><label>E-mail *</label><input class="fi" type="email" oninput="S.editBuf.email=this.value" placeholder="email@escola.com"></div>
-        <div class="fl"><label>Senha provisória *</label><input class="fi" type="password" oninput="S.editBuf.senha=this.value" placeholder="Mínimo 4 caracteres"></div>
-        <button class="btn-primary" onclick="admCriarProf()">Criar professor</button>`;
-    }
-    if(m.type==='senhaReset'){
-      mc=`<div class="modal-title">🔑 Senha resetada<button class="cls" onclick="closeModal()">×</button></div>
-        <div style="font-size:13px;color:#666;margin-bottom:10px">Senha provisória de <strong>${m.nome}</strong>:</div>
-        <div style="background:#f0faf6;border:1.5px dashed #1D9E75;border-radius:8px;padding:14px;text-align:center;font-size:24px;font-weight:700;color:#0a7a4e;letter-spacing:3px">${m.senha}</div>
-        <div style="font-size:11px;color:#999;margin-top:8px;text-align:center">Anote e compartilhe com o professor.</div>
-        <button class="btn-primary" onclick="closeModal()">Fechar</button>`;
-    }
+    if(m.type==='novaTurma'){const profs2=Object.values(S.professores).filter(p=>p.status==='ativo');mc=`<div class="modal-title">Nova turma<button class="cls" onclick="closeModal()">×</button></div><div class="fl"><label>Nome *</label><input class="fi" placeholder="Ex: 9º Ano A" oninput="S.editBuf.nome=this.value"></div><div class="fl"><label>Professor</label><select class="fi" onchange="S.editBuf.profId=this.value"><option value="">Sem professor</option>${profs2.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select></div><div class="fl"><label>Limite de faltas</label><input class="ni" type="number" min="1" value="6" oninput="S.editBuf.lim=this.value"></div><button class="btn-primary" onclick="criarTurma()">Criar</button>`;}
+    if(m.type==='editTurma'){const t2=S.turmas[m.tid];const profs2=Object.values(S.professores).filter(p=>p.status==='ativo');mc=`<div class="modal-title">Editar turma<button class="cls" onclick="closeModal()">×</button></div><div class="fl"><label>Nome</label><input class="fi" value="${t2.nome}" oninput="S.turmas['${m.tid}'].nome=this.value;save()"></div><div class="fl"><label>Professor</label><select class="fi" onchange="atribuirProfTurma('${m.tid}',this.value)"><option value="">Sem professor</option>${profs2.map(p=>`<option value="${p.id}"${t2.profId===p.id?' selected':''}>${p.nome}</option>`).join('')}</select></div><div class="fl"><label>Limite faltas</label><input class="ni" type="number" min="1" value="${t2.limiteFaltas||6}" oninput="S.turmas['${m.tid}'].limiteFaltas=parseInt(this.value)||6;save()"></div><div class="fl"><label>🔗 Link do professor</label><div class="link-box" onclick="copyLink('${m.tid}')">Clique para copiar</div></div><button class="btn-primary" onclick="closeModal()">Fechar</button><button class="btn-danger" onclick="if(confirm('Remover?')){delete S.turmas['${m.tid}'];save();closeModal();}">Remover turma</button>`;}
+    if(m.type==='editProf'){const p2=S.professores[m.pid];const turmas2=Object.values(S.turmas);mc=`<div class="modal-title">${p2.nome}<button class="cls" onclick="closeModal()">×</button></div><div class="fl"><label>Nome</label><input class="fi" value="${p2.nome}" oninput="S.professores['${m.pid}'].nome=this.value;save()"></div><div class="fl"><label>E-mail</label><input class="fi" value="${p2.email}" oninput="S.professores['${m.pid}'].email=this.value;save()"></div><div class="fl"><label>Turma</label><select class="fi" onchange="atribuirProfTurma(this.value,'${m.pid}')"><option value="">Sem turma</option>${turmas2.map(t=>`<option value="${t.id}"${p2.turmaId===t.id?' selected':''}>${t.nome}</option>`).join('')}</select></div><button class="btn-primary" onclick="resetarSenha('${m.pid}')">🔑 Resetar senha</button><button class="btn-danger" onclick="if(confirm('Remover?')){delete S.professores['${m.pid}'];save();closeModal();}">Remover</button>`;}
+    if(m.type==='novoProf'){mc=`<div class="modal-title">Novo professor<button class="cls" onclick="closeModal()">×</button></div><div class="fl"><label>Nome *</label><input class="fi" oninput="S.editBuf.nome=this.value" placeholder="Nome completo"></div><div class="fl"><label>E-mail *</label><input class="fi" type="email" oninput="S.editBuf.email=this.value" placeholder="email@escola.com"></div><div class="fl"><label>Senha *</label><input class="fi" type="password" oninput="S.editBuf.senha=this.value" placeholder="Mín. 4 caracteres"></div><button class="btn-primary" onclick="admCriarProf()">Criar</button>`;}
+    if(m.type==='senhaReset'){mc=`<div class="modal-title">🔑 Senha resetada<button class="cls" onclick="closeModal()">×</button></div><div style="font-size:13px;color:#666;margin-bottom:10px">Senha de <strong>${m.nome}</strong>:</div><div style="background:#f0faf6;border:1.5px dashed #1D9E75;border-radius:8px;padding:14px;text-align:center;font-size:24px;font-weight:700;color:#0a7a4e;letter-spacing:3px">${m.senha}</div><button class="btn-primary" onclick="closeModal()">Fechar</button>`;}
     if(mc)html+=`<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">${mc}</div></div>`;
   }
   root.innerHTML=html;
 }
-
 loadData();
 </script>
 </body>
