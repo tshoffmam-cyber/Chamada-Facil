@@ -4,1497 +4,923 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chamada Fácil</title>
-<!--
-  ============================================================
-  CHAMADA FÁCIL — v5.0 BETA
-  ============================================================
-  Estrutura geral:
-  - Arquivo único HTML/CSS/JS (sem dependências externas, exceto jsPDF)
-  - Estado global gerenciado pelo objeto `S` (State)
-  - Persistência via localStorage (trocar por API REST na versão final)
-  - Autenticação simulada com hash simples (trocar por JWT na versão final)
-  - Estrutura preparada para planos de assinatura (ver objeto PLANOS)
-  - Código comentado em português para facilitar manutenção
-
-  PARA O PROGRAMADOR:
-  - Buscar por "TODO:" para encontrar pontos de evolução
-  - Buscar por "PLANO:" para encontrar lógica de assinatura
-  - Buscar por "SEGURANÇA:" para pontos que precisam de hardening
-  - Buscar por "API:" para onde integrar backend
-  ============================================================
--->
 <style>
-/* ══════════════════════════════════════════════
-   CHAMADA FÁCIL — Design System Unificado
-   Paleta:
-     Escuro principal:  #1a1a2e
-     Escuro secundário: #16213e
-     Verde primário:    #1D9E75
-     Verde hover:       #0F6E56
-     Fundo claro:       #f4f6f8
-     Card:              #ffffff
-     Texto principal:   #111827
-     Texto secundário:  #6b7280
-     Borda:             #e5e7eb
-   Tipografia: 'Segoe UI', system-ui
-   Raio padrão: 10px cards, 8px elementos
-══════════════════════════════════════════════ */
-
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#f4f6f8;min-height:100vh;color:#111827}
 .app{max-width:500px;margin:0 auto;padding:12px}
-
-/* ── Cabeçalho escuro (padrão em todas as telas) ─ */
 .app-header{background:#1a1a2e;border-radius:14px;padding:16px 18px;margin-bottom:10px}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .page-title{font-size:16px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.04em}
 .sub-info{font-size:11px;color:#9ca3af;margin-top:3px}
 .escola-info{font-size:11px;color:#5DCAA5;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
-
-/* ── Stats no cabeçalho ──────────────────────── */
-.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:2px}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:2px}
+.stats-row.s3{grid-template-columns:1fr 1fr 1fr}
 .stat{background:#16213e;border-radius:8px;padding:9px 10px;text-align:center}
 .stat-num{font-size:19px;font-weight:700;color:#fff}
 .stat-num.g{color:#5DCAA5}.stat-num.r{color:#F0997B}.stat-num.b{color:#85B7EB}
 .stat-label{font-size:10px;color:#9ca3af;margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
-
-/* ── Card de conteúdo (interior claro) ────────── */
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 18px;margin-bottom:10px}
-
-/* ── Abas ─────────────────────────────────────── */
 .tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
 .tab{padding:6px 12px;border-radius:8px;font-size:11px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;font-weight:600;transition:all .15s}
 .tab:hover{border-color:#1D9E75;color:#1D9E75}
-.tab.active{background:#1D9E75;color:#fff;border-color:#1D9E75;font-weight:700}
-
-/* ── Cabeçalho de seção ───────────────────────── */
+.tab.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
 .sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .sec-title{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em}
-
-/* ── Botões ───────────────────────────────────── */
-.btn-xs{font-size:12px;padding:5px 12px;border:1px solid #1D9E75;border-radius:8px;background:#fff;color:#1D9E75;cursor:pointer;font-weight:700;transition:all .15s}
+.btn-xs{font-size:12px;padding:5px 12px;border:1px solid #1D9E75;border-radius:8px;background:#fff;color:#1D9E75;cursor:pointer;font-weight:700}
 .btn-xs:hover{background:#1D9E75;color:#fff}
-.btn-primary{width:100%;padding:12px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;text-transform:uppercase;letter-spacing:.05em;transition:background .15s}
+.btn-primary{width:100%;padding:12px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;text-transform:uppercase;letter-spacing:.05em}
 .btn-primary:hover{background:#0F6E56}
-.btn-secondary{width:100%;padding:10px;background:#fff;color:#374151;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600;transition:all .15s}
+.btn-secondary{width:100%;padding:10px;background:#fff;color:#374151;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600}
 .btn-secondary:hover{border-color:#1D9E75;color:#1D9E75}
 .btn-danger{width:100%;padding:9px;background:#fff;color:#b03030;border:1px solid #fca5a5;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600}
-.btn-danger:hover{background:#fff5f5}
-.btn-wpp{width:100%;padding:12px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.04em}
-.btn-wpp:hover{background:#1da851}
-.btn-pdf{width:100%;padding:12px;background:#e53e3e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.04em}
-.btn-pdf:hover{background:#c53030}
-
-/* ── Cards de alunos ──────────────────────────── */
+.btn-wpp{width:100%;padding:12px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-pdf{width:100%;padding:12px;background:#e53e3e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
 .sc{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;transition:all .15s}
-.sc.clickable{cursor:pointer}.sc.clickable:hover{border-color:#1D9E75;box-shadow:0 0 0 1px #1D9E7520}
+.sc.clickable{cursor:pointer}.sc.clickable:hover{border-color:#1D9E75}
 .sc.present-card{border-left:3px solid #1D9E75;background:#f0fdf8}
 .sc.absent-card{border-left:3px solid #ef4444;background:#fff8f8}
 .sc.justif-card{border-left:3px solid #3b82f6;background:#f0f7ff}
 .sc.alert-card{border-left:3px solid #f59e0b}
-
-/* ── Avatar ───────────────────────────────────── */
 .av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-.av0{background:#1a1a2e;color:#5DCAA5}
-.av1{background:#16213e;color:#85B7EB}
-.av2{background:#1a1a2e;color:#F0997B}
-.av3{background:#16213e;color:#AFA9EC}
-.av4{background:#1a1a2e;color:#FAC775}
-
-/* ── Info aluno ───────────────────────────────── */
+.av0{background:#1a1a2e;color:#5DCAA5}.av1{background:#16213e;color:#85B7EB}
+.av2{background:#1a1a2e;color:#F0997B}.av3{background:#16213e;color:#AFA9EC}.av4{background:#1a1a2e;color:#FAC775}
 .si{flex:1;min-width:0}
 .sn{font-size:13px;font-weight:600;color:#111827}
 .sm{font-size:11px;color:#6b7280;margin-top:2px;display:flex;align-items:center;gap:6px}
-
-/* ── Badges falta ─────────────────────────────── */
 .fb{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-.fb.ok{background:#dcfce7;color:#166534}
-.fb.warn{background:#fef3c7;color:#92400e}
-.fb.bad{background:#fee2e2;color:#991b1b}
-
-/* ── Botão de presença ────────────────────────── */
-.chk{width:36px;height:36px;border-radius:50%;border:2px solid #e5e7eb;background:#f9fafb;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#9ca3af;transition:all .15s;font-weight:700}
-.chk:hover{border-color:#1D9E75}
+.fb.ok{background:#dcfce7;color:#166534}.fb.warn{background:#fef3c7;color:#92400e}.fb.bad{background:#fee2e2;color:#991b1b}
+.chk{width:36px;height:36px;border-radius:50%;border:2px solid #e5e7eb;background:#f9fafb;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#9ca3af;font-weight:700}
 .chk.present{background:#1D9E75;border-color:#1D9E75;color:#fff}
 .chk.absent{background:#ef4444;border-color:#ef4444;color:#fff}
 .chk.justif{background:#3b82f6;border-color:#3b82f6;color:#fff}
-
-/* ── Modal ────────────────────────────────────── */
 .modal-bg{position:fixed;inset:0;background:rgba(10,10,20,.6);z-index:100;display:flex;align-items:flex-end;justify-content:center}
 .modal{background:#fff;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
-.modal-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:#111827;text-transform:uppercase;letter-spacing:.04em;padding-bottom:12px;border-bottom:1px solid #e5e7eb}
+.modal-title{font-size:13px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:#111827;text-transform:uppercase;letter-spacing:.04em;padding-bottom:12px;border-bottom:1px solid #e5e7eb}
 .cls{background:transparent;border:none;font-size:22px;cursor:pointer;color:#9ca3af;padding:2px 6px;line-height:1}
-.cls:hover{color:#374151}
-
-/* ── Formulários ──────────────────────────────── */
 .fl{margin-bottom:14px}
 .fl label{display:block;font-size:11px;color:#6b7280;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.fi{width:100%;padding:10px 12px;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#111827;font-family:inherit;transition:border-color .15s}
-.fi:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 3px #1D9E7515}
+.fi{width:100%;padding:10px 12px;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#111827;font-family:inherit}
+.fi:focus{outline:none;border-color:#1D9E75}
 textarea.fi{resize:vertical;min-height:70px}
 .ni{width:64px;padding:8px;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;text-align:center}
-
-/* ── Alertas e mensagens ──────────────────────── */
 .alert-banner{background:#fffbeb;border:1px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#92400e;font-weight:600}
 .err{color:#dc2626;font-size:12px;margin-top:6px;text-align:center;font-weight:700;padding:8px;background:#fee2e2;border-radius:6px}
-
-/* ── Histórico ────────────────────────────────── */
 .hist-item{padding:10px 0;border-bottom:1px solid #f3f4f6}
 .progress-bar{height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden;margin-top:6px}
 .progress-fill{height:100%;border-radius:2px}
-
-/* ── Relatórios ───────────────────────────────── */
 .rel-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:12px;color:#374151}
 .rel-row:last-child{border:none}
-
-/* ── Link box ─────────────────────────────────── */
 .link-box{background:#f0fdf4;border:1px dashed #1D9E75;border-radius:8px;padding:8px 12px;font-size:11px;color:#0F6E56;word-break:break-all;margin-top:5px;cursor:pointer;font-weight:600}
-.link-box:hover{background:#dcfce7}
-
-/* ── Estado vazio ─────────────────────────────── */
 .empty-state{text-align:center;padding:32px 16px;color:#9ca3af;font-size:13px}
 .divider{border:none;border-top:1px solid #f3f4f6;margin:10px 0}
-
-/* ── Beta box ─────────────────────────────────── */
 .beta-box{margin-top:16px;padding:14px;background:#f0fdf4;border-radius:10px;border:1.5px dashed #1D9E75}
 .beta-title{font-size:10px;font-weight:700;color:#0F6E56;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
-.beta-btn{width:100%;text-align:center;padding:11px 12px;margin-bottom:7px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;color:#111827;transition:all .15s}
+.beta-btn{width:100%;text-align:center;padding:11px 12px;margin-bottom:7px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;color:#111827}
 .beta-btn:last-child{margin-bottom:0}
 .beta-btn:hover{border-color:#1D9E75;color:#1D9E75}
 .beta-hint{font-size:11px;color:#9ca3af}
-
-/* ── Timeline ─────────────────────────────────── */
 .timeline{padding:4px 0}
 .tl-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f3f4f6}
 .tl-item:last-child{border:none}
 .tl-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px}
-.tl-present{background:#dcfce7;color:#166534}
-.tl-absent{background:#fee2e2;color:#991b1b}
-.tl-obs{background:#fef3c7;color:#92400e}
-.tl-justif{background:#dbeafe;color:#1e40af}
+.tl-present{background:#dcfce7;color:#166534}.tl-absent{background:#fee2e2;color:#991b1b}
+.tl-obs{background:#fef3c7;color:#92400e}.tl-justif{background:#dbeafe;color:#1e40af}
 .tl-date{font-size:11px;color:#9ca3af;margin-bottom:2px}
 .tl-text{font-size:13px;color:#111827}
-
-/* ── Obs input ────────────────────────────────── */
 .obs-input-row{display:flex;gap:8px;margin-top:10px}
 .obs-input-row input{flex:1;padding:9px 12px;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit}
 .obs-input-row input:focus{outline:none;border-color:#1D9E75}
 .obs-input-row button{padding:9px 16px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:700}
-
-/* ── Perfil stats ─────────────────────────────── */
 .perfil-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
 .perfil-stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center}
 .perfil-stat-n{font-size:18px;font-weight:700;color:#111827}
 .perfil-stat-l{font-size:10px;color:#6b7280;margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
-
-/* ── Planos ───────────────────────────────────── */
-.plano-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
 </style>
 </head>
 <body>
-<div class="app" id="root"></div>
-
-<!-- Biblioteca jsPDF para exportação de PDF -->
+<div class="app" id="root"><div class="empty-state">Carregando...</div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script>
-// ============================================================
-// CONFIGURAÇÃO DE PLANOS
-// PLANO: Estrutura preparada para integração com gateway de pagamento
-// TODO: Integrar com Stripe, PagSeguro ou MercadoPago na v1.0
-// ============================================================
-const PLANOS = {
-  beta: {
-    id: 'beta',
-    nome: 'Beta',
-    preco: 0,
-    maxEscolas: 99,   // ilimitado no beta
-    maxTurmas: 99,
-    temRelatorio: true,
-    temPDF: true,
-    temWhatsapp: true,
-  },
-  basico: {
-    id: 'basico',
-    nome: 'Básico',
-    preco: 29.90,
-    maxEscolas: 1,
-    maxTurmas: 1,
-    temRelatorio: false,
-    temPDF: true,
-    temWhatsapp: true,
-  },
-  plus: {
-    id: 'plus',
-    nome: 'Plus',
-    preco: 59.90,
-    maxEscolas: 3,
-    maxTurmas: 3,
-    temRelatorio: true,
-    temPDF: true,
-    temWhatsapp: true,
-  },
-  diretor: {
-    id: 'diretor',
-    nome: 'Diretor',
-    preco: 89.90,
-    maxEscolas: 1,
-    maxTurmas: 99,
-    temRelatorio: true,
-    temPDF: true,
-    temWhatsapp: true,
-    temVisaoProfessores: true, // acesso aos professores da escola
-  }
+// ── Configuração de Planos ───────────────────────────────────
+const PLANOS={
+  beta:   {id:'beta',   nome:'Beta',    preco:0,    maxEscolas:99,maxTurmas:99, temRelatorio:true,  temPDF:true,temWhatsapp:true},
+  basico: {id:'basico', nome:'Básico',  preco:29.90,maxEscolas:1, maxTurmas:1,  temRelatorio:false, temPDF:true,temWhatsapp:true},
+  plus:   {id:'plus',   nome:'Plus',    preco:59.90,maxEscolas:3, maxTurmas:3,  temRelatorio:true,  temPDF:true,temWhatsapp:true},
+  diretor:{id:'diretor',nome:'Diretor', preco:89.90,maxEscolas:1, maxTurmas:99, temRelatorio:true,  temPDF:true,temWhatsapp:true,temVisaoProfessores:true}
 };
 
-// ============================================================
-// CHAVES DE ARMAZENAMENTO LOCAL
-// API: Substituir localStorage por chamadas REST na v1.0
-// SEGURANÇA: Dados sensíveis não devem ficar no localStorage em produção
-// ============================================================
-const DATA_KEY = 'chamadafacil_v6';
-const ADM_KEY  = 'chamadafacil_adm_v6';
+// ── Suporte IA ───────────────────────────────────────────────
+const ADM_WHATSAPP='5511999999999';
+const ADM_EMAIL='suporte@chamadafacil.com.br';
+const SUPORTE_SYSTEM=`Você é o assistente de suporte do Chamada Fácil, um app de controle de presença escolar.
+Seu nome é "Fácil". Fale de forma próxima e informal, como um colega que conhece bem o sistema.
+SOBRE O APP: professores fazem chamada digital, registram observações e geram PDFs/WhatsApp.
+Planos: Beta (grátis), Básico R$29,90, Plus R$59,90, Diretor R$89,90.
+Na chamada: 1 toque=presente(verde), 2=ausente(vermelho), 3=justificado(azul), 4=limpar.
+REEMBOLSO: cancelamento livre, reembolso em até 7 dias, email: ${ADM_EMAIL}
+Quando não souber: diga que vai encaminhar para o ADM humano.
+Responda em português, curto e direto. Máximo 3 parágrafos.`;
+let suporteHistorico=[];
 
-// ── Sanitização de strings para evitar quebra de HTML/JS ─────
-// BUG CORRIGIDO: nomes com apóstrofo (D'Silva) quebravam o modal
-function esc(str){ return String(str||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
-function unesc(str){ return String(str||'').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>') }
+// ── Chaves de storage ────────────────────────────────────────
+const DATA_KEY='chamadafacil_v6';
+const ADM_KEY='chamadafacil_adm_v6';
 
-// ── Sanitização de texto para PDF ────────────────────────────
-// BUG CORRIGIDO: acentos e caracteres especiais quebravam o jsPDF
-function sanitizePDF(str){
-  return String(str||'')
-    .replace(/[àáâãä]/g,'a').replace(/[ÀÁÂÃÄ]/g,'A')
-    .replace(/[èéêë]/g,'e').replace(/[ÈÉÊË]/g,'E')
-    .replace(/[ìíîï]/g,'i').replace(/[ÌÍÎÏ]/g,'I')
-    .replace(/[òóôõö]/g,'o').replace(/[ÒÓÔÕÖ]/g,'O')
-    .replace(/[ùúûü]/g,'u').replace(/[ÙÚÛÜ]/g,'U')
-    .replace(/[ç]/g,'c').replace(/[Ç]/g,'C')
-    .replace(/[ñ]/g,'n').replace(/[Ñ]/g,'N')
-    .replace(/[^\x00-\x7F]/g,'?');
+// ── Utilitários ──────────────────────────────────────────────
+function uid(){return Math.random().toString(36).slice(2,9)}
+function initials(n){return(n||'?').split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase()}
+function nowStr(){return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+function today(){return new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}
+function saudacao(){const h=new Date().getHours();return h>=5&&h<12?'Bom dia':h>=12&&h<18?'Boa tarde':'Boa noite'}
+function getParam(k){try{return new URLSearchParams(window.location.search).get(k)}catch{return null}}
+function hash(s){let h=0;for(let i=0;i<s.length;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0}return h.toString(36)}
+function fc(f,lim){if(f===0)return'ok';if(f>=lim)return'bad';if(f>=lim-2)return'warn';return'ok'}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function sanitizePDF(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x00-\x7F]/g,'?')}
+
+// ── Storage ──────────────────────────────────────────────────
+const storage={
+  get(k){try{const v=localStorage.getItem(k);return v?{value:v}:null}catch{return null}},
+  set(k,v){try{localStorage.setItem(k,v);return{value:v}}catch{return null}}
+};
+
+// ── Estado global ────────────────────────────────────────────
+let S={
+  screen:'loading',authRole:null,authProfId:null,
+  turmaAtiva:null,tab:'chamada',modal:null,loginErr:'',
+  suporteCarregando:false,
+  admPassHash:hash('admin123'),
+  turmas:{},professores:{},editBuf:{},profBuffer:{}
+};
+
+// ── Logo SVG ─────────────────────────────────────────────────
+function logoSVG(size){
+  size=size||40;
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#1D9E75"/><path d="M10 21L17 28L30 13" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 }
 
-// ── Funções utilitárias ──────────────────────────────────────
-function uid()      { return Math.random().toString(36).slice(2,9) }
-function initials(n){ return (n||'?').split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase() }
-function nowStr()   { return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) }
-function today()    { return new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) }
-function saudacao() { const h=new Date().getHours(); return h>=5&&h<12?'Bom dia':h>=12&&h<18?'Boa tarde':'Boa noite' }
-function getParam(k){ try{ return new URLSearchParams(window.location.search).get(k) }catch{ return null } }
-
-// SEGURANÇA: hash simples para senhas — substituir por bcrypt no backend
-function hash(s){ let h=0; for(let i=0;i<s.length;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0} return h.toString(36) }
-
-// ── Verificação de limite por plano ──────────────────────────
-// BUG CORRIGIDO: limites de planos não eram aplicados de verdade
-function checkLimitePlano(profId, tipo){
-  const prof = S.professores[profId]; if(!prof) return false;
-  const plano = PLANOS[prof.plano||'beta']||PLANOS.beta;
-  if(tipo==='turma'){
-    const turmasDoProf = Object.values(S.turmas).filter(t=>t.profId===profId).length;
-    if(turmasDoProf >= plano.maxTurmas){
-      showToast(`Plano ${plano.nome}: limite de ${plano.maxTurmas} turma(s) atingido.`);
-      return false;
-    }
-  }
-  if(tipo==='escola'){
-    const escolasDoProf = [...new Set(Object.values(S.turmas).filter(t=>t.profId===profId).map(t=>t.escola).filter(Boolean))];
-    if(escolasDoProf.length >= plano.maxEscolas && !escolasDoProf.includes(S.editBuf.escola)){
-      showToast(`Plano ${plano.nome}: limite de ${plano.maxEscolas} escola(s) atingido.`);
-      return false;
-    }
-  }
-  return true;
-}
-
-function fc(f,lim){ if(f===0)return'ok'; if(f>=lim)return'bad'; if(f>=lim-2)return'warn'; return'ok' }
-
-// ── Storage (localStorage por enquanto) ─────────────────────
-// API: Substituir por fetch('/api/...') na versão com backend
-const storage = {
-  async get(k)   { try{ const v=localStorage.getItem(k); return v?{value:v}:null }catch{ return null } },
-  async set(k,v) { try{ localStorage.setItem(k,v); return{value:v} }catch{ return null } }
-};
-
-// ============================================================
-// ESTADO GLOBAL DA APLICAÇÃO
-// TODO: Migrar para Redux ou Zustand quando virar React/Next.js
-// ============================================================
-let S = {
-  screen:     'loading',
-  authRole:   null,
-  authProfId: null,
-  turmaAtiva: null,
-  tab:        'chamada',
-  modal:      null,
-  loginErr:   '',
-  suporteCarregando: false,
-  admPassHash: hash('admin123'),
-  turmas:      {},
-  professores: {},
-  escolas:     {},
-  editBuf:     {},
-  profBuffer:  {},
-};
-
-// ── Persistência ─────────────────────────────────────────────
-async function loadData() {
-  try {
-    const [r1,r2] = await Promise.all([storage.get(DATA_KEY), storage.get(ADM_KEY)]);
-    if(r1?.value){ const d=JSON.parse(r1.value); S.turmas=d.turmas||{}; S.professores=d.professores||{}; S.escolas=d.escolas||{}; }
-    if(r2?.value){ S.admPassHash=r2.value; }
-  } catch(e) { console.error('Erro ao carregar dados:', e) }
-
-  const tid  = getParam('turma');
-  // BUG CORRIGIDO: usando localStorage em vez de sessionStorage
-  const sess = localStorage.getItem('auth_cf6');
+// ── Auth ─────────────────────────────────────────────────────
+function loadData(){
+  try{
+    var r1=storage.get(DATA_KEY);
+    var r2=storage.get(ADM_KEY);
+    if(r1&&r1.value){var d=JSON.parse(r1.value);S.turmas=d.turmas||{};S.professores=d.professores||{};}
+    if(r2&&r2.value){S.admPassHash=r2.value;}
+  }catch(e){console.error('loadData error',e)}
+  var tid=getParam('turma');
+  var sess=localStorage.getItem('auth_cf6');
   if(sess){
-    const p = JSON.parse(sess);
-    S.authRole=p.role; S.authProfId=p.profId;
-    if(tid&&S.turmas[tid]) S.turmaAtiva=tid;
-    else if(p.role==='prof'){ const pr=S.professores[p.profId]; S.turmaAtiva=pr?.turmaId||null; }
-    S.screen = p.role==='adm'||p.role==='diretor' ? 'relatorio' : 'chamada';
-  } else {
-    if(tid&&S.turmas[tid]) S.turmaAtiva=tid;
-    S.screen = 'login';
+    try{
+      var p=JSON.parse(sess);
+      S.authRole=p.role;S.authProfId=p.profId;
+      if(tid&&S.turmas[tid])S.turmaAtiva=tid;
+      else if(p.role==='prof'){var pr=S.professores[p.profId];S.turmaAtiva=pr?pr.turmaId||null:null;}
+      S.screen=(p.role==='adm'||p.role==='diretor')?'relatorio':'chamada';
+    }catch(e){S.screen='login';}
+  }else{
+    if(tid&&S.turmas[tid])S.turmaAtiva=tid;
+    S.screen='login';
   }
   render();
 }
 
-async function save() {
-  await storage.set(DATA_KEY, JSON.stringify({turmas:S.turmas, professores:S.professores, escolas:S.escolas}));
-  await storage.set(ADM_KEY, S.admPassHash);
+function save(){
+  storage.set(DATA_KEY,JSON.stringify({turmas:S.turmas,professores:S.professores}));
+  storage.set(ADM_KEY,S.admPassHash);
 }
 
-// BUG CORRIGIDO: sessão some ao fechar a aba — agora usa localStorage
-function setSession(role, profId=null) {
-  S.authRole=role; S.authProfId=profId;
-  // Usando localStorage em vez de sessionStorage para persistir ao fechar a aba
-  localStorage.setItem('auth_cf6', JSON.stringify({role,profId,ts:Date.now()}));
+function setSession(role,profId){
+  S.authRole=role;S.authProfId=profId||null;
+  localStorage.setItem('auth_cf6',JSON.stringify({role:role,profId:profId||null}));
 }
-function logout() {
-  S.authRole=null; S.authProfId=null; S.turmaAtiva=null; S.screen='login';
-  localStorage.removeItem('auth_cf6');
-  render();
+function logout(){
+  S.authRole=null;S.authProfId=null;S.turmaAtiva=null;S.screen='login';
+  localStorage.removeItem('auth_cf6');render();
 }
 
-// ── Autenticação ─────────────────────────────────────────────
-function tryLogin(user, pass) {
-  S.loginErr = '';
-  if(!user||!pass){ S.loginErr='Preencha usuário e senha.'; render(); return; }
-
-  // Login ADM master
+function tryLogin(user,pass){
+  S.loginErr='';
+  if(!user||!pass){S.loginErr='Preencha usuário e senha.';render();return;}
   if(user.toLowerCase()==='adm'||user.toLowerCase()==='admin'){
-    if(hash(pass)===S.admPassHash){ setSession('adm'); S.screen='relatorio'; S.tab='relatorio'; render(); return; }
-    S.loginErr='Senha incorreta.'; render(); return;
+    if(hash(pass)===S.admPassHash){setSession('adm',null);S.screen='relatorio';S.tab='relatorio';render();return;}
+    S.loginErr='Senha incorreta.';render();return;
   }
-
-  // Login professor/diretor por e-mail
-  const prof = Object.values(S.professores).find(p=>p.email.toLowerCase()===user.toLowerCase());
-  if(!prof){          S.loginErr='Usuário não encontrado.';        render(); return; }
-  if(prof.status==='pendente'){ S.loginErr='Aguardando aprovação do ADM.'; render(); return; }
-  if(hash(pass)!==prof.passHash){ S.loginErr='Senha incorreta.';  render(); return; }
-
-  setSession(prof.role||'prof', prof.id);
-  S.turmaAtiva = prof.turmaId||null;
-  S.screen = prof.role==='diretor' ? 'relatorio' : 'chamada';
-  S.tab = 'chamada';
-  render();
+  var prof=null;
+  var profs=Object.values(S.professores);
+  for(var i=0;i<profs.length;i++){if(profs[i].email.toLowerCase()===user.toLowerCase()){prof=profs[i];break;}}
+  if(!prof){S.loginErr='Usuário não encontrado.';render();return;}
+  if(prof.status==='pendente'){S.loginErr='Aguardando aprovação do ADM.';render();return;}
+  if(hash(pass)!==prof.passHash){S.loginErr='Senha incorreta.';render();return;}
+  setSession(prof.role||'prof',prof.id);
+  S.turmaAtiva=prof.turmaId||null;
+  S.screen=(prof.role==='diretor')?'relatorio':'chamada';
+  S.tab='chamada';render();
 }
 
-function tryRegister() {
-  const{nome,email,senha,senha2,turmaId,escola,role}=S.profBuffer;
-  if(!nome?.trim()||!email?.trim()||!senha?.trim()){ S.loginErr='Preencha todos os campos.'; render(); return; }
-  if(senha!==senha2){ S.loginErr='As senhas não coincidem.'; render(); return; }
-  if(senha.length<4){ S.loginErr='Mínimo 4 caracteres.'; render(); return; }
-  if(Object.values(S.professores).find(p=>p.email.toLowerCase()===email.toLowerCase())){ S.loginErr='E-mail já cadastrado.'; render(); return; }
-
-  const id = uid();
-  // PLANO: ao criar conta, definir plano padrão 'beta'
-  S.professores[id] = {
-    id, nome:nome.trim(), email:email.trim(),
-    passHash:hash(senha),
-    celular: S.profBuffer.celular?.trim()||'',
-    turmaId: turmaId||S.turmaAtiva||null,
-    escola:  escola?.trim()||'',
-    role:    role||'prof',
-    plano:   'beta',
-    status:  'pendente',
-    criado:  nowStr(),
-  };
-  save();
-  S.loginErr=''; S.screen='login';
-  showToast('Cadastro enviado! Aguarde aprovação.'); render();
+function tryRegister(){
+  var b=S.profBuffer;
+  if(!b.nome||!b.nome.trim()||!b.email||!b.email.trim()||!b.senha||!b.senha.trim()){S.loginErr='Preencha todos os campos.';render();return;}
+  if(b.senha!==b.senha2){S.loginErr='As senhas não coincidem.';render();return;}
+  if(b.senha.length<4){S.loginErr='Mínimo 4 caracteres.';render();return;}
+  var profs=Object.values(S.professores);
+  for(var i=0;i<profs.length;i++){if(profs[i].email.toLowerCase()===b.email.toLowerCase()){S.loginErr='E-mail já cadastrado.';render();return;}}
+  var id=uid();
+  S.professores[id]={id:id,nome:b.nome.trim(),email:b.email.trim(),celular:b.celular||'',passHash:hash(b.senha),turmaId:b.turmaId||S.turmaAtiva||null,escola:b.escola||'',role:b.role||'prof',plano:'beta',status:'pendente',criado:nowStr()};
+  save();S.loginErr='';S.screen='login';
+  showToast('Cadastro enviado! Aguarde aprovação.');render();
 }
 
-// ── Demo (acesso rápido para testes) ─────────────────────────
-function entrarDemo(tipo) {
-  if(tipo==='adm'){ tryLogin('adm','admin123'); return; }
-  const EMAIL = 'professor@demo.com';
-  let prof = Object.values(S.professores).find(p=>p.email===EMAIL);
+function entrarDemo(tipo){
+  if(tipo==='adm'){tryLogin('adm','admin123');return;}
+  var EMAIL='professor@demo.com';
+  var prof=null;
+  var profs=Object.values(S.professores);
+  for(var i=0;i<profs.length;i++){if(profs[i].email===EMAIL){prof=profs[i];break;}}
   if(!prof){
-    const pid=uid(), tid=uid();
-    S.turmas[tid] = {
-      id:tid, nome:'9º ANO A', escola:'Escola Demo',
-      profId:pid, limiteFaltas:6, alunos:[
-        {id:uid(),nome:'Ana Beatriz Costa',   obs:'Muito participativa. Destaque na turma.',       faltas:2,presente:null,cor:0,historico:[]},
-        {id:uid(),nome:'Bruno Lima Santos',   obs:'Dificuldades em álgebra. Acompanhar de perto.', faltas:5,presente:null,cor:1,historico:[]},
-        {id:uid(),nome:'Carla Ferreira',      obs:'Faltou nas últimas semanas. Verificar situação.',faltas:7,presente:null,cor:2,historico:[]},
-        {id:uid(),nome:'Diego Souza',         obs:'Transferido recentemente. Adaptando bem.',       faltas:1,presente:null,cor:3,historico:[]},
-        {id:uid(),nome:'Eduarda Mendes',      obs:'TDAH diagnosticado. Sentar na frente.',          faltas:0,presente:null,cor:4,historico:[]},
-      ], history:[], criada:nowStr()
-    };
-    S.professores[pid] = {id:pid, nome:'Prof. João Silva', email:EMAIL, celular:'(11) 98765-4321', passHash:hash('demo123'), turmaId:tid, escola:'Escola Demo', role:'prof', plano:'beta', status:'ativo', criado:nowStr()};
-    prof = S.professores[pid]; save();
+    var pid=uid();var tid=uid();
+    S.turmas[tid]={id:tid,nome:'9º ANO A',escola:'Escola Demo',profId:pid,limiteFaltas:6,alunos:[
+      {id:uid(),nome:'Ana Beatriz Costa',obs:'Muito participativa.',faltas:2,presente:null,cor:0,historico:[]},
+      {id:uid(),nome:'Bruno Lima Santos',obs:'Dificuldades em álgebra.',faltas:5,presente:null,cor:1,historico:[]},
+      {id:uid(),nome:'Carla Ferreira',obs:'Faltou várias vezes.',faltas:7,presente:null,cor:2,historico:[]},
+      {id:uid(),nome:'Diego Souza',obs:'Transferido recentemente.',faltas:1,presente:null,cor:3,historico:[]},
+      {id:uid(),nome:'Eduarda Mendes',obs:'TDAH diagnosticado.',faltas:0,presente:null,cor:4,historico:[]}
+    ],history:[],criada:nowStr()};
+    S.professores[pid]={id:pid,nome:'Prof. João Silva',email:EMAIL,celular:'(11) 98765-4321',passHash:hash('demo123'),turmaId:tid,escola:'Escola Demo',role:'prof',plano:'beta',status:'ativo',criado:nowStr()};
+    save();
   }
   tryLogin(EMAIL,'demo123');
 }
 
-// ── Getters de contexto ──────────────────────────────────────
-function getProf()  { return S.professores[S.authProfId]||null }
-function getTurma() {
-  if(S.authRole==='adm') return S.turmaAtiva?S.turmas[S.turmaAtiva]:null;
-  const p=getProf(); return p?.turmaId?S.turmas[p.turmaId]:null;
+// ── Getters ──────────────────────────────────────────────────
+function getProf(){return S.professores[S.authProfId]||null}
+function getTurma(){
+  if(S.authRole==='adm')return S.turmaAtiva?S.turmas[S.turmaAtiva]:null;
+  var p=getProf();return(p&&p.turmaId)?S.turmas[p.turmaId]:null;
 }
 
-// PLANO: verifica se o professor pode usar um recurso pelo plano
-function temAcesso(recurso) {
-  const prof = getProf();
-  const plano = PLANOS[prof?.plano||'beta']||PLANOS.beta;
-  return !!plano[recurso];
-}
-
-// ── Lógica de chamada ────────────────────────────────────────
-function togglePresente(aid) {
-  const t=getTurma(); if(!t)return;
-  t.alunos = t.alunos.map(a=>{
-    if(a.id!==aid) return a;
-    const old=a.presente;
-    // Ciclo: null → presente → ausente → justificado → null
-    let np = old===null?'P' : old==='P'?'F' : old==='F'?'J' : null;
-    let nf = a.faltas;
-    // Conta falta ao marcar ausente
-    if(old==='P' && np==='F') nf++;
-    // Desconta falta ao ir de ausente para justificado (não conta)
-    if(old==='F' && np==='J') nf=Math.max(0,nf-1);
-    // Desconta falta ao limpar de ausente
-    if(old==='F' && np===null) nf=Math.max(0,nf-1);
-    return {...a, presente:np, faltas:nf};
+// ── Lógica chamada ───────────────────────────────────────────
+function togglePresente(aid){
+  var t=getTurma();if(!t)return;
+  t.alunos=t.alunos.map(function(a){
+    if(a.id!==aid)return a;
+    var old=a.presente;
+    var np=old===null?'P':old==='P'?'F':old==='F'?'J':null;
+    var nf=a.faltas;
+    if(old==='P'&&np==='F')nf++;
+    if(old==='F'&&np==='J')nf=Math.max(0,nf-1);
+    if(old==='F'&&np===null)nf=Math.max(0,nf-1);
+    return Object.assign({},a,{presente:np,faltas:nf});
   });
-  save(); render();
+  save();render();
 }
 
-function salvarChamada() {
-  const t=getTurma(); if(!t)return;
-  const presentes = t.alunos.filter(a=>a.presente===true);
-  const ausentes  = t.alunos.filter(a=>a.presente===false);
-  if(!presentes.length&&!ausentes.length){ showToast('Marque ao menos um aluno.'); return; }
-  const dataAtual = nowStr();
-  t.history.unshift({id:uid(), data:dataAtual, presentes:presentes.map(a=>a.nome), ausentes:ausentes.map(a=>a.nome), total:t.alunos.length});
-  if(t.history.length>60) t.history=t.history.slice(0,60);
-  // Registra no histórico individual de cada aluno
-  t.alunos = t.alunos.map(a=>{
-    if(a.presente===null) return a;
-    const entrada = {tipo:a.presente===true?'presente':'ausente', data:dataAtual};
-    return {...a, presente:null, historico:[entrada,...(a.historico||[])].slice(0,100)};
+function salvarChamada(){
+  var t=getTurma();if(!t)return;
+  var presentes=t.alunos.filter(function(a){return a.presente==='P'});
+  var ausentes=t.alunos.filter(function(a){return a.presente==='F'});
+  var justific=t.alunos.filter(function(a){return a.presente==='J'});
+  if(!presentes.length&&!ausentes.length&&!justific.length){showToast('Marque ao menos um aluno.');return;}
+  var dataAtual=nowStr();
+  t.history.unshift({id:uid(),data:dataAtual,presentes:presentes.map(function(a){return a.nome}),ausentes:ausentes.map(function(a){return a.nome}),justific:justific.map(function(a){return a.nome}),total:t.alunos.length});
+  if(t.history.length>60)t.history=t.history.slice(0,60);
+  t.alunos=t.alunos.map(function(a){
+    if(a.presente===null)return a;
+    var tipo=a.presente==='P'?'presente':a.presente==='F'?'ausente':'justificado';
+    var entrada={tipo:tipo,data:dataAtual};
+    var hist=[entrada].concat(a.historico||[]).slice(0,100);
+    return Object.assign({},a,{presente:null,historico:hist});
   });
-  save(); render(); showToast('Chamada salva!');
+  save();render();showToast('Chamada salva!');
 }
 
-function adicionarObservacao(aid, texto) {
-  if(!texto?.trim()) return;
-  const t=getTurma(); if(!t)return;
-  t.alunos = t.alunos.map(a=>{
-    if(a.id!==aid) return a;
-    return {...a, historico:[{tipo:'obs',data:nowStr(),texto:texto.trim()},...(a.historico||[])].slice(0,100)};
+function adicionarObservacao(aid,texto){
+  if(!texto||!texto.trim())return;
+  var t=getTurma();if(!t)return;
+  t.alunos=t.alunos.map(function(a){
+    if(a.id!==aid)return a;
+    var entrada={tipo:'obs',data:nowStr(),texto:texto.trim()};
+    var hist=[entrada].concat(a.historico||[]).slice(0,100);
+    return Object.assign({},a,{historico:hist});
   });
-  save(); render(); showToast('Observação salva!');
+  save();render();showToast('Observação salva!');
 }
 
-function salvarAluno() {
-  const{nome,obs,turmaId,faltas}=S.editBuf;
-  if(!nome?.trim()){ showToast('Digite o nome do aluno.'); return; }
-  if(S.modal?.type==='novoAluno'){
-    const tid = S.authRole==='adm'?turmaId:getTurma()?.id;
-    if(!tid){ showToast('Selecione uma turma.'); return; }
-    S.turmas[tid].alunos.push({id:uid(), nome:nome.trim(), obs:obs?.trim()||'', faltas:0, presente:null, cor:S.turmas[tid].alunos.length%5, historico:[]});
-  } else {
-    const t=getTurma(); if(!t)return;
-    t.alunos = t.alunos.map(a=>a.id===S.modal.aid?{...a,nome:nome.trim(),obs:obs?.trim()||'',faltas:parseInt(faltas)||a.faltas}:a);
+function salvarAluno(){
+  var b=S.editBuf;
+  if(!b.nome||!b.nome.trim()){showToast('Digite o nome.');return;}
+  if(S.modal&&S.modal.type==='novoAluno'){
+    var tid=S.authRole==='adm'?b.turmaId:(getTurma()?getTurma().id:null);
+    if(!tid){showToast('Selecione uma turma.');return;}
+    S.turmas[tid].alunos.push({id:uid(),nome:b.nome.trim(),obs:b.obs?b.obs.trim():'',faltas:0,presente:null,cor:S.turmas[tid].alunos.length%5,historico:[]});
+  }else{
+    var t=getTurma();if(!t)return;
+    t.alunos=t.alunos.map(function(a){
+      if(a.id!==S.modal.aid)return a;
+      return Object.assign({},a,{nome:b.nome.trim(),obs:b.obs?b.obs.trim():'',faltas:parseInt(b.faltas)||a.faltas});
+    });
   }
-  save(); closeModal(); showToast('Aluno salvo!');
+  save();closeModal();showToast('Salvo!');
 }
 
-function removerAluno() {
-  if(!confirm('Remover este aluno permanentemente?')) return;
-  const t=getTurma(); if(!t)return;
-  t.alunos = t.alunos.filter(a=>a.id!==S.modal.aid);
-  save(); closeModal();
+function removerAluno(){
+  if(!confirm('Remover este aluno?'))return;
+  var t=getTurma();if(!t)return;
+  t.alunos=t.alunos.filter(function(a){return a.id!==S.modal.aid});
+  save();closeModal();
 }
 
-// ── Lógica de turmas ─────────────────────────────────────────
-function criarTurma() {
-  const{nome,escola,profId,lim}=S.editBuf;
-  if(!nome?.trim()){ showToast('Digite o nome da turma.'); return; }
-  // PLANO: verifica se o professor pode criar mais turmas
-  const pidDono = profId||(S.authRole==='prof'?S.authProfId:null);
-  if(pidDono && !checkLimitePlano(pidDono,'turma')) return;
-  const id=uid();
-  S.turmas[id] = {id, nome:nome.trim().toUpperCase(), escola:escola?.trim()||'', profId:profId||null, limiteFaltas:parseInt(lim)||6, alunos:[], history:[], criada:nowStr()};
-  if(profId&&S.professores[profId]){ S.professores[profId].turmaId=id; S.professores[profId].status='ativo'; }
-  save(); closeModal(); showToast('Turma criada!');
+function criarTurma(){
+  var b=S.editBuf;
+  if(!b.nome||!b.nome.trim()){showToast('Digite o nome.');return;}
+  var id=uid();
+  S.turmas[id]={id:id,nome:b.nome.trim().toUpperCase(),escola:b.escola?b.escola.trim():'',profId:b.profId||null,limiteFaltas:parseInt(b.lim)||6,alunos:[],history:[],criada:nowStr()};
+  if(b.profId&&S.professores[b.profId]){S.professores[b.profId].turmaId=id;S.professores[b.profId].status='ativo';}
+  save();closeModal();showToast('Turma criada!');
 }
 
-function salvarTurma(tid) {
-  // Salva alterações feitas diretamente nos campos do modal de edição
-  save(); showToast('Turma atualizada!');
+function aprovarProf(pid){
+  var p=S.professores[pid];p.status='ativo';
+  if(!p.turmaId){var tid=uid();S.turmas[tid]={id:tid,nome:'TURMA DE '+p.nome.split(' ')[0].toUpperCase(),escola:p.escola||'',profId:pid,limiteFaltas:6,alunos:[],history:[],criada:nowStr()};p.turmaId=tid;}
+  save();render();showToast('Aprovado!');
 }
-
-// ── Lógica de professores ────────────────────────────────────
-function aprovarProf(pid) {
-  const p=S.professores[pid]; p.status='ativo';
-  if(!p.turmaId){
-    const tid=uid();
-    S.turmas[tid]={id:tid,nome:'TURMA DE '+p.nome.split(' ')[0].toUpperCase(),escola:p.escola||'',profId:pid,limiteFaltas:6,alunos:[],history:[],criada:nowStr()};
-    p.turmaId=tid;
-  }
-  save(); render(); showToast('Professor aprovado!');
-}
-function rejeitarProf(pid){ if(confirm('Rejeitar e remover este cadastro?')){ delete S.professores[pid]; save(); render(); } }
+function rejeitarProf(pid){if(confirm('Rejeitar?')){delete S.professores[pid];save();render();}}
 function resetarSenha(pid){
-  const p=S.professores[pid];
-  const nova=Math.random().toString(36).slice(2,8);
-  p.passHash=hash(nova); save();
-  S.modal={type:'senhaReset',nome:p.nome,senha:nova}; render();
+  var p=S.professores[pid];
+  var nova=Math.random().toString(36).slice(2,8);
+  p.passHash=hash(nova);save();
+  S.modal={type:'senhaReset',nome:p.nome,senha:nova};render();
 }
 function trocarSenhaAdm(){
-  const p1=document.getElementById('np1')?.value;
-  const p2=document.getElementById('np2')?.value;
-  if(!p1||p1.length<4){ showToast('Senha muito curta.'); return; }
-  if(p1!==p2){ showToast('Senhas não coincidem.'); return; }
-  S.admPassHash=hash(p1); save(); showToast('Senha ADM alterada!');
+  var p1=document.getElementById('np1')?document.getElementById('np1').value:'';
+  var p2=document.getElementById('np2')?document.getElementById('np2').value:'';
+  if(!p1||p1.length<4){showToast('Senha muito curta.');return;}
+  if(p1!==p2){showToast('Senhas não coincidem.');return;}
+  S.admPassHash=hash(p1);save();showToast('Senha alterada!');
 }
 function atribuirProfTurma(turmaId,profId){
-  if(turmaId&&S.turmas[turmaId]) S.turmas[turmaId].profId=profId||null;
-  if(profId&&S.professores[profId]) S.professores[profId].turmaId=turmaId||null;
+  if(turmaId&&S.turmas[turmaId])S.turmas[turmaId].profId=profId||null;
+  if(profId&&S.professores[profId])S.professores[profId].turmaId=turmaId||null;
   save();
 }
-function admCriarProf(){
-  const{nome,email,senha,celular,escola,role}=S.editBuf;
-  if(!nome?.trim()||!email?.trim()||!senha?.trim()){ showToast('Preencha todos os campos.'); return; }
-  const id=uid();
-  S.professores[id]={id,nome:nome.trim(),email:email.trim(),celular:celular?.trim()||'',passHash:hash(senha),turmaId:null,escola:escola?.trim()||'',role:role||'prof',plano:'beta',status:'ativo',criado:nowStr()};
-  save(); closeModal(); showToast('Professor criado!');
-}
-
-// ── Link de turma ────────────────────────────────────────────
-function getLinkTurma(id){ return window.location.href.split('?')[0]+'?turma='+id }
-function copyLink(id){ try{ navigator.clipboard.writeText(getLinkTurma(id)); showToast('Link copiado!'); }catch(e){} }
-
-// ── Modal ────────────────────────────────────────────────────
-function closeModal(){ S.modal=null; render(); }
+function getLinkTurma(id){return window.location.href.split('?')[0]+'?turma='+id}
+function copyLink(id){try{navigator.clipboard.writeText(getLinkTurma(id));showToast('Link copiado!');}catch(e){showToast('Copie: '+getLinkTurma(id));}}
+function closeModal(){S.modal=null;render();}
 function openEditAluno(aid){
-  const a=getTurma()?.alunos.find(x=>x.id===aid); if(!a)return;
-  S.modal={type:'perfilAluno',aid}; render();
+  var a=getTurma()?getTurma().alunos.find(function(x){return x.id===aid}):null;
+  if(!a)return;
+  S.modal={type:'perfilAluno',aid:aid};render();
+}
+function admCriarProf(){
+  var b=S.editBuf;
+  if(!b.nome||!b.nome.trim()||!b.email||!b.email.trim()||!b.senha||!b.senha.trim()){showToast('Preencha todos os campos.');return;}
+  var id=uid();
+  S.professores[id]={id:id,nome:b.nome.trim(),email:b.email.trim(),celular:b.celular||'',passHash:hash(b.senha),turmaId:null,escola:b.escola||'',role:b.role||'prof',plano:'beta',status:'ativo',criado:nowStr()};
+  save();closeModal();showToast('Professor criado!');
 }
 
-// ── Compartilhamento via WhatsApp ────────────────────────────
+// ── WhatsApp ─────────────────────────────────────────────────
 function compartilharWpp(aid){
-  const t=getTurma(); if(!t)return;
-  const a=t.alunos.find(x=>x.id===aid); if(!a)return;
-  const prof=getProf()||{nome:'Escola'};
-  const lim=t.limiteFaltas||6;
-  const hist=a.historico||[];
-  const total=hist.filter(h=>h.tipo==='presente'||h.tipo==='ausente').length;
-  const pres=hist.filter(h=>h.tipo==='presente').length;
-  const freq=total>0?Math.round(pres/total*100):100;
-  const obsRec=hist.filter(h=>h.tipo==='obs').slice(0,3);
-  const escola=t.escola?` — ${t.escola}`:'';
-
-  let msg=`${saudacao()}! 🎓\n\n`;
-  msg+=`Espero que esteja bem.\n\n`;
-  msg+=`Aqui é *${prof.nome}*${escola}, professor(a) da turma *${t.nome}*.\n\n`;
-  msg+=`Gostaria de transmitir algumas informações sobre *${a.nome}*:\n\n`;
-  msg+=`📊 *Situação atual:*\n`;
-  msg+=`• Faltas registradas: *${a.faltas}*${a.faltas>=lim?' ⚠️ (atingiu o limite)':''}\n`;
-  msg+=`• Frequência: *${freq}%*\n`;
-  msg+=`• Turma: ${t.nome}${escola}\n\n`;
-  if(obsRec.length>0){ msg+=`📝 *Observações recentes:*\n`; obsRec.forEach(o=>{ msg+=`• ${o.texto} _(${o.data})_\n`; }); msg+='\n'; }
-  if(a.obs){ msg+=`📌 *Perfil do aluno:* ${a.obs}\n\n`; }
-  msg+=`Qualquer dúvida estou à disposição. 😊\n\n`;
-  msg+=`_${prof.nome} — ${t.nome}${escola}_`;
-
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  var t=getTurma();if(!t)return;
+  var a=t.alunos.find(function(x){return x.id===aid});if(!a)return;
+  var prof=getProf()||{nome:'Escola'};
+  var lim=t.limiteFaltas||6;
+  var hist=a.historico||[];
+  var total=hist.filter(function(h){return h.tipo==='presente'||h.tipo==='ausente'}).length;
+  var pres=hist.filter(function(h){return h.tipo==='presente'}).length;
+  var freq=total>0?Math.round(pres/total*100):100;
+  var obsRec=hist.filter(function(h){return h.tipo==='obs'}).slice(0,3);
+  var escola=t.escola?' — '+t.escola:'';
+  var msg=saudacao()+'! 🎓\n\nEspero que esteja bem.\n\nAqui é *'+prof.nome+'*'+escola+', professor(a) da turma *'+t.nome+'*.\n\nGostaria de transmitir algumas informações sobre *'+a.nome+'*:\n\n📊 *Situação atual:*\n• Faltas: *'+a.faltas+'*'+(a.faltas>=lim?' ⚠️':'')+'\n• Frequência: *'+freq+'%*\n\n';
+  if(obsRec.length>0){msg+='📝 *Observações recentes:*\n';obsRec.forEach(function(o){msg+='• '+o.texto+'\n';});msg+='\n';}
+  if(a.obs)msg+='📌 *Perfil:* '+a.obs+'\n\n';
+  msg+='Qualquer dúvida estou à disposição. 😊\n\n_'+prof.nome+' — '+t.nome+escola+'_';
+  try{
+    var url='https://wa.me/?text='+encodeURIComponent(msg);
+    var w=window.open(url,'_blank');
+    if(!w)navigator.clipboard.writeText(msg).then(function(){showToast('Texto copiado! Cole no WhatsApp.');});
+  }catch(e){navigator.clipboard.writeText(msg).then(function(){showToast('Texto copiado! Cole no WhatsApp.');});}
 }
 
-// ── Exportação em PDF ────────────────────────────────────────
-function gerarPDF(aid){
-  const t=getTurma(); if(!t)return;
-  const a=t.alunos.find(x=>x.id===aid); if(!a)return;
-  const prof=getProf()||{nome:'Escola'};
-  const lim=t.limiteFaltas||6;
-  const hist=a.historico||[];
-  const total=hist.filter(h=>h.tipo==='presente'||h.tipo==='ausente').length;
-  const pres=hist.filter(h=>h.tipo==='presente').length;
-  const freq=total>0?Math.round(pres/total*100):100;
-  const escola=t.escola||'';
+// ── Suporte IA ───────────────────────────────────────────────
+function enviarMensagemSuporte(texto){
+  if(!texto||!texto.trim())return;
+  suporteHistorico.push({role:'user',content:texto.trim()});
+  S.suporteCarregando=true;render();
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:SUPORTE_SYSTEM,messages:suporteHistorico})
+  }).then(function(r){return r.json()}).then(function(data){
+    var resp=(data.content&&data.content[0]&&data.content[0].text)||'Desculpe, não consegui processar. Tente novamente!';
+    suporteHistorico.push({role:'assistant',content:resp});
+    S.suporteCarregando=false;render();
+    setTimeout(function(){var c=document.getElementById('sc');if(c)c.scrollTop=c.scrollHeight;},50);
+  }).catch(function(){
+    suporteHistorico.push({role:'assistant',content:'Opa, tive um probleminha técnico 😅 Tente novamente ou entre em contato pelo e-mail '+ADM_EMAIL});
+    S.suporteCarregando=false;render();
+  });
+}
 
+function acionarADM(){
+  var prof=getProf();
+  var nome=prof?prof.nome:'Usuário';
+  var email=prof?prof.email:'não informado';
+  var escola=prof?prof.escola:'não informada';
+  var plano=PLANOS[prof?(prof.plano||'beta'):'beta'].nome;
+  var conversa='';
+  suporteHistorico.forEach(function(m){
+    conversa+='\n'+(m.role==='user'?'👤 '+nome:'🤖 Fácil')+': '+m.content+'\n';
+  });
+  var msg='*SUPORTE CHAMADA FÁCIL* 🆘\n\n*Usuário:* '+nome+'\n*E-mail:* '+email+'\n*Escola:* '+escola+'\n*Plano:* '+plano+'\n\n*Conversa com IA:*\n'+conversa+'\n_Enviado automaticamente pelo app_';
   try{
-    const{jsPDF}=window.jspdf;
-    const doc=new jsPDF({unit:'mm',format:'a4'});
-    const W=210; let y=20;
+    var url='https://wa.me/'+ADM_WHATSAPP+'?text='+encodeURIComponent(msg);
+    var w=window.open(url,'_blank');
+    if(!w)navigator.clipboard.writeText(msg).then(function(){showToast('Texto copiado! Cole no WhatsApp do ADM.');});
+    else showToast('Abrindo WhatsApp...');
+  }catch(e){navigator.clipboard.writeText(msg).then(function(){showToast('Texto copiado!');});}
+}
 
-    // Cabeçalho verde
-    doc.setFillColor(15,110,86); doc.rect(0,0,W,36,'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(20); doc.setFont('helvetica','bold');
-    doc.text('CHAMADA FÁCIL',W/2,13,{align:'center'});
-    doc.setFontSize(10); doc.setFont('helvetica','normal');
-    doc.text('Relatório Individual do Aluno',W/2,21,{align:'center'});
-    doc.text(`${t.nome}${escola?' — '+escola:''} · Gerado em ${nowStr()}`,W/2,28,{align:'center'});
-    y=48;
-
-    // Nome e professor
-    doc.setTextColor(17,17,17);
-    doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.text(a.nome,14,y); y+=8;
-    doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
-    doc.text(`Professor(a): ${prof.nome}   |   Turma: ${t.nome}${escola?' — '+escola:''}`,14,y); y+=10;
-
-    // Blocos de estatísticas
+// ── PDF ──────────────────────────────────────────────────────
+function gerarPDF(aid){
+  var t=getTurma();if(!t)return;
+  var a=t.alunos.find(function(x){return x.id===aid});if(!a)return;
+  var prof=getProf()||{nome:'Escola'};
+  var lim=t.limiteFaltas||6;
+  var hist=a.historico||[];
+  var total=hist.filter(function(h){return h.tipo==='presente'||h.tipo==='ausente'}).length;
+  var pres=hist.filter(function(h){return h.tipo==='presente'}).length;
+  var freq=total>0?Math.round(pres/total*100):100;
+  var sN=sanitizePDF(a.nome),sP=sanitizePDF(prof.nome),sT=sanitizePDF(t.nome),sE=sanitizePDF(t.escola||''),sO=sanitizePDF(a.obs||'');
+  try{
+    var jsPDF=window.jspdf.jsPDF;
+    var doc=new jsPDF({unit:'mm',format:'a4'});
+    var W=210;var y=20;
+    doc.setFillColor(15,110,86);doc.rect(0,0,W,36,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont('helvetica','bold');
+    doc.text('CHAMADA FACIL',W/2,13,{align:'center'});
+    doc.setFontSize(10);doc.setFont('helvetica','normal');
+    doc.text('Relatorio Individual - '+sT+(sE?' - '+sE:''),W/2,22,{align:'center'});
+    doc.text('Gerado em '+sanitizePDF(nowStr()),W/2,29,{align:'center'});y=46;
+    doc.setTextColor(17,17,17);doc.setFontSize(15);doc.setFont('helvetica','bold');doc.text(sN,14,y);y+=8;
+    doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);
+    doc.text('Professor: '+sP+' | Turma: '+sT+(sE?' - '+sE:''),14,y);y+=10;
     doc.setFillColor(245,245,245);
-    doc.roundedRect(14,y,55,22,3,3,'F');
-    doc.roundedRect(75,y,55,22,3,3,'F');
-    doc.roundedRect(136,y,60,22,3,3,'F');
-    doc.setTextColor(17,17,17); doc.setFontSize(16); doc.setFont('helvetica','bold');
-    doc.text(String(a.faltas),41,y+10,{align:'center'});
-    doc.text(`${freq}%`,102,y+10,{align:'center'});
-    doc.text(String(total),166,y+10,{align:'center'});
-    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
-    doc.text('FALTAS',41,y+17,{align:'center'});
-    doc.text('FREQUÊNCIA',102,y+17,{align:'center'});
-    doc.text('AULAS REGISTRADAS',166,y+17,{align:'center'});
-    y+=30;
-
-    // Alerta de limite
-    if(a.faltas>=lim){
-      doc.setFillColor(255,237,213); doc.roundedRect(14,y,W-28,10,2,2,'F');
-      doc.setTextColor(180,80,0); doc.setFontSize(10); doc.setFont('helvetica','bold');
-      doc.text(`ATENÇÃO: Aluno atingiu o limite de ${lim} faltas.`,W/2,y+7,{align:'center'});
-      doc.setTextColor(17,17,17); y+=16;
-    }
-
-    // Perfil do aluno
-    if(a.obs){
-      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(17,17,17);
-      doc.text('PERFIL DO ALUNO',14,y); y+=6;
-      doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
-      const lines=doc.splitTextToSize(a.obs,W-28);
-      doc.text(lines,14,y); y+=lines.length*5+6;
-    }
-
-    // Histórico
-    if(hist.length>0){
-      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(17,17,17);
-      doc.text('HISTÓRICO',14,y); y+=7;
-      hist.slice(0,30).forEach(h=>{
-        if(y>270){ doc.addPage(); y=20; }
-        const label=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':'Observação';
-        const cor=h.tipo==='presente'?[10,122,78]:h.tipo==='ausente'?[176,48,48]:[100,80,0];
-        doc.setFillColor(...(h.tipo==='presente'?[220,252,231]:h.tipo==='ausente'?[255,228,230]:[254,249,195]));
-        doc.roundedRect(14,y-4,W-28,h.tipo==='obs'?12:8,2,2,'F');
-        doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...cor);
-        doc.text(label,18,y+1);
-        doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
-        doc.text(h.data,W-14,y+1,{align:'right'});
-        if(h.tipo==='obs'&&h.texto){
-          doc.setTextColor(60,60,60);
-          const tl=doc.splitTextToSize(h.texto,W-60);
-          doc.text(tl,18,y+6); y+=tl.length*4+2;
-        }
+    doc.roundedRect(14,y,55,22,3,3,'F');doc.roundedRect(75,y,55,22,3,3,'F');doc.roundedRect(136,y,60,22,3,3,'F');
+    doc.setTextColor(17,17,17);doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.text(String(a.faltas),41,y+10,{align:'center'});doc.text(freq+'%',102,y+10,{align:'center'});doc.text(String(total),166,y+10,{align:'center'});
+    doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);
+    doc.text('FALTAS',41,y+17,{align:'center'});doc.text('FREQUENCIA',102,y+17,{align:'center'});doc.text('AULAS',166,y+17,{align:'center'});y+=30;
+    if(a.faltas>=lim){doc.setFillColor(255,237,213);doc.roundedRect(14,y,W-28,10,2,2,'F');doc.setTextColor(180,80,0);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text('ATENCAO: Limite de '+lim+' faltas atingido.',W/2,y+7,{align:'center'});y+=16;}
+    if(sO){doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(17,17,17);doc.text('PERFIL DO ALUNO',14,y);y+=6;doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);var lines=doc.splitTextToSize(sO,W-28);doc.text(lines,14,y);y+=lines.length*5+6;}
+    if(hist.length>0){doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(17,17,17);doc.text('HISTORICO',14,y);y+=7;
+      hist.slice(0,25).forEach(function(h){
+        if(y>270){doc.addPage();y=20;}
+        var label=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':h.tipo==='justificado'?'Justificado':'Observacao';
+        var cor=h.tipo==='presente'?[10,122,78]:h.tipo==='ausente'?[176,48,48]:h.tipo==='justificado'?[30,100,200]:[100,80,0];
+        var bg=h.tipo==='presente'?[220,252,231]:h.tipo==='ausente'?[255,228,230]:h.tipo==='justificado'?[219,234,254]:[254,249,195];
+        doc.setFillColor(bg[0],bg[1],bg[2]);doc.roundedRect(14,y-4,W-28,h.tipo==='obs'?12:8,2,2,'F');
+        doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(cor[0],cor[1],cor[2]);doc.text(label,18,y+1);
+        doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.text(sanitizePDF(h.data||''),W-14,y+1,{align:'right'});
+        if(h.tipo==='obs'&&h.texto){var tl=doc.splitTextToSize(sanitizePDF(h.texto),W-60);doc.text(tl,18,y+6);y+=tl.length*4+2;}
         y+=10;
       });
     }
-
-    // Rodapé
-    doc.setFontSize(8); doc.setTextColor(150,150,150);
-    doc.text(`Chamada Fácil · ${nowStr()} · ${prof.nome}`,W/2,290,{align:'center'});
-    doc.save(`relatorio_${a.nome.replace(/\s+/g,'_')}.pdf`);
-    showToast('PDF gerado com sucesso!');
-  } catch(e){ showToast('Erro ao gerar PDF.'); console.error(e); }
+    doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Chamada Facil - '+sanitizePDF(nowStr())+' - '+sP,W/2,290,{align:'center'});
+    doc.save('relatorio_'+sN.replace(/\s+/g,'_')+'.pdf');showToast('PDF gerado!');
+  }catch(e){showToast('Erro ao gerar PDF.');console.error(e);}
 }
 
-// ============================================================
-// SUPORTE IA — powered by Claude API
-// TODO: A chave da API precisa ficar no backend em produção
-// Por enquanto usa a API diretamente (apenas para beta/demo)
-// ============================================================
-const SUPORTE_SYSTEM = `Você é o assistente de suporte do Chamada Fácil, um app de controle de presença escolar para professores e diretores.
-
-Seu nome é "Fácil" e você fala de forma próxima, acolhedora e informal — como um colega que conhece bem o sistema.
-
-SOBRE O APP:
-- Chamada Fácil é um app para professores fazerem chamada digital, registrar observações sobre alunos e gerar relatórios e PDFs
-- Tem planos: Beta (grátis), Básico (R$29,90/mês), Plus (R$59,90/mês), Diretor (R$89,90/mês)
-- O professor faz login com e-mail e senha
-- Na chamada: 1 toque = presente (verde), 2 toques = ausente (vermelho), 3 toques = limpar
-- Dados ficam salvos no dispositivo (versão beta) — banco de dados real vem na v1.0
-- PDF pode ser exportado pelo perfil de cada aluno
-- WhatsApp: abre mensagem automática com situação do aluno
-- Alerta de faltas configurável (padrão: 6 faltas)
-- Para resetar senha: o ADM precisa fazer manualmente no painel
-
-POLÍTICA DE REEMBOLSO:
-- Cancelamento a qualquer momento, sem multa
-- Reembolso em até 7 dias após a cobrança
-- Após 7 dias: acesso até o fim do período pago
-- Para pedir reembolso: enviar e-mail para suporte@chamadafacil.com.br
-
-PROBLEMAS TÉCNICOS COMUNS:
-- "Perdi meus dados": na versão beta os dados ficam no dispositivo — se limpou o cache, os dados foram perdidos. Pedimos desculpas, isso será resolvido na v1.0 com banco de dados
-- "Não consigo logar": verificar se o e-mail está correto; se esqueceu a senha, pedir ao ADM para resetar
-- "PDF não funciona no iPhone": tentar pelo Chrome no celular em vez do Safari
-- "WhatsApp não abre": o sistema copia o texto automaticamente — basta colar no WhatsApp
-
-QUANDO NÃO SOUBER RESPONDER:
-- Diga que vai encaminhar para a equipe humana
-- Peça o e-mail e o problema resumido
-- Informe que o prazo de resposta é de até 24h úteis
-
-Responda sempre em português brasileiro, de forma curta e direta. Máximo 3 parágrafos por resposta. Use emojis com moderação.`;
-
-let suporteHistorico = [];
-
-async function enviarMensagemSuporte(texto) {
-  if(!texto?.trim()) return;
-  const prof = getProf();
-
-  // Adiciona mensagem do usuário
-  suporteHistorico.push({role:'user', content:texto.trim()});
-  S.suporteCarregando = true;
-  render();
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: SUPORTE_SYSTEM,
-        messages: suporteHistorico
-      })
-    });
-    const data = await resp.json();
-    const resposta = data.content?.[0]?.text || 'Desculpe, não consegui processar sua mensagem. Tente novamente!';
-    suporteHistorico.push({role:'assistant', content:resposta});
-  } catch(e) {
-    suporteHistorico.push({role:'assistant', content:'Opa, tive um probleminha técnico aqui 😅 Tente novamente em instantes. Se persistir, manda um e-mail para suporte@chamadafacil.com.br'});
-  }
-
-  S.suporteCarregando = false;
-  render();
-  // Scroll para o final do chat
-  setTimeout(()=>{
-    const chat = document.getElementById('suporte-chat');
-    if(chat) chat.scrollTop = chat.scrollHeight;
-  }, 50);
-}
 function showToast(msg){
-  let t=document.getElementById('_toast');
-  if(!t){
-    t=document.createElement('div'); t.id='_toast';
-    Object.assign(t.style,{position:'fixed',bottom:'20px',left:'50%',transform:'translateX(-50%)',background:'#1D9E75',color:'#fff',padding:'9px 18px',borderRadius:'8px',fontSize:'13px',fontWeight:'700',zIndex:'999',transition:'opacity .3s',pointerEvents:'none',whiteSpace:'nowrap'});
-    document.body.appendChild(t);
-  }
-  t.textContent=msg; t.style.opacity='1';
-  clearTimeout(t._t); t._t=setTimeout(()=>t.style.opacity='0',2200);
+  var t=document.getElementById('_toast');
+  if(!t){t=document.createElement('div');t.id='_toast';t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;z-index:999;transition:opacity .3s;pointer-events:none;white-space:nowrap';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0'},2200);
 }
 
-// ============================================================
-// LOGO SVG — Check verde minimalista
-// TODO: Substituir por arquivo .svg ou .png na versão final
-// ============================================================
-function logoSVG(size=40){
-  return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="40" height="40" rx="10" fill="#1D9E75"/>
-    <path d="M10 21L17 28L30 13" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
-}
-
-// ============================================================
-// RENDER PRINCIPAL
-// ============================================================
+// ══════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════
 function render(){
-  const root=document.getElementById('root');
-  if(S.screen==='loading'){ root.innerHTML='<div class="empty-state">Carregando...</div>'; return; }
-  let html='';
+  var root=document.getElementById('root');
+  if(!root)return;
+  if(S.screen==='loading'){root.innerHTML='<div class="empty-state">Carregando...</div>';return;}
+  var html='';
 
-  // ── TELA DE LOGIN ──────────────────────────────────────────
+  // LOGIN
   if(S.screen==='login'){
-    html=`<div style="max-width:400px;margin:0 auto">
-      <!-- Capa escuro premium -->
-      <div style="background:#1a1a2e;border-radius:20px;padding:40px 24px 32px;margin-bottom:12px;text-align:center">
-
-        <!-- Logo centralizada -->
-        <div style="display:flex;justify-content:center;margin-bottom:16px">
-          ${logoSVG(52)}
-        </div>
-
-        <!-- Título centralizado -->
-        <div style="font-size:30px;font-weight:700;color:#fff;letter-spacing:.02em;margin-bottom:10px">
-          CHAMADA FÁCIL
-        </div>
-
-        <!-- Descrição centralizada -->
-        <div style="font-size:13px;color:#9ca3af;line-height:1.6;margin-bottom:28px;max-width:280px;margin-left:auto;margin-right:auto">
-          Plataforma de controle de presença e análises rápidas
-        </div>
-
-        <!-- 4 cards de funcionalidade centralizados -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center">
-          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div style="font-size:22px">📋</div>
-            <div style="font-size:12px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Chamada Digital</div>
-            <div style="font-size:10px;color:#6b7280">Marque com 1 toque</div>
-          </div>
-          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div style="font-size:22px">📊</div>
-            <div style="font-size:12px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Relatórios</div>
-            <div style="font-size:10px;color:#6b7280">Visão do diretor</div>
-          </div>
-          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div style="font-size:22px">🔔</div>
-            <div style="font-size:12px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Alertas</div>
-            <div style="font-size:10px;color:#6b7280">Faltas automáticas</div>
-          </div>
-          <div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div style="font-size:22px">🔐</div>
-            <div style="font-size:12px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Seguro</div>
-            <div style="font-size:10px;color:#6b7280">Senhas protegidas</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Formulário de login -->
-      <div class="card">
-        <div class="fl"><label>E-mail (ou "adm")</label><input class="fi" id="lu" type="text" placeholder="professor@escola.com" oninput="S._lu=this.value" onkeydown="if(event.key==='Enter')tryLogin(S._lu||'',S._lp||'')"></div>
-        <div class="fl"><label>Senha</label><input class="fi" type="password" placeholder="••••••" oninput="S._lp=this.value" onkeydown="if(event.key==='Enter')tryLogin(S._lu||'',S._lp||'')"></div>
-        ${S.loginErr?`<div class="err">⚠ ${S.loginErr}</div>`:''}
-        <button class="btn-primary" onclick="tryLogin(S._lu||'',S._lp||'')">Entrar no Sistema</button>
-        <button class="btn-secondary" onclick="S.screen='register';S.loginErr='';S.profBuffer={};render()">Sou Professor — Criar Minha Conta</button>
-        <div class="beta-box">
-          <div class="beta-title">🧪 Acesso de Teste (Beta)</div>
-          <button class="beta-btn" onclick="entrarDemo('adm')">
-            <span style="font-size:18px">👑</span>
-            <div style="text-align:center"><div style="font-weight:700">Diretor / ADM</div><div class="beta-hint">adm / admin123</div></div>
-          </button>
-          <button class="beta-btn" onclick="entrarDemo('prof')">
-            <span style="font-size:18px">👨‍🏫</span>
-            <div style="text-align:center"><div style="font-weight:700">Professor Demo</div><div class="beta-hint">turma com 5 alunos</div></div>
-          </button>
-        </div>
-      </div>
-    </div>`;
+    html='<div style="max-width:400px;margin:0 auto">'
+      +'<div style="background:#1a1a2e;border-radius:20px;padding:40px 24px 32px;margin-bottom:12px;text-align:center">'
+      +'<div style="display:flex;justify-content:center;margin-bottom:16px">'+logoSVG(52)+'</div>'
+      +'<div style="font-size:28px;font-weight:700;color:#fff;letter-spacing:.02em;margin-bottom:10px">CHAMADA FÁCIL</div>'
+      +'<div style="font-size:13px;color:#9ca3af;line-height:1.6;margin-bottom:28px">Plataforma de controle de presença e análises rápidas</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center">'
+      +'<div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px"><div style="font-size:22px;margin-bottom:5px">📋</div><div style="font-size:11px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Chamada Digital</div><div style="font-size:10px;color:#6b7280;margin-top:3px">Marque com 1 toque</div></div>'
+      +'<div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px"><div style="font-size:22px;margin-bottom:5px">📊</div><div style="font-size:11px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Relatórios</div><div style="font-size:10px;color:#6b7280;margin-top:3px">Visão do diretor</div></div>'
+      +'<div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px"><div style="font-size:22px;margin-bottom:5px">🔔</div><div style="font-size:11px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Alertas</div><div style="font-size:10px;color:#6b7280;margin-top:3px">Faltas automáticas</div></div>'
+      +'<div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px"><div style="font-size:22px;margin-bottom:5px">🔐</div><div style="font-size:11px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Seguro</div><div style="font-size:10px;color:#6b7280;margin-top:3px">Senhas protegidas</div></div>'
+      +'</div></div>'
+      +'<div class="card">'
+      +'<div class="fl"><label>E-mail (ou "adm")</label><input class="fi" id="lu" type="text" placeholder="professor@escola.com" oninput="S._lu=this.value" onkeydown="if(event.key===\'Enter\')tryLogin(S._lu||\'',S._lp||\'')"></div>'
+      +'<div class="fl"><label>Senha</label><input class="fi" type="password" placeholder="••••••" oninput="S._lp=this.value" onkeydown="if(event.key===\'Enter\')tryLogin(S._lu||\'',S._lp||\'')"></div>'
+      +(S.loginErr?'<div class="err">⚠ '+S.loginErr+'</div>':'')
+      +'<button class="btn-primary" onclick="tryLogin(S._lu||\'',S._lp||\'')">Entrar no Sistema</button>'
+      +'<button class="btn-secondary" onclick="S.screen=\'register\';S.loginErr=\'\';S.profBuffer={};render()">Sou Professor — Criar Minha Conta</button>'
+      +'<div class="beta-box"><div class="beta-title">🧪 Acesso de Teste (Beta)</div>'
+      +'<button class="beta-btn" onclick="entrarDemo(\'adm\')"><span style="font-size:18px">👑</span><div><div style="font-weight:700">Diretor / ADM</div><div class="beta-hint">adm / admin123</div></div></button>'
+      +'<button class="beta-btn" onclick="entrarDemo(\'prof\')"><span style="font-size:18px">👨‍🏫</span><div><div style="font-weight:700">Professor Demo</div><div class="beta-hint">turma com 5 alunos</div></div></button>'
+      +'</div></div></div>';
   }
 
-  // ── TELA DE CADASTRO ───────────────────────────────────────
+  // CADASTRO
   else if(S.screen==='register'){
-    const turmas=Object.values(S.turmas);
-    html=`<div style="max-width:380px;margin:24px auto 0"><div class="card">
-      <div style="text-align:center;margin-bottom:18px">${logoSVG(36)}<div style="font-size:15px;font-weight:700;margin-top:8px;text-transform:uppercase;letter-spacing:.04em">Cadastro de Professor</div></div>
-      <div class="fl"><label>Nome Completo *</label><input class="fi" placeholder="Seu nome" oninput="S.profBuffer.nome=this.value"></div>
-      <div class="fl"><label>E-mail *</label><input class="fi" type="email" placeholder="professor@escola.com" oninput="S.profBuffer.email=this.value"><div style="font-size:11px;color:#888;margin-top:3px">Usado para nota fiscal, atualizações e recuperação de senha</div></div>
-      <div class="fl"><label>Celular <span style="font-size:10px;color:#aaa;font-weight:400">(opcional)</span></label><input class="fi" type="tel" placeholder="(11) 99999-9999" oninput="S.profBuffer.celular=this.value" maxlength="15"><div style="font-size:11px;color:#888;margin-top:3px">Para contato direto e alertas via WhatsApp</div></div>
-      <div class="fl"><label>Nome da Escola</label><input class="fi" placeholder="Ex: E.E. Prof. João Alves" oninput="S.profBuffer.escola=this.value"></div>
-      <div class="fl"><label>Turma / Ano</label><select class="fi" onchange="S.profBuffer.turmaId=this.value"><option value="">Aguardar ADM atribuir</option>${turmas.map(t=>`<option value="${t.id}">${t.nome}${t.escola?' — '+t.escola:''}</option>`).join('')}</select></div>
-      <div class="fl"><label>Tipo de Conta</label><select class="fi" onchange="S.profBuffer.role=this.value"><option value="prof">Professor</option><option value="diretor">Diretor</option></select></div>
-      <div class="fl"><label>Senha *</label><input class="fi" type="password" placeholder="Mínimo 4 caracteres" oninput="S.profBuffer.senha=this.value"></div>
-      <div class="fl"><label>Confirmar Senha *</label><input class="fi" type="password" placeholder="Repita a senha" oninput="S.profBuffer.senha2=this.value"></div>
-      ${S.loginErr?`<div class="err">⚠ ${S.loginErr}</div>`:''}
-      <button class="btn-primary" onclick="tryRegister()">Enviar Cadastro</button>
-      <button class="btn-secondary" onclick="S.screen='login';S.loginErr='';render()">← Voltar ao Login</button>
-    </div></div>`;
+    var turmas=Object.values(S.turmas);
+    html='<div style="max-width:380px;margin:24px auto 0"><div class="card">'
+      +'<div style="text-align:center;margin-bottom:18px">'+logoSVG(36)+'<div style="font-size:15px;font-weight:700;margin-top:8px;text-transform:uppercase;letter-spacing:.04em">Cadastro de Professor</div></div>'
+      +'<div class="fl"><label>Nome Completo *</label><input class="fi" placeholder="Seu nome" oninput="S.profBuffer.nome=this.value"></div>'
+      +'<div class="fl"><label>E-mail *</label><input class="fi" type="email" placeholder="professor@escola.com" oninput="S.profBuffer.email=this.value"><div style="font-size:11px;color:#9ca3af;margin-top:3px">Para nota fiscal e comunicações</div></div>'
+      +'<div class="fl"><label>Celular <span style="font-size:10px;color:#9ca3af;font-weight:400">(opcional)</span></label><input class="fi" type="tel" placeholder="(11) 99999-9999" oninput="S.profBuffer.celular=this.value" maxlength="15"></div>'
+      +'<div class="fl"><label>Nome da Escola</label><input class="fi" placeholder="E.E. Nome da Escola" oninput="S.profBuffer.escola=this.value"></div>'
+      +'<div class="fl"><label>Tipo de Conta</label><select class="fi" onchange="S.profBuffer.role=this.value"><option value="prof">Professor</option><option value="diretor">Diretor</option></select></div>'
+      +'<div class="fl"><label>Turma</label><select class="fi" onchange="S.profBuffer.turmaId=this.value"><option value="">Aguardar ADM atribuir</option>'
+      +turmas.map(function(t){return'<option value="'+t.id+'">'+t.nome+(t.escola?' — '+t.escola:'')+'</option>'}).join('')
+      +'</select></div>'
+      +'<div class="fl"><label>Senha *</label><input class="fi" type="password" placeholder="Mínimo 4 caracteres" oninput="S.profBuffer.senha=this.value"></div>'
+      +'<div class="fl"><label>Confirmar Senha *</label><input class="fi" type="password" placeholder="Repita" oninput="S.profBuffer.senha2=this.value"></div>'
+      +(S.loginErr?'<div class="err">⚠ '+S.loginErr+'</div>':'')
+      +'<button class="btn-primary" onclick="tryRegister()">Enviar Cadastro</button>'
+      +'<button class="btn-secondary" onclick="S.screen=\'login\';S.loginErr=\'\';render()">← Voltar ao Login</button>'
+      +'</div></div>';
   }
 
-  // ── TELA DE PLANOS ─────────────────────────────────────────
-  else if(S.screen==='planos'){
-    const prof=getProf();
-    const planoAtual=PLANOS[prof?.plano||'beta']||PLANOS.beta;
-    html+=`<div style="max-width:480px;margin:0 auto">
-      <!-- Cabeçalho -->
-      <div style="text-align:center;padding:24px 16px 20px">
-        <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px">
-          ${logoSVG(32)}
-          <span style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em">Chamada Fácil</span>
-        </div>
-        <div style="font-size:22px;font-weight:700;color:#111;margin-bottom:8px">Escolha seu plano</div>
-        <div style="font-size:13px;color:#888;max-width:320px;margin:0 auto">Comece grátis e expanda conforme sua escola cresce.</div>
-      </div>
-
-      <!-- Badge plano atual -->
-      ${prof?`<div style="text-align:center;margin-bottom:16px"><span style="background:#f0faf6;border:1px solid #5DCAA5;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#0F6E56">Plano atual: ${planoAtual.nome}</span></div>`:''}
-
-      <!-- Cards empilhados -->
-
-      <!-- BETA (grátis) -->
-      <div class="card" style="margin-bottom:10px;opacity:.8">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Beta</div>
-            <div style="font-size:24px;font-weight:700;color:#111">Grátis</div>
-            <div style="font-size:12px;color:#888;margin-top:2px">durante o período de testes</div>
-          </div>
-          ${(prof?.plano||'beta')==='beta'?`<span style="background:#f0f0f0;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#666">ATUAL</span>`:''}
-        </div>
-        <div style="border-top:1px solid #eee;padding-top:12px;display:flex;flex-direction:column;gap:7px">
-          ${['1 turma','1 escola','Chamada digital','PDF básico','WhatsApp','Sem relatórios avançados'].map((f,i)=>
-            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:${i>=5?'#bbb':'#333'}">
-              <span style="font-size:14px">${i>=5?'✕':'✓'}</span>${f}
-            </div>`
-          ).join('')}
-        </div>
-      </div>
-
-      <!-- BÁSICO -->
-      <div class="card" style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Básico</div>
-            <div style="font-size:24px;font-weight:700;color:#111">R$ 29<span style="font-size:14px;font-weight:400;color:#888">,90/mês</span></div>
-            <div style="font-size:12px;color:#888;margin-top:2px">ou R$ 23,90/mês no anual</div>
-          </div>
-          ${(prof?.plano)==='basico'?`<span style="background:#f0faf6;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#0F6E56">ATUAL</span>`:''}
-        </div>
-        <div style="border-top:1px solid #eee;padding-top:12px;display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
-          ${['1 turma','1 escola','Chamada digital','Histórico individual','PDF completo','WhatsApp com saudação','Alertas de faltas'].map(f=>
-            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333">
-              <span style="font-size:14px;color:#1D9E75">✓</span>${f}
-            </div>`
-          ).join('')}
-        </div>
-        <button class="btn-primary" style="margin-top:0" onclick="showToast('Em breve! Aguarde o lançamento oficial.')">Assinar Básico</button>
-      </div>
-
-      <!-- PLUS (destaque) -->
-      <div style="background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:10px;position:relative">
-        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;border-radius:20px;padding:4px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">⭐ Mais popular</div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#5DCAA5;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Plus</div>
-            <div style="font-size:24px;font-weight:700;color:#fff">R$ 59<span style="font-size:14px;font-weight:400;color:#9ca3af">,90/mês</span></div>
-            <div style="font-size:12px;color:#6b7280;margin-top:2px">ou R$ 47,90/mês no anual</div>
-          </div>
-          ${(prof?.plano)==='plus'?`<span style="background:rgba(29,158,117,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#5DCAA5">ATUAL</span>`:''}
-        </div>
-        <div style="border-top:1px solid #2d2d4e;padding-top:12px;display:flex;flex-direction:column;gap:7px;margin-bottom:16px">
-          ${['Até 3 turmas','Até 3 escolas','Tudo do plano Básico','Relatórios gerais','Painel de frequência','Exportação em lote','Suporte prioritário'].map(f=>
-            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#e2e8f0">
-              <span style="font-size:14px;color:#5DCAA5">✓</span>${f}
-            </div>`
-          ).join('')}
-        </div>
-        <button style="width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.04em" onclick="showToast('Em breve! Aguarde o lançamento oficial.')">Assinar Plus</button>
-      </div>
-
-      <!-- DIRETOR -->
-      <div class="card" style="margin-bottom:10px;border-color:#7F77DD">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Diretor</div>
-            <div style="font-size:24px;font-weight:700;color:#111">R$ 89<span style="font-size:14px;font-weight:400;color:#888">,90/mês</span></div>
-            <div style="font-size:12px;color:#888;margin-top:2px">ou R$ 71,90/mês no anual</div>
-          </div>
-          ${(prof?.plano)==='diretor'?`<span style="background:#EEEDFE;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#3C3489">ATUAL</span>`:''}
-        </div>
-        <div style="border-top:1px solid #eee;padding-top:12px;display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
-          ${['1 escola (ilimitado)','Turmas ilimitadas','Tudo do plano Plus','Painel do diretor','Ver todos os professores','Relatório consolidado','Alertas por escola'].map(f=>
-            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333">
-              <span style="font-size:14px;color:#7F77DD">✓</span>${f}
-            </div>`
-          ).join('')}
-        </div>
-        <button class="btn-primary" style="margin-top:0;background:#534AB7" onclick="showToast('Em breve! Aguarde o lançamento oficial.')">Assinar Diretor</button>
-      </div>
-
-      <!-- FAQ rápido -->
-      <div class="card" style="margin-bottom:10px">
-        <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Dúvidas frequentes</div>
-        ${[
-          ['Posso cancelar a qualquer momento?','Sim. Sem multa ou fidelidade. Cancele quando quiser.'],
-          ['Meus dados ficam salvos se cancelar?','Você terá 30 dias para exportar seus dados antes de perder o acesso.'],
-          ['Posso mudar de plano?','Sim. Faça upgrade ou downgrade a qualquer momento.'],
-          ['O período beta é realmente grátis?','Sim, 100% grátis enquanto o app está em fase de testes.'],
-        ].map(([p,r])=>`
-          <div style="padding:10px 0;border-bottom:1px solid #eee">
-            <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${p}</div>
-            <div style="font-size:12px;color:#888">${r}</div>
-          </div>
-        `).join('')}
-      </div>
-
-      <button class="btn-secondary" style="margin-bottom:20px" onclick="S.screen='chamada';render()">← Voltar ao app</button>
-    </div>`;
-  }
+  // CHAMADA
   else if(S.screen==='chamada'){
-    const prof=getProf(); const t=getTurma(); const lim=t?.limiteFaltas||6;
-    const presentes=t?.alunos.filter(a=>a.presente==='P').length||0;
-    const ausentes=t?.alunos.filter(a=>a.presente==='F').length||0;
-    const justific=t?.alunos.filter(a=>a.presente==='J').length||0;
-    const alerts=t?.alunos.filter(a=>a.faltas>=lim)||[];
+    var prof=getProf();var t=getTurma();var lim=t?t.limiteFaltas||6:6;
+    var presentes=t?t.alunos.filter(function(a){return a.presente==='P'}).length:0;
+    var ausentes=t?t.alunos.filter(function(a){return a.presente==='F'}).length:0;
+    var justific=t?t.alunos.filter(function(a){return a.presente==='J'}).length:0;
+    var alerts=t?t.alunos.filter(function(a){return a.faltas>=lim}):[];
+    html+='<div class="app-header"><div class="header-top">'
+      +'<div><div class="page-title">'+(t?t.nome:'Aguardando Turma')+'</div>'
+      +(t&&t.escola?'<div class="escola-info">'+t.escola+'</div>':'')
+      +'<div class="sub-info">'+(prof?prof.nome+' · ':'')+today()+'</div></div>'
+      +'<div style="display:flex;gap:6px;align-items:center">'
+      +(S.authRole==='adm'||S.authRole==='diretor'?'<button class="btn-xs" onclick="S.screen=\'relatorio\';S.tab=\'relatorio\';render()">← Painel</button>':'')
+      +'<button class="btn-xs" onclick="S.screen=\'planos\';render()">💳</button>'
+      +'<button class="btn-xs" onclick="logout()">Sair</button>'
+      +'</div></div>'
+      +(t?'<div class="stats-row"><div class="stat"><div class="stat-num">'+t.alunos.length+'</div><div class="stat-label">Total</div></div><div class="stat"><div class="stat-num g">'+presentes+'</div><div class="stat-label">Presentes</div></div><div class="stat"><div class="stat-num r">'+ausentes+'</div><div class="stat-label">Ausentes</div></div><div class="stat"><div class="stat-num b">'+justific+'</div><div class="stat-label">Justif.</div></div></div>':'')
+      +'</div>';
+    if(!t){html+='<div class="empty-state">⏳ Aguarde o ADM atribuir sua turma.</div>';}
+    else{
+      if(alerts.length>0&&S.tab==='chamada')html+='<div class="alert-banner">⚠️ '+alerts.length+' aluno(s) com '+lim+'+ faltas: '+alerts.map(function(a){return a.nome.split(' ')[0]}).join(', ')+'</div>';
+      html+='<div class="tabs">'
+        +'<button class="tab '+(S.tab==='chamada'?'active':'')+'" onclick="S.tab=\'chamada\';render()">📋 Chamada</button>'
+        +'<button class="tab '+(S.tab==='alunos'?'active':'')+'" onclick="S.tab=\'alunos\';render()">👥 Alunos</button>'
+        +'<button class="tab '+(S.tab==='historico'?'active':'')+'" onclick="S.tab=\'historico\';render()">📅 Histórico</button>'
+        +'<button class="tab '+(S.tab==='config'?'active':'')+'" onclick="S.tab=\'config\';render()">⚙️ Config</button>'
+        +'<button class="tab '+(S.tab==='suporte'?'active':'')+'" onclick="S.tab=\'suporte\';render()">💬 Suporte</button>'
+        +'</div>';
 
-    html+=`<div class="card"><div class="header-top">
-      <div>
-        <div class="page-title">${t?t.nome:'Sem Turma'}</div>
-        ${t?.escola?`<div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:1px">${t.escola}</div>`:''}
-        <div class="sub-info">${prof?prof.nome+' · ':''} ${today()}</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        ${S.authRole==='adm'||S.authRole==='diretor'?`<button class="btn-xs" onclick="S.screen='relatorio';S.tab='relatorio';render()">← Painel</button>`:''}
-        <button class="btn-xs" onclick="S.screen='planos';render()">💳 Planos</button>
-        <button class="btn-xs" onclick="logout()">Sair</button>
-      </div>
-    </div>
-    ${t?`<div class="stats-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
-      <div class="stat"><div class="stat-num">${t.alunos.length}</div><div class="stat-label">Total</div></div>
-      <div class="stat"><div class="stat-num g">${presentes}</div><div class="stat-label">Presentes</div></div>
-      <div class="stat"><div class="stat-num r">${ausentes}</div><div class="stat-label">Ausentes</div></div>
-      <div class="stat"><div class="stat-num" style="color:#185FA5">${justific}</div><div class="stat-label">Justif.</div></div>
-    </div>`:''}
-    </div>`;
-
-    if(!t){
-      html+=`<div class="empty-state">⏳ Aguarde o ADM atribuir sua turma.<br><br>Você pode atualizar seu perfil em Configurações.</div>`;
-    } else {
-      if(alerts.length>0&&S.tab==='chamada')
-        html+=`<div class="alert-banner">⚠️ ${alerts.length} ALUNO(S) COM ${lim}+ FALTAS: ${alerts.map(a=>a.nome.split(' ')[0]).join(', ')}</div>`;
-
-      html+=`<div class="tabs">
-        <button class="tab ${S.tab==='chamada'?'active':''}"   onclick="S.tab='chamada';render()">📋 Chamada</button>
-        <button class="tab ${S.tab==='alunos'?'active':''}"    onclick="S.tab='alunos';render()">👥 Alunos</button>
-        <button class="tab ${S.tab==='historico'?'active':''}" onclick="S.tab='historico';render()">📅 Histórico</button>
-        <button class="tab ${S.tab==='config'?'active':''}"    onclick="S.tab='config';render()">⚙️ Config</button>
-        <button class="tab ${S.tab==='suporte'?'active':''}"   onclick="S.tab='suporte';suporteHistorico=suporteHistorico.length?suporteHistorico:[];render()">💬 Suporte</button>
-      </div>`;
-
-      // Aba Chamada
       if(S.tab==='chamada'){
-        html+=`<div class="sec-hdr"><span class="sec-title">Marque a Presença</span><button class="btn-xs" style="background:#1D9E75;color:#fff;border-color:#1D9E75" onclick="salvarChamada()">💾 Salvar Chamada</button></div>`;
-        if(!t.alunos.length) html+=`<div class="empty-state">Nenhum aluno. Vá à aba Alunos para adicionar.</div>`;
-        t.alunos.forEach(a=>{
-          let cc='sc clickable';
-          if(a.presente==='P')cc+=' present-card';
-          else if(a.presente==='F')cc+=' absent-card';
-          else if(a.presente==='J')cc+=' justif-card';
-          else if(a.faltas>=lim)cc+=' alert-card';
-          const ck=a.presente==='P'?'present':a.presente==='F'?'absent':a.presente==='J'?'justif':'';
-          const ci=a.presente==='P'?'✓':a.presente==='F'?'✗':a.presente==='J'?'J':'·';
-          html+=`<div class="${cc}" onclick="openEditAluno('${a.id}')">
-            <div class="av av${a.cor%5}">${initials(a.nome)}</div>
-            <div class="si"><div class="sn">${a.nome}</div>
-            <div class="sm"><span class="fb ${fc(a.faltas,lim)}">${a.faltas}F</span>${a.obs?'<span>📝</span>':''}</div></div>
-            <button class="chk ${ck}" onclick="event.stopPropagation();togglePresente('${a.id}')" title="1x=Presente 2x=Ausente 3x=Justificado 4x=Limpar">${ci}</button>
-          </div>`;
+        html+='<div class="sec-hdr"><span class="sec-title">Marque a Presença</span><button class="btn-xs" onclick="salvarChamada()">💾 Salvar</button></div>';
+        if(!t.alunos.length)html+='<div class="empty-state">Nenhum aluno. Vá à aba Alunos.</div>';
+        t.alunos.forEach(function(a){
+          var cc='sc clickable';
+          if(a.presente==='P')cc+=' present-card';else if(a.presente==='F')cc+=' absent-card';else if(a.presente==='J')cc+=' justif-card';else if(a.faltas>=lim)cc+=' alert-card';
+          var ck=a.presente==='P'?'present':a.presente==='F'?'absent':a.presente==='J'?'justif':'';
+          var ci=a.presente==='P'?'✓':a.presente==='F'?'✗':a.presente==='J'?'J':'·';
+          html+='<div class="'+cc+'" onclick="openEditAluno(\''+a.id+'\')">'
+            +'<div class="av av'+a.cor%5+'">'+initials(a.nome)+'</div>'
+            +'<div class="si"><div class="sn">'+esc(a.nome)+'</div>'
+            +'<div class="sm"><span class="fb '+fc(a.faltas,lim)+'">'+a.faltas+'F</span>'+(a.obs?'<span>📝</span>':'')+'</div></div>'
+            +'<button class="chk '+ck+'" onclick="event.stopPropagation();togglePresente(\''+a.id+'\')">'+ci+'</button>'
+            +'</div>';
         });
-        html+=`<div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px;line-height:1.6">
-          <span style="color:#1D9E75;font-weight:700">✓ Presente</span> &nbsp;→&nbsp;
-          <span style="color:#D85A30;font-weight:700">✗ Ausente</span> &nbsp;→&nbsp;
-          <span style="color:#185FA5;font-weight:700">J Justificado</span> &nbsp;→&nbsp; Limpar
-        </div>`;
+        html+='<div style="font-size:11px;color:#9ca3af;text-align:center;margin-top:8px;line-height:1.8"><span style="color:#1D9E75;font-weight:700">✓ Presente</span> → <span style="color:#ef4444;font-weight:700">✗ Ausente</span> → <span style="color:#3b82f6;font-weight:700">J Justificado</span> → Limpar</div>';
       }
 
-      // Aba Alunos
       if(S.tab==='alunos'){
-        html+=`<div class="sec-hdr"><span class="sec-title">Alunos Cadastrados</span><button class="btn-xs" onclick="S.modal={type:'novoAluno'};S.editBuf={};render()">+ Novo Aluno</button></div>`;
-        if(!t.alunos.length) html+=`<div class="empty-state">Nenhum aluno cadastrado.</div>`;
-        t.alunos.forEach(a=>{
-          html+=`<div class="sc clickable" onclick="openEditAluno('${a.id}')">
-            <div class="av av${a.cor%5}">${initials(a.nome)}</div>
-            <div class="si"><div class="sn">${a.nome}</div><div class="sm">${a.obs||'<em>Sem observações</em>'}</div></div>
-            <span class="fb ${fc(a.faltas,lim)}">${a.faltas}F</span>
-          </div>`;
+        html+='<div class="sec-hdr"><span class="sec-title">Alunos</span><button class="btn-xs" onclick="S.modal={type:\'novoAluno\'};S.editBuf={};render()">+ Novo</button></div>';
+        if(!t.alunos.length)html+='<div class="empty-state">Nenhum aluno cadastrado.</div>';
+        t.alunos.forEach(function(a){
+          html+='<div class="sc clickable" onclick="openEditAluno(\''+a.id+'\')">'
+            +'<div class="av av'+a.cor%5+'">'+initials(a.nome)+'</div>'
+            +'<div class="si"><div class="sn">'+esc(a.nome)+'</div><div class="sm">'+(a.obs?esc(a.obs):'<em>Sem observações</em>')+'</div></div>'
+            +'<span class="fb '+fc(a.faltas,lim)+'">'+a.faltas+'F</span></div>';
         });
       }
 
-      // Aba Histórico
       if(S.tab==='historico'){
-        html+=`<div class="sec-hdr"><span class="sec-title">Chamadas Salvas</span></div>`;
-        if(!t.history.length) html+=`<div class="empty-state">Nenhuma chamada salva ainda.</div>`;
-        t.history.forEach(h=>{
-          const pct=h.total>0?Math.round(h.presentes.length/h.total*100):0;
-          html+=`<div class="hist-item">
-            <div style="display:flex;justify-content:space-between">
-              <span style="font-size:13px;font-weight:700">${h.data}</span>
-              <span style="font-size:12px;font-weight:700;color:${pct>=75?'#0a7a4e':'#b03030'}">${h.presentes.length}/${h.total} (${pct}%)</span>
-            </div>
-            ${h.ausentes?.length?`<div style="font-size:11px;color:#b03030;margin-top:3px">Ausentes: ${h.ausentes.join(', ')}</div>`:''}
-            ${h.justific?.length?`<div style="font-size:11px;color:#185FA5;margin-top:2px">Justificados: ${h.justific.join(', ')}</div>`:''}
-            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pct>=75?'#1D9E75':'#D85A30'}"></div></div>
-          </div>`;
+        html+='<div class="sec-hdr"><span class="sec-title">Chamadas Salvas</span></div>';
+        if(!t.history.length)html+='<div class="empty-state">Nenhuma chamada salva ainda.</div>';
+        t.history.forEach(function(h){
+          var pct=h.total>0?Math.round(h.presentes.length/h.total*100):0;
+          html+='<div class="hist-item"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">'+h.data+'</span><span style="font-size:12px;font-weight:700;color:'+(pct>=75?'#0a7a4e':'#b03030')+'">'+h.presentes.length+'/'+h.total+' ('+pct+'%)</span></div>'
+            +(h.ausentes&&h.ausentes.length?'<div style="font-size:11px;color:#b03030;margin-top:3px">Ausentes: '+h.ausentes.join(', ')+'</div>':'')
+            +(h.justific&&h.justific.length?'<div style="font-size:11px;color:#3b82f6;margin-top:2px">Justificados: '+h.justific.join(', ')+'</div>':'')
+            +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+(pct>=75?'#1D9E75':'#ef4444')+'"></div></div></div>';
         });
       }
 
-      // Aba Suporte IA
-      if(S.tab==='suporte'){
-        const msgs = suporteHistorico;
-        html+=`<div style="display:flex;flex-direction:column;gap:0">
-          <!-- Cabeçalho do chat -->
-          <div style="background:#1a1a2e;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
-            <div style="width:40px;height:40px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🤖</div>
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#fff">Fácil — Suporte IA</div>
-              <div style="font-size:11px;color:#5DCAA5;margin-top:1px">● Online agora · Responde em segundos</div>
-            </div>
-          </div>
-
-          <!-- Histórico do chat -->
-          <div id="suporte-chat" style="min-height:280px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0;margin-bottom:10px">
-            ${msgs.length===0?`
-              <!-- Mensagem de boas-vindas -->
-              <div style="display:flex;gap:10px;align-items:flex-start">
-                <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
-                <div style="background:#f5f5f5;border-radius:0 12px 12px 12px;padding:12px 14px;max-width:85%">
-                  <div style="font-size:13px;color:#111;line-height:1.5">Oi! 👋 Sou o <strong>Fácil</strong>, assistente do Chamada Fácil.<br><br>Posso te ajudar com dúvidas sobre o sistema, pagamentos ou qualquer problema técnico. O que você precisa?</div>
-                </div>
-              </div>
-              <!-- Sugestões rápidas -->
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-left:42px">
-                ${['Como fazer a chamada?','Esqueci minha senha','Quero cancelar meu plano','PDF não está funcionando','Como exportar para WhatsApp?'].map(s=>
-                  `<button onclick="document.getElementById('suporte-input').value='${s}';enviarMensagemSuporte('${s}')" style="font-size:12px;padding:5px 10px;border:1px solid #1D9E75;border-radius:20px;background:#fff;color:#0F6E56;cursor:pointer;font-weight:500">${s}</button>`
-                ).join('')}
-              </div>
-            `:''}
-            ${msgs.map(m=>{
-              const isUser = m.role==='user';
-              return isUser
-                ? `<div style="display:flex;justify-content:flex-end">
-                    <div style="background:#1D9E75;border-radius:12px 12px 0 12px;padding:10px 14px;max-width:85%">
-                      <div style="font-size:13px;color:#fff;line-height:1.5">${m.content.replace(/\n/g,'<br>')}</div>
-                    </div>
-                  </div>`
-                : `<div style="display:flex;gap:10px;align-items:flex-start">
-                    <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
-                    <div style="background:#f5f5f5;border-radius:0 12px 12px 12px;padding:12px 14px;max-width:85%">
-                      <div style="font-size:13px;color:#111;line-height:1.5">${m.content.replace(/\n/g,'<br>')}</div>
-                    </div>
-                  </div>`;
-            }).join('')}
-            ${S.suporteCarregando?`
-              <div style="display:flex;gap:10px;align-items:flex-start">
-                <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
-                <div style="background:#f5f5f5;border-radius:0 12px 12px 12px;padding:12px 14px">
-                  <div style="display:flex;gap:4px;align-items:center">
-                    <span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s infinite"></span>
-                    <span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s .2s infinite"></span>
-                    <span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s .4s infinite"></span>
-                  </div>
-                </div>
-              </div>
-              <style>@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}</style>
-            `:''}
-          </div>
-
-          <!-- Campo de entrada -->
-          <div style="display:flex;gap:8px;align-items:flex-end">
-            <textarea id="suporte-input" rows="2" placeholder="Digite sua dúvida..." style="flex:1;padding:10px 12px;font-size:13px;border:1px solid #ccc;border-radius:10px;resize:none;font-family:sans-serif;line-height:1.4" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const v=this.value.trim();if(v){enviarMensagemSuporte(v);this.value=''}}"></textarea>
-            <button onclick="const i=document.getElementById('suporte-input');if(i.value.trim()){enviarMensagemSuporte(i.value.trim());i.value=''}" style="width:42px;height:42px;border-radius:10px;background:#1D9E75;border:none;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">➤</button>
-          </div>
-          <div style="font-size:11px;color:#aaa;text-align:center;margin-top:6px">Enter para enviar · Shift+Enter para nova linha</div>
-
-          <!-- Contato humano — aciona o ADM -->
-          ${msgs.length>=4?`
-          <div style="background:#f0faf6;border:1px dashed #5DCAA5;border-radius:10px;padding:14px;margin-top:12px">
-            <div style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:6px">Não resolveu? Falar com o ADM 👋</div>
-            <div style="font-size:12px;color:#666;margin-bottom:10px">Nossa equipe humana responde em até 24h úteis. Clique abaixo para enviar esta conversa ao suporte.</div>
-            <button onclick="acionarADM()" class="btn-wpp" style="margin-top:0">
-              <span style="font-size:16px">💬</span> Enviar conversa ao ADM via WhatsApp
-            </button>
-            <button onclick="acionarADMEmail()" class="btn-secondary" style="margin-top:8px">
-              📧 Enviar por e-mail
-            </button>
-          </div>`:''}
-
-          <!-- Limpar conversa -->
-          ${msgs.length>0?`<button onclick="suporteHistorico=[];render()" style="font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;margin-top:8px;text-align:center;width:100%">🗑 Limpar conversa</button>`:''}
-        </div>`;
       if(S.tab==='config'){
-        html+=`<div class="card">
-          <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Minha Turma</div>
-          <div class="fl"><label>Nome da Turma / Ano</label><input class="fi" value="${t.nome}" placeholder="Ex: 9º ANO A" oninput="getTurma().nome=this.value.toUpperCase();save()"></div>
-          <div class="fl"><label>Nome da Escola</label><input class="fi" value="${t.escola||''}" placeholder="Ex: E.E. Prof. João Alves" oninput="getTurma().escola=this.value;save()"></div>
-          <div class="fl"><label>Limite de Faltas para Alerta</label><input class="ni" type="number" min="1" value="${t.limiteFaltas||6}" oninput="getTurma().limiteFaltas=parseInt(this.value)||6;save()"></div>
-          <div class="fl"><label>🔗 Link desta Turma</label><div class="link-box" onclick="copyLink('${t.id}')">Toque para copiar o link</div></div>
-          <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin:14px 0 8px">Meu Perfil</div>
-          <div class="fl"><label>Meu Nome</label><input class="fi" value="${getProf()?.nome||''}" placeholder="Seu nome" oninput="if(getProf())getProf().nome=this.value;save()"></div>
-          <div class="fl"><label>Minha Escola Principal</label><input class="fi" value="${getProf()?.escola||''}" placeholder="Nome da escola" oninput="if(getProf())getProf().escola=this.value;save()"></div>
-        </div>`;
+        html+='<div class="card"><div class="sec-title" style="margin-bottom:12px">Minha Turma</div>'
+          +'<div class="fl"><label>Nome da Turma / Ano</label><input class="fi" value="'+esc(t.nome)+'" oninput="getTurma().nome=this.value.toUpperCase();save()"></div>'
+          +'<div class="fl"><label>Nome da Escola</label><input class="fi" value="'+esc(t.escola||'')+'" placeholder="E.E. Nome da Escola" oninput="getTurma().escola=this.value;save()"></div>'
+          +'<div class="fl"><label>Limite de Faltas</label><input class="ni" type="number" min="1" value="'+(t.limiteFaltas||6)+'" oninput="getTurma().limiteFaltas=parseInt(this.value)||6;save()"></div>'
+          +'<div class="fl"><label>🔗 Link da Turma</label><div class="link-box" onclick="copyLink(\''+t.id+'\')">Toque para copiar o link</div></div>'
+          +'</div>'
+          +(getProf()?'<div class="card"><div class="sec-title" style="margin-bottom:12px">Meu Perfil</div>'
+          +'<div class="fl"><label>Meu Nome</label><input class="fi" value="'+esc(getProf().nome||'')+'" oninput="if(getProf())getProf().nome=this.value;save()"></div>'
+          +'<div class="fl"><label>Minha Escola</label><input class="fi" value="'+esc(getProf().escola||'')+'" oninput="if(getProf())getProf().escola=this.value;save()"></div>'
+          +'</div>':'');
+      }
+
+      if(S.tab==='suporte'){
+        var msgs=suporteHistorico;
+        html+='<div style="background:#1a1a2e;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px">'
+          +'<div style="width:40px;height:40px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:18px">🤖</div>'
+          +'<div><div style="font-size:14px;font-weight:700;color:#fff">Fácil — Suporte IA</div><div style="font-size:11px;color:#5DCAA5;margin-top:1px">● Online · Responde em segundos</div></div></div>'
+          +'<div id="sc" style="min-height:260px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0;margin-bottom:10px">';
+        if(!msgs.length){
+          html+='<div style="display:flex;gap:10px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>'
+            +'<div style="background:#f5f5f5;border-radius:0 10px 10px 10px;padding:12px 14px;max-width:85%"><div style="font-size:13px;color:#111;line-height:1.5">Oi! 👋 Sou o <strong>Fácil</strong>.<br>Como posso te ajudar hoje?</div></div></div>'
+            +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-left:42px">'
+            +['Como fazer a chamada?','Esqueci minha senha','Quero cancelar meu plano','PDF não funciona'].map(function(s){
+              return '<button onclick="document.getElementById(\'si\').value=\''+s+'\';enviarMensagemSuporte(\''+s+'\')" style="font-size:12px;padding:5px 10px;border:1px solid #1D9E75;border-radius:20px;background:#fff;color:#0F6E56;cursor:pointer;font-weight:500">'+s+'</button>';
+            }).join('')+'</div>';
+        }
+        msgs.forEach(function(m){
+          if(m.role==='user'){
+            html+='<div style="display:flex;justify-content:flex-end"><div style="background:#1D9E75;border-radius:10px 10px 0 10px;padding:10px 14px;max-width:85%"><div style="font-size:13px;color:#fff;line-height:1.5">'+m.content.replace(/\n/g,'<br>')+'</div></div></div>';
+          }else{
+            html+='<div style="display:flex;gap:10px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div><div style="background:#f5f5f5;border-radius:0 10px 10px 10px;padding:12px 14px;max-width:85%"><div style="font-size:13px;color:#111;line-height:1.5">'+m.content.replace(/\n/g,'<br>')+'</div></div></div>';
+          }
+        });
+        if(S.suporteCarregando)html+='<div style="display:flex;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div><div style="background:#f5f5f5;border-radius:0 10px 10px 10px;padding:12px 14px"><span style="display:inline-flex;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s infinite"></span><span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s .2s infinite"></span><span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s .4s infinite"></span></span></div></div>';
+        html+='</div>'
+          +'<div style="display:flex;gap:8px;align-items:flex-end"><textarea id="si" rows="2" placeholder="Digite sua dúvida..." style="flex:1;padding:10px 12px;font-size:13px;border:1px solid #e5e7eb;border-radius:10px;resize:none;font-family:inherit;line-height:1.4" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();var v=this.value.trim();if(v){enviarMensagemSuporte(v);this.value=\'\'}}"></textarea>'
+          +'<button onclick="var i=document.getElementById(\'si\');if(i&&i.value.trim()){enviarMensagemSuporte(i.value.trim());i.value=\'\'}" style="width:42px;height:42px;border-radius:10px;background:#1D9E75;border:none;color:#fff;font-size:18px;cursor:pointer">➤</button></div>'
+          +'<div style="font-size:11px;color:#9ca3af;text-align:center;margin-top:6px">Enter para enviar · Shift+Enter nova linha</div>'
+          +(msgs.length>=4?'<div style="background:#f0fdf4;border:1px dashed #1D9E75;border-radius:10px;padding:14px;margin-top:12px"><div style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:6px">Não resolveu? Falar com o ADM 👋</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">Nossa equipe responde em até 24h.</div><button onclick="acionarADM()" class="btn-wpp" style="margin-top:0"><span>💬</span> Enviar conversa ao ADM</button><button onclick="window.open(\'mailto:'+ADM_EMAIL+'\')" class="btn-secondary">📧 Enviar por e-mail</button></div>':'')
+          +(msgs.length>0?'<button onclick="suporteHistorico=[];render()" style="font-size:12px;color:#9ca3af;background:none;border:none;cursor:pointer;margin-top:8px;text-align:center;width:100%">🗑 Limpar conversa</button>':'');
       }
     }
   }
 
-  // ── PAINEL DO DIRETOR / ADM ────────────────────────────────
+  // PLANOS
+  else if(S.screen==='planos'){
+    var prof=getProf();var planoAtual=PLANOS[prof?prof.plano||'beta':'beta']||PLANOS.beta;
+    html='<div style="max-width:480px;margin:0 auto">'
+      +'<div class="app-header" style="text-align:center"><div style="display:flex;justify-content:center;margin-bottom:10px">'+logoSVG(36)+'</div>'
+      +'<div class="page-title">Escolha seu Plano</div>'
+      +'<div style="font-size:12px;color:#9ca3af;margin-top:6px">Comece grátis e expanda conforme cresce</div></div>'
+      +(prof?'<div style="text-align:center;margin-bottom:12px"><span style="background:#f0fdf4;border:1px solid #1D9E75;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#0F6E56">Plano atual: '+planoAtual.nome+'</span></div>':'')
+      // Beta
+      +'<div class="card" style="opacity:.8">'
+      +'<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Beta</div>'
+      +'<div style="font-size:24px;font-weight:700;color:#111827">Grátis</div>'
+      +'<div style="font-size:12px;color:#9ca3af;margin-bottom:12px">durante o período de testes</div>'
+      +'<div style="border-top:1px solid #e5e7eb;padding-top:10px;display:flex;flex-direction:column;gap:6px">'
+      +['1 turma','1 escola','Chamada digital','PDF básico','WhatsApp'].map(function(f){return'<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#1D9E75">✓</span>'+f+'</div>'}).join('')
+      +'</div></div>'
+      // Básico
+      +'<div class="card">'
+      +'<div style="font-size:11px;font-weight:700;color:#1D9E75;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Básico</div>'
+      +'<div style="font-size:24px;font-weight:700;color:#111827">R$ 29<span style="font-size:14px;font-weight:400;color:#9ca3af">,90/mês</span></div>'
+      +'<div style="font-size:12px;color:#9ca3af;margin-bottom:12px">ou R$ 23,90/mês no anual</div>'
+      +'<div style="border-top:1px solid #e5e7eb;padding-top:10px;display:flex;flex-direction:column;gap:6px;margin-bottom:12px">'
+      +['1 turma','1 escola','Chamada digital','Histórico individual','PDF completo','WhatsApp com saudação'].map(function(f){return'<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#1D9E75">✓</span>'+f+'</div>'}).join('')
+      +'</div><button class="btn-primary" style="margin-top:0" onclick="showToast(\'Em breve!\')">Assinar Básico</button></div>'
+      // Plus (destaque)
+      +'<div style="background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:10px;position:relative">'
+      +'<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;border-radius:20px;padding:4px 16px;font-size:11px;font-weight:700;text-transform:uppercase;white-space:nowrap">⭐ Mais popular</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#5DCAA5;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Plus</div>'
+      +'<div style="font-size:24px;font-weight:700;color:#fff">R$ 59<span style="font-size:14px;font-weight:400;color:#9ca3af">,90/mês</span></div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:12px">ou R$ 47,90/mês no anual</div>'
+      +'<div style="border-top:1px solid #2d2d4e;padding-top:10px;display:flex;flex-direction:column;gap:6px;margin-bottom:14px">'
+      +['Até 3 turmas','Até 3 escolas','Tudo do Básico','Relatórios gerais','Painel de frequência'].map(function(f){return'<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#e2e8f0"><span style="color:#5DCAA5">✓</span>'+f+'</div>'}).join('')
+      +'</div><button style="width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase" onclick="showToast(\'Em breve!\')">Assinar Plus</button></div>'
+      // Diretor
+      +'<div class="card" style="border-color:#7F77DD">'
+      +'<div style="font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Diretor</div>'
+      +'<div style="font-size:24px;font-weight:700;color:#111827">R$ 89<span style="font-size:14px;font-weight:400;color:#9ca3af">,90/mês</span></div>'
+      +'<div style="font-size:12px;color:#9ca3af;margin-bottom:12px">ou R$ 71,90/mês no anual</div>'
+      +'<div style="border-top:1px solid #e5e7eb;padding-top:10px;display:flex;flex-direction:column;gap:6px;margin-bottom:12px">'
+      +['1 escola (ilimitado)','Turmas ilimitadas','Tudo do Plus','Painel do diretor','Ver todos os professores'].map(function(f){return'<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#7F77DD">✓</span>'+f+'</div>'}).join('')
+      +'</div><button class="btn-primary" style="margin-top:0;background:#534AB7" onclick="showToast(\'Em breve!\')">Assinar Diretor</button></div>'
+      +'<button class="btn-secondary" style="margin-bottom:20px" onclick="S.screen=\'chamada\';render()">← Voltar ao app</button></div>';
+  }
+
+  // PAINEL ADM/DIRETOR
   else if(S.screen==='relatorio'){
-    const turmas=Object.values(S.turmas); const profs=Object.values(S.professores);
-    const pendentes=profs.filter(p=>p.status==='pendente');
-    const totalAl=turmas.reduce((s,t)=>s+t.alunos.filter(a=>a.faltas>=(t.limiteFaltas||6)).length,0);
-
-    html+=`<div class="card"><div class="header-top">
-      <div style="display:flex;align-items:center;gap:10px">
-        ${logoSVG(32)}
-        <div><div class="page-title">${S.authRole==='adm'?'Painel ADM':'Painel do Diretor'}</div><div class="sub-info">${today()}</div></div>
-      </div>
-      <button class="btn-xs" onclick="logout()">Sair</button>
-    </div>
-    <div class="stats-row">
-      <div class="stat"><div class="stat-num">${turmas.length}</div><div class="stat-label">Turmas</div></div>
-      <div class="stat"><div class="stat-num g">${profs.filter(p=>p.status==='ativo').length}</div><div class="stat-label">Professores</div></div>
-      <div class="stat"><div class="stat-num r">${totalAl}</div><div class="stat-label">Alertas</div></div>
-    </div></div>`;
-
-    html+=`<div class="tabs">
-      <button class="tab ${S.tab==='relatorio'?'active':''}"    onclick="S.tab='relatorio';render()">📊 Relatórios</button>
-      <button class="tab ${S.tab==='turmas'?'active':''}"       onclick="S.tab='turmas';render()">🏫 Turmas</button>
-      <button class="tab ${S.tab==='professores'?'active':''}"  onclick="S.tab='professores';render()">👨‍🏫 Professores${pendentes.length?` <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:0 6px;font-size:11px">${pendentes.length}</span>`:''}</button>
-      ${S.authRole==='adm'?`<button class="tab ${S.tab==='config'?'active':''}" onclick="S.tab='config';render()">⚙️ Config</button>`:''}
-      <button class="tab ${S.tab==='suporte'?'active':''}" onclick="S.tab='suporte';render()">💬 Suporte</button>
-    </div>`;
-
-    // Aviso de suporte pendente para o ADM
-    if(S.authRole==='adm'&&S.tab!=='suporte'){
-      html+=`<div style="background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#856404;display:flex;justify-content:space-between;align-items:center">
-        <span>💬 Professores podem acionar você pelo suporte quando precisarem de ajuda.</span>
-        <button onclick="S.tab='suporte';render()" style="font-size:12px;font-weight:700;color:#856404;background:none;border:none;cursor:pointer;white-space:nowrap">Ver suporte →</button>
-      </div>`;
-    }
+    var turmas=Object.values(S.turmas);var profs=Object.values(S.professores);
+    var pendentes=profs.filter(function(p){return p.status==='pendente'});
+    var totalAl=turmas.reduce(function(s,t){return s+t.alunos.filter(function(a){return a.faltas>=(t.limiteFaltas||6)}).length},0);
+    html+='<div class="app-header"><div class="header-top">'
+      +'<div style="display:flex;align-items:center;gap:10px">'+logoSVG(30)
+      +'<div><div class="page-title">'+(S.authRole==='adm'?'Painel ADM':'Painel do Diretor')+'</div><div class="sub-info">'+today()+'</div></div></div>'
+      +'<button class="btn-xs" onclick="logout()">Sair</button></div>'
+      +'<div class="stats-row s3"><div class="stat"><div class="stat-num">'+turmas.length+'</div><div class="stat-label">Turmas</div></div>'
+      +'<div class="stat"><div class="stat-num g">'+profs.filter(function(p){return p.status==='ativo'}).length+'</div><div class="stat-label">Professores</div></div>'
+      +'<div class="stat"><div class="stat-num r">'+totalAl+'</div><div class="stat-label">Alertas</div></div></div></div>';
+    html+='<div class="tabs">'
+      +'<button class="tab '+(S.tab==='relatorio'?'active':'')+'" onclick="S.tab=\'relatorio\';render()">📊 Relatórios</button>'
+      +'<button class="tab '+(S.tab==='turmas'?'active':'')+'" onclick="S.tab=\'turmas\';render()">🏫 Turmas</button>'
+      +'<button class="tab '+(S.tab==='professores'?'active':'')+'" onclick="S.tab=\'professores\';render()">👨‍🏫 Professores'+(pendentes.length?' <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:0 6px;font-size:11px">'+pendentes.length+'</span>':'')+'</button>'
+      +(S.authRole==='adm'?'<button class="tab '+(S.tab==='config'?'active':'')+'" onclick="S.tab=\'config\';render()">⚙️ Config</button>':'')
+      +'<button class="tab '+(S.tab==='suporte'?'active':'')+'" onclick="S.tab=\'suporte\';render()">💬 Suporte</button>'
+      +'</div>';
 
     if(S.tab==='relatorio'){
-      if(!turmas.length) html+=`<div class="empty-state">Nenhuma turma criada ainda.</div>`;
-      turmas.forEach(t=>{
-        const lim=t.limiteFaltas||6;
-        const al=t.alunos.filter(a=>a.faltas>=lim);
-        const mf=t.alunos.length?(t.alunos.reduce((s,a)=>s+a.faltas,0)/t.alunos.length).toFixed(1):0;
-        const mfq=t.history.length?Math.round(t.history.reduce((s,h)=>s+(h.presentes.length/(h.total||1)*100),0)/t.history.length):null;
-        const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';
-        html+=`<div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-            <div>
-              <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.03em">${t.nome}</div>
-              ${t.escola?`<div style="font-size:11px;color:#888;font-weight:600">${t.escola}</div>`:''}
-              <div style="font-size:11px;color:#aaa">${profNome}</div>
-            </div>
-            <button class="btn-xs" onclick="S.turmaAtiva='${t.id}';S.tab='chamada';S.screen='chamada';render()">Ver Chamada</button>
-          </div>
-          <div class="rel-row"><span>Alunos</span><span>${t.alunos.length}</span></div>
-          <div class="rel-row"><span>Chamadas Realizadas</span><span>${t.history.length}</span></div>
-          <div class="rel-row"><span>Média de Faltas</span><span>${mf}</span></div>
-          <div class="rel-row"><span>Frequência Média</span><span style="font-weight:700;color:${mfq===null?'#888':mfq>=75?'#0a7a4e':'#b03030'}">${mfq!==null?mfq+'%':'—'}</span></div>
-          ${al.length?`<div class="rel-row"><span style="color:#b03030">⚠ Alertas (${lim}+ Faltas)</span><span style="color:#b03030;font-weight:700">${al.map(a=>a.nome.split(' ')[0]).join(', ')}</span></div>`:''}
-          ${mfq!==null?`<div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${mfq}%;background:${mfq>=75?'#1D9E75':'#D85A30'}"></div></div>`:''}
-        </div>`;
+      if(!turmas.length)html+='<div class="empty-state">Nenhuma turma criada.</div>';
+      turmas.forEach(function(t){
+        var lim=t.limiteFaltas||6;var al=t.alunos.filter(function(a){return a.faltas>=lim});
+        var mf=t.alunos.length?(t.alunos.reduce(function(s,a){return s+a.faltas},0)/t.alunos.length).toFixed(1):0;
+        var mfq=t.history.length?Math.round(t.history.reduce(function(s,h){return s+(h.presentes.length/(h.total||1)*100)},0)/t.history.length):null;
+        var profNome=t.profId&&S.professores[t.profId]?S.professores[t.profId].nome:'Sem professor';
+        html+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+          +'<div><div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.03em">'+esc(t.nome)+'</div>'
+          +(t.escola?'<div style="font-size:11px;color:#1D9E75;font-weight:600">'+esc(t.escola)+'</div>':'')
+          +'<div style="font-size:11px;color:#9ca3af">'+esc(profNome)+'</div></div>'
+          +'<button class="btn-xs" onclick="S.turmaAtiva=\''+t.id+'\';S.tab=\'chamada\';S.screen=\'chamada\';render()">Ver</button></div>'
+          +'<div class="rel-row"><span>Alunos</span><span>'+t.alunos.length+'</span></div>'
+          +'<div class="rel-row"><span>Chamadas</span><span>'+t.history.length+'</span></div>'
+          +'<div class="rel-row"><span>Média faltas</span><span>'+mf+'</span></div>'
+          +'<div class="rel-row"><span>Frequência</span><span style="font-weight:700;color:'+(mfq===null?'#9ca3af':mfq>=75?'#0a7a4e':'#b03030')+'">'+(mfq!==null?mfq+'%':'—')+'</span></div>'
+          +(al.length?'<div class="rel-row"><span style="color:#b03030">⚠ Alertas</span><span style="color:#b03030;font-weight:700">'+al.map(function(a){return a.nome.split(' ')[0]}).join(', ')+'</span></div>':'')
+          +(mfq!==null?'<div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:'+mfq+'%;background:'+(mfq>=75?'#1D9E75':'#ef4444')+'"></div></div>':'')
+          +'</div>';
       });
     }
 
     if(S.tab==='turmas'){
-      html+=`<div class="sec-hdr"><span class="sec-title">Turmas</span><button class="btn-xs" onclick="S.modal={type:'novaTurma'};S.editBuf={};render()">+ Nova Turma</button></div>`;
-      if(!turmas.length) html+=`<div class="empty-state">Nenhuma turma criada.</div>`;
-      turmas.forEach(t=>{
-        const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';
-        html+=`<div class="sc clickable" onclick="S.modal={type:'editTurma',tid:'${t.id}'};S.editBuf={};render()">
-          <div class="av av0">T</div>
-          <div class="si"><div class="sn">${t.nome}${t.escola?' — '+t.escola:''}</div><div class="sm">${profNome} · ${t.alunos.length} alunos</div></div>
-          <span class="fb ok">LIM ${t.limiteFaltas||6}F</span>
-        </div>`;
+      html+='<div class="sec-hdr"><span class="sec-title">Turmas</span><button class="btn-xs" onclick="S.modal={type:\'novaTurma\'};S.editBuf={};render()">+ Nova</button></div>';
+      if(!turmas.length)html+='<div class="empty-state">Nenhuma turma.</div>';
+      turmas.forEach(function(t){
+        var pn=t.profId&&S.professores[t.profId]?S.professores[t.profId].nome:'Sem professor';
+        html+='<div class="sc clickable" onclick="S.modal={type:\'editTurma\',tid:\''+t.id+'\'};render()">'
+          +'<div class="av av0">T</div>'
+          +'<div class="si"><div class="sn">'+esc(t.nome)+(t.escola?' — '+esc(t.escola):'')+'</div><div class="sm">'+esc(pn)+' · '+t.alunos.length+' alunos</div></div>'
+          +'<span class="fb ok">'+( t.limiteFaltas||6)+'F</span></div>';
       });
     }
 
     if(S.tab==='professores'){
       if(pendentes.length){
-        html+=`<div class="sec-hdr"><span class="sec-title" style="color:#b06000">⏳ Aguardando Aprovação (${pendentes.length})</span></div>`;
-        pendentes.forEach(p=>{
-          html+=`<div class="sc">
-            <div class="av av2">${initials(p.nome)}</div>
-            <div class="si"><div class="sn">${p.nome}</div><div class="sm">${p.email}${p.escola?' · '+p.escola:''} · ${p.role==='diretor'?'Diretor':'Professor'}</div></div>
-            <div style="display:flex;gap:5px">
-              <button class="btn-xs" style="color:#0a7a4e;border-color:#1D9E75" onclick="aprovarProf('${p.id}')">✓ Aprovar</button>
-              <button class="btn-xs" style="color:#b03030;border-color:#f09090" onclick="rejeitarProf('${p.id}')">✗</button>
-            </div>
-          </div>`;
+        html+='<div class="sec-hdr"><span class="sec-title" style="color:#92400e">⏳ Pendentes</span></div>';
+        pendentes.forEach(function(p){
+          html+='<div class="sc"><div class="av av2">'+initials(p.nome)+'</div>'
+            +'<div class="si"><div class="sn">'+esc(p.nome)+'</div><div class="sm">'+esc(p.email)+(p.escola?' · '+esc(p.escola):'')+'</div></div>'
+            +'<div style="display:flex;gap:5px"><button class="btn-xs" style="color:#0a7a4e;border-color:#1D9E75" onclick="aprovarProf(\''+p.id+'\')">✓</button>'
+            +'<button class="btn-xs" style="color:#b03030;border-color:#fca5a5" onclick="rejeitarProf(\''+p.id+'\')">✗</button></div></div>';
         });
-        html+=`<hr class="divider">`;
+        html+='<hr class="divider">';
       }
-      html+=`<div class="sec-hdr">
-        <span class="sec-title">Professores Ativos</span>
-        ${S.authRole==='adm'?`<button class="btn-xs" onclick="S.modal={type:'novoProf'};S.editBuf={};render()">+ Novo</button>`:'<span style="font-size:11px;color:#aaa">Professores que assinaram e vincularam esta escola</span>'}
-      </div>`;
-      // Diretor só vê professores da mesma escola
-      const ativos = S.authRole==='diretor'
-        ? profs.filter(p=>p.status==='ativo' && p.escola && getProf()?.escola && p.escola.toLowerCase()===getProf()?.escola.toLowerCase() && p.role==='prof')
-        : profs.filter(p=>p.status==='ativo');
-      if(!ativos.length) html+=`<div class="empty-state">Nenhum professor ativo.</div>`;
-      ativos.forEach(p=>{
-        const turma=p.turmaId?S.turmas[p.turmaId]:null;
-        // PLANO: exibir badge do plano do professor
-        const planoBadge=`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#e0f2fe;color:#0369a1;font-weight:700;text-transform:uppercase">${PLANOS[p.plano||'beta']?.nome||'Beta'}</span>`;
-        html+=`<div class="sc clickable" onclick="S.modal={type:'editProf',pid:'${p.id}'};render()">
-          <div class="av av1">${initials(p.nome)}</div>
-          <div class="si">
-            <div class="sn">${p.nome} ${p.role==='diretor'?'<span style="font-size:10px;color:#5b21b6;font-weight:700">(DIRETOR)</span>':''}</div>
-            <div class="sm">${p.email}${turma?' · '+turma.nome:''}</div>
-          </div>
-          ${planoBadge}
-        </div>`;
+      html+='<div class="sec-hdr"><span class="sec-title">Ativos</span>'+(S.authRole==='adm'?'<button class="btn-xs" onclick="S.modal={type:\'novoProf\'};S.editBuf={};render()">+ Novo</button>':'<span style="font-size:11px;color:#9ca3af">Professores vinculados</span>')+'</div>';
+      var ativosArr=S.authRole==='diretor'
+        ?profs.filter(function(p){var gp=getProf();return p.status==='ativo'&&p.role==='prof'&&gp&&p.escola&&p.escola.toLowerCase()===gp.escola.toLowerCase()})
+        :profs.filter(function(p){return p.status==='ativo'});
+      if(!ativosArr.length)html+='<div class="empty-state">Nenhum professor ativo.</div>';
+      ativosArr.forEach(function(p){
+        var turma=p.turmaId?S.turmas[p.turmaId]:null;
+        var badge='<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#dbeafe;color:#1e40af;font-weight:700;text-transform:uppercase">'+(PLANOS[p.plano||'beta']?PLANOS[p.plano||'beta'].nome:'Beta')+'</span>';
+        html+='<div class="sc clickable" onclick="S.modal={type:\'editProf\',pid:\''+p.id+'\'};render()">'
+          +'<div class="av av1">'+initials(p.nome)+'</div>'
+          +'<div class="si"><div class="sn">'+esc(p.nome)+(p.role==='diretor'?' <span style="font-size:10px;color:#5b21b6;font-weight:700">(DIR)</span>':'')+'</div>'
+          +'<div class="sm">'+esc(p.email)+(p.celular?' <span>📱 '+esc(p.celular)+'</span>':'')+(turma?' · '+esc(turma.nome):'')+'</div></div>'+badge+'</div>';
       });
     }
 
     if(S.tab==='config'&&S.authRole==='adm'){
-      html+=`<div class="card">
-        <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">🔐 Senha do ADM</div>
-        <div class="fl"><label>Nova Senha</label><input class="fi" type="password" id="np1" placeholder="Mínimo 4 caracteres"></div>
-        <div class="fl"><label>Confirmar Nova Senha</label><input class="fi" type="password" id="np2" placeholder="Repita a senha"></div>
-        <button class="btn-primary" onclick="trocarSenhaAdm()">Alterar Senha ADM</button>
-      </div>`;
+      html+='<div class="card"><div class="sec-title" style="margin-bottom:12px">🔐 Senha ADM</div>'
+        +'<div class="fl"><label>Nova Senha</label><input class="fi" type="password" id="np1" placeholder="Mínimo 4 caracteres"></div>'
+        +'<div class="fl"><label>Confirmar</label><input class="fi" type="password" id="np2" placeholder="Repita"></div>'
+        +'<button class="btn-primary" onclick="trocarSenhaAdm()">Alterar Senha ADM</button></div>';
     }
 
-    // Aba Suporte (reutiliza o mesmo componente)
     if(S.tab==='suporte'){
-      // Redireciona para o render do suporte — mesmo componente
-      S.screen='chamada'; S.tab='suporte';
-      render(); return;
+      // Reutiliza o suporte da tela de chamada
+      S.screen='chamada';S.tab='suporte';render();return;
     }
   }
 
-  // ── MODAIS ─────────────────────────────────────────────────
+  // MODAIS
   if(S.modal){
-    let mc=''; const m=S.modal;
+    var mc='';var m=S.modal;
 
-    // Modal: Perfil completo do aluno
     if(m.type==='perfilAluno'){
-      const t=getTurma(); const a=t?.alunos.find(x=>x.id===m.aid);
+      var t=getTurma();var a=t?t.alunos.find(function(x){return x.id===m.aid}):null;
       if(a){
-        const lim=t.limiteFaltas||6;
-        const hist=a.historico||[];
-        const totalH=hist.filter(h=>h.tipo==='presente'||h.tipo==='ausente').length;
-        const pres=hist.filter(h=>h.tipo==='presente').length;
-        const freq=totalH>0?Math.round(pres/totalH*100):100;
-
-        mc=`<div class="modal-title">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="av av${a.cor%5}" style="width:40px;height:40px;font-size:14px">${initials(a.nome)}</div>
-            <div><div>${a.nome}</div><div style="font-size:11px;color:#888;font-weight:400;text-transform:none">${t.nome}${t.escola?' — '+t.escola:''}</div></div>
-          </div>
-          <button class="cls" onclick="closeModal()">×</button>
-        </div>
-        <div class="perfil-stats">
-          <div class="perfil-stat"><div class="perfil-stat-n" style="color:${a.faltas>=lim?'#b03030':'#111'}">${a.faltas}</div><div class="perfil-stat-l">Faltas</div></div>
-          <div class="perfil-stat"><div class="perfil-stat-n" style="color:${freq>=75?'#0a7a4e':'#b03030'}">${freq}%</div><div class="perfil-stat-l">Frequência</div></div>
-          <div class="perfil-stat"><div class="perfil-stat-n">${totalH}</div><div class="perfil-stat-l">Aulas</div></div>
-        </div>
-        ${a.faltas>=lim?`<div style="background:#ffe4e6;border-radius:8px;padding:8px 12px;font-size:12px;color:#9f1239;margin-bottom:12px;font-weight:700">⚠️ ATINGIU O LIMITE DE ${lim} FALTAS!</div>`:''}
-        ${a.obs?`<div style="background:#f5f5f5;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;margin-bottom:12px"><strong>PERFIL:</strong> ${a.obs}</div>`:''}
-        <div class="sec-title" style="margin-bottom:6px">Adicionar Observação</div>
-        <div class="obs-input-row">
-          <input id="nova-obs-${a.id}" type="text" placeholder="Digite uma observação..." onkeydown="if(event.key==='Enter'){adicionarObservacao('${a.id}',this.value);this.value=''}">
-          <button onclick="adicionarObservacao('${a.id}',document.getElementById('nova-obs-${a.id}').value);document.getElementById('nova-obs-${a.id}').value=''">+</button>
-        </div>
-        <div class="sec-title" style="margin:14px 0 6px">Histórico Individual</div>
-        <div class="timeline">
-          ${hist.length===0?'<div style="font-size:13px;color:#aaa;text-align:center;padding:12px">Nenhum registro ainda.</div>':''}
-          ${hist.slice(0,20).map(h=>{
-            const icon=h.tipo==='presente'?'✓':h.tipo==='ausente'?'✗':h.tipo==='justificado'?'J':'📝';
-            const cls=h.tipo==='presente'?'tl-present':h.tipo==='ausente'?'tl-absent':h.tipo==='justificado'?'tl-justif':'tl-obs';
-            const txt=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':h.tipo==='justificado'?'<span style="color:#185FA5;font-weight:600">Falta justificada</span>':(h.texto||'Observação');
-            return `<div class="tl-item"><div class="tl-icon ${cls}">${icon}</div><div><div class="tl-date">${h.data}</div><div class="tl-text">${txt}</div></div></div>`;
-          }).join('')}
-        </div>
-        <button class="btn-wpp" onclick="compartilharWpp('${a.id}')"><span>💬</span> Compartilhar via WhatsApp</button>
-        <button class="btn-pdf" onclick="gerarPDF('${a.id}')"><span>📄</span> Exportar PDF</button>
-        <button class="btn-secondary" onclick="S.modal={type:'editAluno',aid:'${a.id}'};S.editBuf={nome:'${a.nome.replace(/'/g,"\\'")}',obs:decodeURIComponent('${encodeURIComponent(a.obs||'')}'),faltas:${a.faltas}};render()">✏️ Editar Dados do Aluno</button>`;
+        var lim=t.limiteFaltas||6;var hist=a.historico||[];
+        var totalH=hist.filter(function(h){return h.tipo==='presente'||h.tipo==='ausente'}).length;
+        var presH=hist.filter(function(h){return h.tipo==='presente'}).length;
+        var freq=totalH>0?Math.round(presH/totalH*100):100;
+        mc='<div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="av av'+a.cor%5+'" style="width:40px;height:40px;font-size:14px">'+initials(a.nome)+'</div>'
+          +'<div><div>'+esc(a.nome)+'</div><div style="font-size:11px;color:#9ca3af;font-weight:400;text-transform:none">'+(t.nome+(t.escola?' — '+t.escola:''))+'</div></div></div>'
+          +'<button class="cls" onclick="closeModal()">×</button></div>'
+          +'<div class="perfil-stats"><div class="perfil-stat"><div class="perfil-stat-n" style="color:'+(a.faltas>=lim?'#b03030':'#111827')+'">'+a.faltas+'</div><div class="perfil-stat-l">Faltas</div></div>'
+          +'<div class="perfil-stat"><div class="perfil-stat-n" style="color:'+(freq>=75?'#0a7a4e':'#b03030')+'">'+freq+'%</div><div class="perfil-stat-l">Frequência</div></div>'
+          +'<div class="perfil-stat"><div class="perfil-stat-n">'+totalH+'</div><div class="perfil-stat-l">Aulas</div></div></div>'
+          +(a.faltas>=lim?'<div style="background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;margin-bottom:12px;font-weight:700">⚠️ Atingiu o limite de '+lim+' faltas!</div>':'')
+          +(a.obs?'<div style="background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12px;color:#374151;margin-bottom:12px"><strong>PERFIL:</strong> '+esc(a.obs)+'</div>':'')
+          +'<div class="sec-title" style="margin-bottom:6px">Adicionar Observação</div>'
+          +'<div class="obs-input-row"><input id="no-'+a.id+'" type="text" placeholder="Digite uma observação..." onkeydown="if(event.key===\'Enter\'){adicionarObservacao(\''+a.id+'\',this.value);this.value=\'\'}">'
+          +'<button onclick="adicionarObservacao(\''+a.id+'\',document.getElementById(\'no-'+a.id+'\').value);document.getElementById(\'no-'+a.id+'\').value=\'\'">+</button></div>'
+          +'<div class="sec-title" style="margin:14px 0 6px">Histórico Individual</div>'
+          +'<div class="timeline">'
+          +(hist.length===0?'<div style="font-size:13px;color:#9ca3af;text-align:center;padding:12px">Nenhum registro ainda.</div>':'')
+          +hist.slice(0,20).map(function(h){
+            var icon=h.tipo==='presente'?'✓':h.tipo==='ausente'?'✗':h.tipo==='justificado'?'J':'📝';
+            var cls=h.tipo==='presente'?'tl-present':h.tipo==='ausente'?'tl-absent':h.tipo==='justificado'?'tl-justif':'tl-obs';
+            var txt=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':h.tipo==='justificado'?'<span style="color:#3b82f6;font-weight:600">Falta justificada</span>':(esc(h.texto)||'Obs.');
+            return'<div class="tl-item"><div class="tl-icon '+cls+'">'+icon+'</div><div><div class="tl-date">'+h.data+'</div><div class="tl-text">'+txt+'</div></div></div>';
+          }).join('')+'</div>'
+          +'<button class="btn-wpp" onclick="compartilharWpp(\''+a.id+'\')"><span>💬</span> Compartilhar via WhatsApp</button>'
+          +'<button class="btn-pdf" onclick="gerarPDF(\''+a.id+'\')"><span>📄</span> Exportar PDF</button>'
+          +'<button class="btn-secondary" onclick="S.modal={type:\'editAluno\',aid:\''+a.id+'\'};S.editBuf={nome:\''+a.nome.replace(/'/g,"\\'")+'\'};render()">✏️ Editar Dados</button>';
       }
     }
 
-    // Modal: Novo/Editar aluno
     if(m.type==='novoAluno'||m.type==='editAluno'){
-      const isEdit=m.type==='editAluno'; const a=isEdit?getTurma()?.alunos.find(x=>x.id===m.aid):null;
-      const turmas2=S.authRole==='adm'?Object.values(S.turmas):[];
-      mc=`<div class="modal-title">${isEdit?'Editar Aluno':'Novo Aluno'}<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome Completo *</label><input class="fi" value="${S.editBuf.nome||''}" placeholder="Nome do aluno" oninput="S.editBuf.nome=this.value"></div>
-        <div class="fl"><label>Observações sobre o Aluno</label><textarea class="fi" placeholder="Saúde, comportamento, necessidades especiais, pontos positivos..." oninput="S.editBuf.obs=this.value">${S.editBuf.obs||''}</textarea></div>
-        ${isEdit?`<div class="fl"><label>Faltas Registradas</label><input class="ni" type="number" min="0" value="${a?.faltas||0}" oninput="S.editBuf.faltas=this.value"></div>`:''}
-        ${S.authRole==='adm'&&!isEdit?`<div class="fl"><label>Turma</label><select class="fi" onchange="S.editBuf.turmaId=this.value"><option value="">Selecione a turma</option>${turmas2.map(t=>`<option value="${t.id}">${t.nome}${t.escola?' — '+t.escola:''}</option>`).join('')}</select></div>`:''}
-        <button class="btn-primary" onclick="salvarAluno()">Salvar Aluno</button>
-        ${isEdit?`<button class="btn-danger" onclick="removerAluno()">Remover Aluno</button>`:''}`;
+      var isEdit=m.type==='editAluno';
+      var a2=isEdit&&getTurma()?getTurma().alunos.find(function(x){return x.id===m.aid}):null;
+      var turmas2=S.authRole==='adm'?Object.values(S.turmas):[];
+      mc='<div class="modal-title">'+(isEdit?'Editar Aluno':'Novo Aluno')+'<button class="cls" onclick="closeModal()">×</button></div>'
+        +'<div class="fl"><label>Nome *</label><input class="fi" value="'+esc(S.editBuf.nome||'')+'" placeholder="Nome do aluno" oninput="S.editBuf.nome=this.value"></div>'
+        +'<div class="fl"><label>Observações</label><textarea class="fi" placeholder="Saúde, comportamento, necessidades especiais..." oninput="S.editBuf.obs=this.value">'+(S.editBuf.obs||'')+'</textarea></div>'
+        +(isEdit&&a2?'<div class="fl"><label>Faltas</label><input class="ni" type="number" min="0" value="'+(a2.faltas||0)+'" oninput="S.editBuf.faltas=this.value"></div>':'')
+        +(S.authRole==='adm'&&!isEdit?'<div class="fl"><label>Turma</label><select class="fi" onchange="S.editBuf.turmaId=this.value"><option value="">Selecione</option>'+turmas2.map(function(t){return'<option value="'+t.id+'">'+esc(t.nome)+(t.escola?' — '+t.escola:'')+'</option>'}).join('')+'</select></div>':'')
+        +'<button class="btn-primary" onclick="salvarAluno()">Salvar</button>'
+        +(isEdit?'<button class="btn-danger" onclick="removerAluno()">Remover Aluno</button>':'');
     }
 
-    // Modal: Nova turma
     if(m.type==='novaTurma'){
-      const profs2=Object.values(S.professores).filter(p=>p.status==='ativo');
-      mc=`<div class="modal-title">Nova Turma<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome da Turma / Ano *</label><input class="fi" placeholder="Ex: 9º ANO A" oninput="S.editBuf.nome=this.value"></div>
-        <div class="fl"><label>Nome da Escola</label><input class="fi" placeholder="Ex: E.E. Prof. João Alves" oninput="S.editBuf.escola=this.value"></div>
-        <div class="fl"><label>Professor Responsável</label><select class="fi" onchange="S.editBuf.profId=this.value"><option value="">Sem professor ainda</option>${profs2.map(p=>`<option value="${p.id}">${p.nome}${p.escola?' — '+p.escola:''}</option>`).join('')}</select></div>
-        <div class="fl"><label>Limite de Faltas para Alerta</label><input class="ni" type="number" min="1" value="6" oninput="S.editBuf.lim=this.value"></div>
-        <button class="btn-primary" onclick="criarTurma()">Criar Turma</button>`;
+      var ps=Object.values(S.professores).filter(function(p){return p.status==='ativo'});
+      mc='<div class="modal-title">Nova Turma<button class="cls" onclick="closeModal()">×</button></div>'
+        +'<div class="fl"><label>Nome / Ano *</label><input class="fi" placeholder="Ex: 9º ANO A" oninput="S.editBuf.nome=this.value"></div>'
+        +'<div class="fl"><label>Escola</label><input class="fi" placeholder="E.E. Nome da Escola" oninput="S.editBuf.escola=this.value"></div>'
+        +'<div class="fl"><label>Professor</label><select class="fi" onchange="S.editBuf.profId=this.value"><option value="">Sem professor ainda</option>'+ps.map(function(p){return'<option value="'+p.id+'">'+esc(p.nome)+'</option>'}).join('')+'</select></div>'
+        +'<div class="fl"><label>Limite de Faltas</label><input class="ni" type="number" min="1" value="6" oninput="S.editBuf.lim=this.value"></div>'
+        +'<button class="btn-primary" onclick="criarTurma()">Criar Turma</button>';
     }
 
-    // Modal: Editar turma
     if(m.type==='editTurma'){
-      const t2=S.turmas[m.tid]; const profs2=Object.values(S.professores).filter(p=>p.status==='ativo');
-      mc=`<div class="modal-title">Editar Turma<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome da Turma</label><input class="fi" value="${t2.nome}" oninput="S.turmas['${m.tid}'].nome=this.value.toUpperCase();save()"></div>
-        <div class="fl"><label>Nome da Escola</label><input class="fi" value="${t2.escola||''}" placeholder="Nome da escola" oninput="S.turmas['${m.tid}'].escola=this.value;save()"></div>
-        <div class="fl"><label>Professor</label><select class="fi" onchange="atribuirProfTurma('${m.tid}',this.value)"><option value="">Sem professor</option>${profs2.map(p=>`<option value="${p.id}"${t2.profId===p.id?' selected':''}>${p.nome}</option>`).join('')}</select></div>
-        <div class="fl"><label>Limite de Faltas</label><input class="ni" type="number" min="1" value="${t2.limiteFaltas||6}" oninput="S.turmas['${m.tid}'].limiteFaltas=parseInt(this.value)||6;save()"></div>
-        <div class="fl"><label>🔗 Link do Professor</label><div class="link-box" onclick="copyLink('${m.tid}')">Toque para copiar o link da turma</div></div>
-        <button class="btn-primary" onclick="closeModal()">Fechar</button>
-        <button class="btn-danger" onclick="if(confirm('Remover esta turma e todos os dados?')){delete S.turmas['${m.tid}'];save();closeModal();}">Remover Turma</button>`;
+      var t3=S.turmas[m.tid];var ps2=Object.values(S.professores).filter(function(p){return p.status==='ativo'});
+      mc='<div class="modal-title">Editar Turma<button class="cls" onclick="closeModal()">×</button></div>'
+        +'<div class="fl"><label>Nome</label><input class="fi" value="'+esc(t3.nome)+'" oninput="S.turmas[\''+m.tid+'\'].nome=this.value.toUpperCase();save()"></div>'
+        +'<div class="fl"><label>Escola</label><input class="fi" value="'+esc(t3.escola||'')+'" oninput="S.turmas[\''+m.tid+'\'].escola=this.value;save()"></div>'
+        +'<div class="fl"><label>Professor</label><select class="fi" onchange="atribuirProfTurma(\''+m.tid+'\',this.value)"><option value="">Sem professor</option>'+ps2.map(function(p){return'<option value="'+p.id+'"'+(t3.profId===p.id?' selected':'')+'>'+esc(p.nome)+'</option>'}).join('')+'</select></div>'
+        +'<div class="fl"><label>Limite Faltas</label><input class="ni" type="number" min="1" value="'+(t3.limiteFaltas||6)+'" oninput="S.turmas[\''+m.tid+'\'].limiteFaltas=parseInt(this.value)||6;save()"></div>'
+        +'<div class="fl"><label>🔗 Link do Professor</label><div class="link-box" onclick="copyLink(\''+m.tid+'\')">Toque para copiar o link</div></div>'
+        +'<button class="btn-primary" onclick="closeModal()">Fechar</button>'
+        +'<button class="btn-danger" onclick="if(confirm(\'Remover turma?\')){{delete S.turmas[\''+m.tid+'\'];save();closeModal();}}">Remover Turma</button>';
     }
 
-    // Modal: Editar professor
     if(m.type==='editProf'){
-      const p2=S.professores[m.pid]; const turmas2=Object.values(S.turmas);
-      // PLANO: seleção de plano pelo ADM
-      mc=`<div class="modal-title">${p2.nome}<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome</label><input class="fi" value="${p2.nome}" oninput="S.professores['${m.pid}'].nome=this.value;save()"></div>
-        <div class="fl"><label>E-mail</label><input class="fi" value="${p2.email}" oninput="S.professores['${m.pid}'].email=this.value;save()"></div>
-        <div class="fl"><label>Escola Principal</label><input class="fi" value="${p2.escola||''}" oninput="S.professores['${m.pid}'].escola=this.value;save()"></div>
-        <div class="fl"><label>Tipo de Conta</label><select class="fi" onchange="S.professores['${m.pid}'].role=this.value;save()"><option value="prof"${p2.role==='prof'?' selected':''}>Professor</option><option value="diretor"${p2.role==='diretor'?' selected':''}>Diretor</option></select></div>
-        <div class="fl"><label>Plano de Assinatura</label>
-          <select class="fi" onchange="S.professores['${m.pid}'].plano=this.value;save()">
-            ${Object.values(PLANOS).map(pl=>`<option value="${pl.id}"${(p2.plano||'beta')===pl.id?' selected':''}>${pl.nome}${pl.preco>0?' — R$ '+pl.preco.toFixed(2).replace('.',','):' (Grátis)'}</option>`).join('')}
-          </select>
-        </div>
-        <div class="fl"><label>Turma</label><select class="fi" onchange="atribuirProfTurma(this.value,'${m.pid}')"><option value="">Sem turma</option>${turmas2.map(t=>`<option value="${t.id}"${p2.turmaId===t.id?' selected':''}>${t.nome}${t.escola?' — '+t.escola:''}</option>`).join('')}</select></div>
-        <button class="btn-primary" onclick="resetarSenha('${m.pid}')">🔑 Resetar Senha</button>
-        <button class="btn-danger" onclick="if(confirm('Remover professor?')){delete S.professores['${m.pid}'];save();closeModal();}">Remover Professor</button>`;
+      var p3=S.professores[m.pid];var ts=Object.values(S.turmas);var isADM=S.authRole==='adm';
+      mc='<div class="modal-title">'+esc(p3.nome)+'<button class="cls" onclick="closeModal()">×</button></div>'
+        +(isADM
+          ?'<div class="fl"><label>Nome</label><input class="fi" value="'+esc(p3.nome)+'" oninput="S.professores[\''+m.pid+'\'].nome=this.value;save()"></div>'
+          +'<div class="fl"><label>E-mail</label><input class="fi" value="'+esc(p3.email)+'" oninput="S.professores[\''+m.pid+'\'].email=this.value;save()"></div>'
+          +'<div class="fl"><label>Celular</label><input class="fi" type="tel" value="'+esc(p3.celular||'')+'" oninput="S.professores[\''+m.pid+'\'].celular=this.value;save()" maxlength="15"></div>'
+          +'<div class="fl"><label>Escola</label><input class="fi" value="'+esc(p3.escola||'')+'" oninput="S.professores[\''+m.pid+'\'].escola=this.value;save()"></div>'
+          +'<div class="fl"><label>Plano</label><select class="fi" onchange="S.professores[\''+m.pid+'\'].plano=this.value;save()">'+Object.values(PLANOS).map(function(pl){return'<option value="'+pl.id+'"'+((p3.plano||'beta')===pl.id?' selected':'')+'>'+pl.nome+(pl.preco>0?' — R$ '+pl.preco.toFixed(2).replace('.',','):' (Grátis)')+'</option>'}).join('')+'</select></div>'
+          +'<div class="fl"><label>Turma</label><select class="fi" onchange="atribuirProfTurma(this.value,\''+m.pid+'\')"><option value="">Sem turma</option>'+ts.map(function(t){return'<option value="'+t.id+'"'+(p3.turmaId===t.id?' selected':'')+'>'+esc(t.nome)+'</option>'}).join('')+'</select></div>'
+          :'<div style="background:#f9fafb;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#6b7280">E-mail</span><span>'+esc(p3.email)+'</span></div>'
+          +(p3.celular?'<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#6b7280">Celular</span><span>'+esc(p3.celular)+'</span></div>':'')
+          +'<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#6b7280">Escola</span><span>'+esc(p3.escola||'—')+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#6b7280">Plano</span><span>'+(PLANOS[p3.plano||'beta']?PLANOS[p3.plano||'beta'].nome:'Beta')+'</span></div></div>')
+        +(p3.celular?'<a href="https://wa.me/55'+p3.celular.replace(/\D/g,'')+'" target="_blank" class="btn-wpp" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px"><span>💬</span> Chamar no WhatsApp</a>':'')
+        +(isADM?'<button class="btn-primary" style="margin-top:8px" onclick="resetarSenha(\''+m.pid+'\')">🔑 Resetar Senha</button>'
+          +'<button class="btn-danger" onclick="if(confirm(\'Remover?\')){{delete S.professores[\''+m.pid+'\'];save();closeModal();}}">Remover</button>'
+          :'<button class="btn-secondary" style="margin-top:4px" onclick="closeModal()">Fechar</button>');
     }
 
-    // Modal: Novo professor (ADM)
     if(m.type==='novoProf'){
-      mc=`<div class="modal-title">Novo Professor<button class="cls" onclick="closeModal()">×</button></div>
-        <div class="fl"><label>Nome *</label><input class="fi" oninput="S.editBuf.nome=this.value" placeholder="Nome completo"></div>
-        <div class="fl"><label>E-mail *</label><input class="fi" type="email" oninput="S.editBuf.email=this.value" placeholder="email@escola.com"><div style="font-size:11px;color:#888;margin-top:3px">Para nota fiscal e comunicações</div></div>
-        <div class="fl"><label>Celular <span style="font-size:10px;color:#aaa;font-weight:400">(opcional)</span></label><input class="fi" type="tel" oninput="S.editBuf.celular=this.value" placeholder="(11) 99999-9999" maxlength="15"></div>
-        <div class="fl"><label>Escola</label><input class="fi" oninput="S.editBuf.escola=this.value" placeholder="Nome da escola"></div>
-        <div class="fl"><label>Tipo de Conta</label><select class="fi" onchange="S.editBuf.role=this.value"><option value="prof">Professor</option><option value="diretor">Diretor</option></select></div>
-        <div class="fl"><label>Senha Provisória *</label><input class="fi" type="password" oninput="S.editBuf.senha=this.value" placeholder="Mínimo 4 caracteres"></div>
-        <button class="btn-primary" onclick="admCriarProf()">Criar Professor</button>`;
+      mc='<div class="modal-title">Novo Professor<button class="cls" onclick="closeModal()">×</button></div>'
+        +'<div class="fl"><label>Nome *</label><input class="fi" oninput="S.editBuf.nome=this.value" placeholder="Nome completo"></div>'
+        +'<div class="fl"><label>E-mail *</label><input class="fi" type="email" oninput="S.editBuf.email=this.value" placeholder="email@escola.com"></div>'
+        +'<div class="fl"><label>Celular</label><input class="fi" type="tel" oninput="S.editBuf.celular=this.value" placeholder="(11) 99999-9999" maxlength="15"></div>'
+        +'<div class="fl"><label>Escola</label><input class="fi" oninput="S.editBuf.escola=this.value" placeholder="Nome da escola"></div>'
+        +'<div class="fl"><label>Tipo</label><select class="fi" onchange="S.editBuf.role=this.value"><option value="prof">Professor</option><option value="diretor">Diretor</option></select></div>'
+        +'<div class="fl"><label>Senha *</label><input class="fi" type="password" oninput="S.editBuf.senha=this.value" placeholder="Mínimo 4 caracteres"></div>'
+        +'<button class="btn-primary" onclick="admCriarProf()">Criar Professor</button>';
     }
 
-    // Modal: Senha resetada
     if(m.type==='senhaReset'){
-      mc=`<div class="modal-title">🔑 Senha Resetada<button class="cls" onclick="closeModal()">×</button></div>
-        <div style="font-size:13px;color:#666;margin-bottom:10px">Senha provisória de <strong>${m.nome}</strong>:</div>
-        <div style="background:#f0faf6;border:1.5px dashed #1D9E75;border-radius:8px;padding:14px;text-align:center;font-size:24px;font-weight:700;color:#0a7a4e;letter-spacing:3px">${m.senha}</div>
-        <div style="font-size:11px;color:#999;margin-top:8px;text-align:center">Compartilhe com o professor e peça para ele trocar.</div>
-        <button class="btn-primary" onclick="closeModal()">Fechar</button>`;
+      mc='<div class="modal-title">🔑 Senha Resetada<button class="cls" onclick="closeModal()">×</button></div>'
+        +'<div style="font-size:13px;color:#6b7280;margin-bottom:10px">Senha provisória de <strong>'+esc(m.nome)+'</strong>:</div>'
+        +'<div style="background:#f0fdf4;border:1.5px dashed #1D9E75;border-radius:8px;padding:14px;text-align:center;font-size:24px;font-weight:700;color:#0F6E56;letter-spacing:3px">'+m.senha+'</div>'
+        +'<button class="btn-primary" onclick="closeModal()">Fechar</button>';
     }
 
-    if(mc) html+=`<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">${mc}</div></div>`;
+    if(mc)html+='<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">'+mc+'</div></div>';
   }
 
-  root.innerHTML = html;
+  root.innerHTML=html;
 }
 
-// Inicia o app
 loadData();
 </script>
 </body>
