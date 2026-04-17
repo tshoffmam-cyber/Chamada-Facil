@@ -24,148 +24,171 @@
   ============================================================
 -->
 <style>
-/* ── Reset e base ─────────────────────────────── */
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#f3f4f6;min-height:100vh;color:#111}
+/* ══════════════════════════════════════════════
+   CHAMADA FÁCIL — Design System Unificado
+   Paleta:
+     Escuro principal:  #1a1a2e
+     Escuro secundário: #16213e
+     Verde primário:    #1D9E75
+     Verde hover:       #0F6E56
+     Fundo claro:       #f4f6f8
+     Card:              #ffffff
+     Texto principal:   #111827
+     Texto secundário:  #6b7280
+     Borda:             #e5e7eb
+   Tipografia: 'Segoe UI', system-ui
+   Raio padrão: 10px cards, 8px elementos
+══════════════════════════════════════════════ */
 
-/* ── Layout principal ─────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f4f6f8;min-height:100vh;color:#111827}
 .app{max-width:500px;margin:0 auto;padding:12px}
 
-/* ── Cards e containers ───────────────────────── */
-.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:16px 18px;margin-bottom:10px}
+/* ── Cabeçalho escuro (padrão em todas as telas) ─ */
+.app-header{background:#1a1a2e;border-radius:14px;padding:16px 18px;margin-bottom:10px}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.page-title{font-size:16px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.04em}
+.sub-info{font-size:11px;color:#9ca3af;margin-top:3px}
+.escola-info{font-size:11px;color:#5DCAA5;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+
+/* ── Stats no cabeçalho ──────────────────────── */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:2px}
+.stat{background:#16213e;border-radius:8px;padding:9px 10px;text-align:center}
+.stat-num{font-size:19px;font-weight:700;color:#fff}
+.stat-num.g{color:#5DCAA5}.stat-num.r{color:#F0997B}.stat-num.b{color:#85B7EB}
+.stat-label{font-size:10px;color:#9ca3af;margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
+
+/* ── Card de conteúdo (interior claro) ────────── */
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 18px;margin-bottom:10px}
+
+/* ── Abas ─────────────────────────────────────── */
+.tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.tab{padding:6px 12px;border-radius:8px;font-size:11px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;font-weight:600;transition:all .15s}
+.tab:hover{border-color:#1D9E75;color:#1D9E75}
+.tab.active{background:#1D9E75;color:#fff;border-color:#1D9E75;font-weight:700}
 
 /* ── Cabeçalho de seção ───────────────────────── */
-.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.page-title{font-size:17px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.03em}
-.sub-info{font-size:12px;color:#888;margin-top:2px}
-
-/* ── Cards de estatísticas ────────────────────── */
-.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.stat{background:#f5f5f5;border-radius:8px;padding:9px 10px;text-align:center}
-.stat-num{font-size:19px;font-weight:700;color:#111}
-.stat-num.g{color:#0a7a4e}.stat-num.r{color:#b03030}
-.stat-label{font-size:11px;color:#888;margin-top:1px;text-transform:uppercase;letter-spacing:.03em}
-
-/* ── Abas de navegação ────────────────────────── */
-.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.tab{padding:6px 13px;border-radius:8px;font-size:12px;border:1px solid #ddd;background:#fff;cursor:pointer;color:#666;text-transform:uppercase;letter-spacing:.03em;font-weight:600}
-.tab.active{background:#f0f0f0;color:#111;border-color:#bbb}
-
-/* ── Cabeçalho de lista ───────────────────────── */
 .sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.sec-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em}
+.sec-title{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em}
 
 /* ── Botões ───────────────────────────────────── */
-.btn-xs{font-size:12px;padding:4px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;cursor:pointer;font-weight:600}
-.btn-xs:hover{background:#f5f5f5}
-.btn-primary{width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+.btn-xs{font-size:12px;padding:5px 12px;border:1px solid #1D9E75;border-radius:8px;background:#fff;color:#1D9E75;cursor:pointer;font-weight:700;transition:all .15s}
+.btn-xs:hover{background:#1D9E75;color:#fff}
+.btn-primary{width:100%;padding:12px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;text-transform:uppercase;letter-spacing:.05em;transition:background .15s}
 .btn-primary:hover{background:#0F6E56}
-.btn-secondary{width:100%;padding:9px;background:#fff;color:#111;border:1px solid #ccc;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600}
-.btn-secondary:hover{background:#f5f5f5}
-.btn-danger{width:100%;padding:8px;background:#fff;color:#b03030;border:1px solid #f09090;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600}
-.btn-wpp{width:100%;padding:11px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.04em}
+.btn-secondary{width:100%;padding:10px;background:#fff;color:#374151;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600;transition:all .15s}
+.btn-secondary:hover{border-color:#1D9E75;color:#1D9E75}
+.btn-danger{width:100%;padding:9px;background:#fff;color:#b03030;border:1px solid #fca5a5;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600}
+.btn-danger:hover{background:#fff5f5}
+.btn-wpp{width:100%;padding:12px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.04em}
 .btn-wpp:hover{background:#1da851}
-.btn-pdf{width:100%;padding:11px;background:#e53e3e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.04em}
+.btn-pdf{width:100%;padding:12px;background:#e53e3e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;letter-spacing:.04em}
 .btn-pdf:hover{background:#c53030}
 
 /* ── Cards de alunos ──────────────────────────── */
-.sc{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;transition:border-color .15s}
-.sc.clickable{cursor:pointer}.sc.clickable:hover{border-color:#aaa}
-.sc.present-card{border-left:3px solid #1D9E75}
-.sc.absent-card{border-left:3px solid #D85A30}
-.sc.alert-card{border-left:3px solid #D85A30}
+.sc{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;transition:all .15s}
+.sc.clickable{cursor:pointer}.sc.clickable:hover{border-color:#1D9E75;box-shadow:0 0 0 1px #1D9E7520}
+.sc.present-card{border-left:3px solid #1D9E75;background:#f0fdf8}
+.sc.absent-card{border-left:3px solid #ef4444;background:#fff8f8}
+.sc.justif-card{border-left:3px solid #3b82f6;background:#f0f7ff}
+.sc.alert-card{border-left:3px solid #f59e0b}
 
-/* ── Avatar do aluno ──────────────────────────── */
-.av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-.av0{background:#dbeafe;color:#1e40af}.av1{background:#dcfce7;color:#166534}
-.av2{background:#fef9c3;color:#854d0e}.av3{background:#ffe4e6;color:#9f1239}.av4{background:#ede9fe;color:#5b21b6}
+/* ── Avatar ───────────────────────────────────── */
+.av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.av0{background:#1a1a2e;color:#5DCAA5}
+.av1{background:#16213e;color:#85B7EB}
+.av2{background:#1a1a2e;color:#F0997B}
+.av3{background:#16213e;color:#AFA9EC}
+.av4{background:#1a1a2e;color:#FAC775}
 
-/* ── Info do aluno ────────────────────────────── */
+/* ── Info aluno ───────────────────────────────── */
 .si{flex:1;min-width:0}
-.sn{font-size:13px;font-weight:600;color:#111}
-.sm{font-size:11px;color:#888;margin-top:2px;display:flex;align-items:center;gap:6px}
+.sn{font-size:13px;font-weight:600;color:#111827}
+.sm{font-size:11px;color:#6b7280;margin-top:2px;display:flex;align-items:center;gap:6px}
 
-/* ── Badges de falta ──────────────────────────── */
-.fb{font-size:11px;padding:2px 7px;border-radius:6px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
-.fb.ok{background:#dcfce7;color:#166534}.fb.warn{background:#fef9c3;color:#854d0e}.fb.bad{background:#ffe4e6;color:#9f1239}
+/* ── Badges falta ─────────────────────────────── */
+.fb{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.fb.ok{background:#dcfce7;color:#166534}
+.fb.warn{background:#fef3c7;color:#92400e}
+.fb.bad{background:#fee2e2;color:#991b1b}
 
-/* ── Botão de check na chamada ────────────────── */
-.chk{width:36px;height:36px;border-radius:50%;border:1.5px solid #ccc;background:#f5f5f5;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:#aaa;transition:all .15s;font-weight:700}
+/* ── Botão de presença ────────────────────────── */
+.chk{width:36px;height:36px;border-radius:50%;border:2px solid #e5e7eb;background:#f9fafb;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#9ca3af;transition:all .15s;font-weight:700}
+.chk:hover{border-color:#1D9E75}
 .chk.present{background:#1D9E75;border-color:#1D9E75;color:#fff}
-.chk.absent{background:#D85A30;border-color:#D85A30;color:#fff}
+.chk.absent{background:#ef4444;border-color:#ef4444;color:#fff}
+.chk.justif{background:#3b82f6;border-color:#3b82f6;color:#fff}
 
 /* ── Modal ────────────────────────────────────── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center}
-.modal{background:#fff;border-radius:12px 12px 0 0;padding:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
-.modal-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;color:#111;text-transform:uppercase;letter-spacing:.04em}
-.cls{background:#fff;border:none;font-size:22px;cursor:pointer;color:#888;padding:2px 6px;line-height:1}
+.modal-bg{position:fixed;inset:0;background:rgba(10,10,20,.6);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
+.modal-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:#111827;text-transform:uppercase;letter-spacing:.04em;padding-bottom:12px;border-bottom:1px solid #e5e7eb}
+.cls{background:transparent;border:none;font-size:22px;cursor:pointer;color:#9ca3af;padding:2px 6px;line-height:1}
+.cls:hover{color:#374151}
 
-/* ── Campos de formulário ─────────────────────── */
-.fl{margin-bottom:12px}
-.fl label{display:block;font-size:11px;color:#666;margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-.fi{width:100%;padding:9px 11px;font-size:13px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;font-family:inherit}
-.fi:focus{outline:none;border-color:#1D9E75}
+/* ── Formulários ──────────────────────────────── */
+.fl{margin-bottom:14px}
+.fl label{display:block;font-size:11px;color:#6b7280;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.fi{width:100%;padding:10px 12px;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#111827;font-family:inherit;transition:border-color .15s}
+.fi:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 3px #1D9E7515}
 textarea.fi{resize:vertical;min-height:70px}
-.ni{width:64px;padding:6px 8px;font-size:13px;border:1px solid #ccc;border-radius:8px;text-align:center}
+.ni{width:64px;padding:8px;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;text-align:center}
 
-/* ── Banner de alerta ─────────────────────────── */
-.alert-banner{background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:9px 13px;margin-bottom:10px;font-size:12px;color:#856404;font-weight:600}
+/* ── Alertas e mensagens ──────────────────────── */
+.alert-banner{background:#fffbeb;border:1px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#92400e;font-weight:600}
+.err{color:#dc2626;font-size:12px;margin-top:6px;text-align:center;font-weight:700;padding:8px;background:#fee2e2;border-radius:6px}
 
-/* ── Mensagem de erro ─────────────────────────── */
-.err{color:#b03030;font-size:12px;margin-top:6px;text-align:center;font-weight:700}
+/* ── Histórico ────────────────────────────────── */
+.hist-item{padding:10px 0;border-bottom:1px solid #f3f4f6}
+.progress-bar{height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:2px}
 
-/* ── Itens de histórico ───────────────────────── */
-.hist-item{padding:9px 0;border-bottom:1px solid #eee}
-.progress-bar{height:5px;background:#eee;border-radius:3px;overflow:hidden;margin-top:5px}
-.progress-fill{height:100%;border-radius:3px}
-
-/* ── Linhas de relatório ──────────────────────── */
-.rel-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px;color:#333}
+/* ── Relatórios ───────────────────────────────── */
+.rel-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:12px;color:#374151}
 .rel-row:last-child{border:none}
 
-/* ── Caixa de link ────────────────────────────── */
-.link-box{background:#f5f5f5;border:1px dashed #ccc;border-radius:8px;padding:8px 11px;font-size:11px;color:#666;word-break:break-all;margin-top:5px;cursor:pointer}
-.link-box:hover{border-color:#888}
+/* ── Link box ─────────────────────────────────── */
+.link-box{background:#f0fdf4;border:1px dashed #1D9E75;border-radius:8px;padding:8px 12px;font-size:11px;color:#0F6E56;word-break:break-all;margin-top:5px;cursor:pointer;font-weight:600}
+.link-box:hover{background:#dcfce7}
 
 /* ── Estado vazio ─────────────────────────────── */
-.empty-state{text-align:center;padding:28px 16px;color:#999;font-size:13px}
-.divider{border:none;border-top:1px solid #eee;margin:10px 0}
+.empty-state{text-align:center;padding:32px 16px;color:#9ca3af;font-size:13px}
+.divider{border:none;border-top:1px solid #f3f4f6;margin:10px 0}
 
-/* ── Caixa de acesso beta ─────────────────────── */
-.beta-box{margin-top:16px;padding:12px;background:#f0faf6;border-radius:8px;border:1.5px dashed #1D9E75}
-.beta-title{font-size:10px;font-weight:700;color:#0F6E56;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
-.beta-btn{width:100%;text-align:center;padding:10px 12px;margin-bottom:6px;border:1px solid #ccc;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600}
+/* ── Beta box ─────────────────────────────────── */
+.beta-box{margin-top:16px;padding:14px;background:#f0fdf4;border-radius:10px;border:1.5px dashed #1D9E75}
+.beta-title{font-size:10px;font-weight:700;color:#0F6E56;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.beta-btn{width:100%;text-align:center;padding:11px 12px;margin-bottom:7px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;color:#111827;transition:all .15s}
 .beta-btn:last-child{margin-bottom:0}
-.beta-btn:hover{background:#f5f5f5}
-.beta-hint{font-size:11px;color:#999}
+.beta-btn:hover{border-color:#1D9E75;color:#1D9E75}
+.beta-hint{font-size:11px;color:#9ca3af}
 
-/* ── Linha do tempo do aluno ──────────────────── */
+/* ── Timeline ─────────────────────────────────── */
 .timeline{padding:4px 0}
-.tl-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.tl-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f3f4f6}
 .tl-item:last-child{border:none}
-.tl-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
-.tl-present{background:#dcfce7}.tl-absent{background:#ffe4e6}.tl-obs{background:#fef9c3}
-.tl-date{font-size:11px;color:#999;margin-bottom:2px}
-.tl-text{font-size:13px;color:#111}
+.tl-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px}
+.tl-present{background:#dcfce7;color:#166534}
+.tl-absent{background:#fee2e2;color:#991b1b}
+.tl-obs{background:#fef3c7;color:#92400e}
+.tl-justif{background:#dbeafe;color:#1e40af}
+.tl-date{font-size:11px;color:#9ca3af;margin-bottom:2px}
+.tl-text{font-size:13px;color:#111827}
 
-/* ── Campo de observação rápida ───────────────── */
+/* ── Obs input ────────────────────────────────── */
 .obs-input-row{display:flex;gap:8px;margin-top:10px}
-.obs-input-row input{flex:1;padding:8px 11px;font-size:13px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
-.obs-input-row button{padding:8px 14px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:700}
+.obs-input-row input{flex:1;padding:9px 12px;font-size:13px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit}
+.obs-input-row input:focus{outline:none;border-color:#1D9E75}
+.obs-input-row button{padding:9px 16px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:700}
 
-/* ── Estatísticas do perfil ───────────────────── */
+/* ── Perfil stats ─────────────────────────────── */
 .perfil-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
-.perfil-stat{background:#f5f5f5;border-radius:8px;padding:10px;text-align:center}
-.perfil-stat-n{font-size:18px;font-weight:700;color:#111}
-.perfil-stat-l{font-size:10px;color:#888;margin-top:1px;text-transform:uppercase;letter-spacing:.03em}
+.perfil-stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center}
+.perfil-stat-n{font-size:18px;font-weight:700;color:#111827}
+.perfil-stat-l{font-size:10px;color:#6b7280;margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
 
-/* ── Cards de planos ──────────────────────────── */
-.plano-card{border:1px solid #e5e5e5;border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
-.plano-card:hover{border-color:#1D9E75}
-.plano-card.ativo{border-color:#1D9E75;border-width:2px;background:#f0faf6}
+/* ── Planos ───────────────────────────────────── */
 .plano-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
-.plano-preco{font-size:22px;font-weight:700;color:#111;margin-bottom:4px}
-.plano-desc{font-size:12px;color:#666;line-height:1.5}
 </style>
 </head>
 <body>
@@ -298,18 +321,18 @@ const storage = {
 // TODO: Migrar para Redux ou Zustand quando virar React/Next.js
 // ============================================================
 let S = {
-  screen:     'loading',  // loading | login | register | chamada | relatorio | planos
-  authRole:   null,       // 'adm' | 'prof' | 'diretor'
+  screen:     'loading',
+  authRole:   null,
   authProfId: null,
   turmaAtiva: null,
   tab:        'chamada',
   modal:      null,
   loginErr:   '',
+  suporteCarregando: false,
   admPassHash: hash('admin123'),
-  // Dados principais — API: virão do banco de dados
-  turmas:      {},   // { [id]: TurmaObj }
-  professores: {},   // { [id]: ProfObj }
-  escolas:     {},   // { [id]: EscolaObj } — TODO: implementar entidade Escola
+  turmas:      {},
+  professores: {},
+  escolas:     {},
   editBuf:     {},
   profBuffer:  {},
 };
@@ -387,14 +410,15 @@ function tryRegister() {
   if(Object.values(S.professores).find(p=>p.email.toLowerCase()===email.toLowerCase())){ S.loginErr='E-mail já cadastrado.'; render(); return; }
 
   const id = uid();
-  // PLANO: ao criar conta, definir plano padrão 'beta' — integrar com pagamento depois
+  // PLANO: ao criar conta, definir plano padrão 'beta'
   S.professores[id] = {
     id, nome:nome.trim(), email:email.trim(),
     passHash:hash(senha),
+    celular: S.profBuffer.celular?.trim()||'',
     turmaId: turmaId||S.turmaAtiva||null,
     escola:  escola?.trim()||'',
     role:    role||'prof',
-    plano:   'beta',   // PLANO: padrão beta, alterar ao confirmar pagamento
+    plano:   'beta',
     status:  'pendente',
     criado:  nowStr(),
   };
@@ -420,7 +444,7 @@ function entrarDemo(tipo) {
         {id:uid(),nome:'Eduarda Mendes',      obs:'TDAH diagnosticado. Sentar na frente.',          faltas:0,presente:null,cor:4,historico:[]},
       ], history:[], criada:nowStr()
     };
-    S.professores[pid] = {id:pid, nome:'Prof. João Silva', email:EMAIL, passHash:hash('demo123'), turmaId:tid, escola:'Escola Demo', role:'prof', plano:'beta', status:'ativo', criado:nowStr()};
+    S.professores[pid] = {id:pid, nome:'Prof. João Silva', email:EMAIL, celular:'(11) 98765-4321', passHash:hash('demo123'), turmaId:tid, escola:'Escola Demo', role:'prof', plano:'beta', status:'ativo', criado:nowStr()};
     prof = S.professores[pid]; save();
   }
   tryLogin(EMAIL,'demo123');
@@ -446,10 +470,15 @@ function togglePresente(aid) {
   t.alunos = t.alunos.map(a=>{
     if(a.id!==aid) return a;
     const old=a.presente;
-    let np = old===null?true : old===true?false : null;
+    // Ciclo: null → presente → ausente → justificado → null
+    let np = old===null?'P' : old==='P'?'F' : old==='F'?'J' : null;
     let nf = a.faltas;
-    if(old===true &&np===false) nf++;
-    if(old===false&&np===null)  nf=Math.max(0,nf-1);
+    // Conta falta ao marcar ausente
+    if(old==='P' && np==='F') nf++;
+    // Desconta falta ao ir de ausente para justificado (não conta)
+    if(old==='F' && np==='J') nf=Math.max(0,nf-1);
+    // Desconta falta ao limpar de ausente
+    if(old==='F' && np===null) nf=Math.max(0,nf-1);
     return {...a, presente:np, faltas:nf};
   });
   save(); render();
@@ -507,6 +536,9 @@ function removerAluno() {
 function criarTurma() {
   const{nome,escola,profId,lim}=S.editBuf;
   if(!nome?.trim()){ showToast('Digite o nome da turma.'); return; }
+  // PLANO: verifica se o professor pode criar mais turmas
+  const pidDono = profId||(S.authRole==='prof'?S.authProfId:null);
+  if(pidDono && !checkLimitePlano(pidDono,'turma')) return;
   const id=uid();
   S.turmas[id] = {id, nome:nome.trim().toUpperCase(), escola:escola?.trim()||'', profId:profId||null, limiteFaltas:parseInt(lim)||6, alunos:[], history:[], criada:nowStr()};
   if(profId&&S.professores[profId]){ S.professores[profId].turmaId=id; S.professores[profId].status='ativo'; }
@@ -548,10 +580,10 @@ function atribuirProfTurma(turmaId,profId){
   save();
 }
 function admCriarProf(){
-  const{nome,email,senha,escola,role}=S.editBuf;
+  const{nome,email,senha,celular,escola,role}=S.editBuf;
   if(!nome?.trim()||!email?.trim()||!senha?.trim()){ showToast('Preencha todos os campos.'); return; }
   const id=uid();
-  S.professores[id]={id,nome:nome.trim(),email:email.trim(),passHash:hash(senha),turmaId:null,escola:escola?.trim()||'',role:role||'prof',plano:'beta',status:'ativo',criado:nowStr()};
+  S.professores[id]={id,nome:nome.trim(),email:email.trim(),celular:celular?.trim()||'',passHash:hash(senha),turmaId:null,escola:escola?.trim()||'',role:role||'prof',plano:'beta',status:'ativo',criado:nowStr()};
   save(); closeModal(); showToast('Professor criado!');
 }
 
@@ -691,7 +723,82 @@ function gerarPDF(aid){
   } catch(e){ showToast('Erro ao gerar PDF.'); console.error(e); }
 }
 
-// ── Toast de notificação ─────────────────────────────────────
+// ============================================================
+// SUPORTE IA — powered by Claude API
+// TODO: A chave da API precisa ficar no backend em produção
+// Por enquanto usa a API diretamente (apenas para beta/demo)
+// ============================================================
+const SUPORTE_SYSTEM = `Você é o assistente de suporte do Chamada Fácil, um app de controle de presença escolar para professores e diretores.
+
+Seu nome é "Fácil" e você fala de forma próxima, acolhedora e informal — como um colega que conhece bem o sistema.
+
+SOBRE O APP:
+- Chamada Fácil é um app para professores fazerem chamada digital, registrar observações sobre alunos e gerar relatórios e PDFs
+- Tem planos: Beta (grátis), Básico (R$29,90/mês), Plus (R$59,90/mês), Diretor (R$89,90/mês)
+- O professor faz login com e-mail e senha
+- Na chamada: 1 toque = presente (verde), 2 toques = ausente (vermelho), 3 toques = limpar
+- Dados ficam salvos no dispositivo (versão beta) — banco de dados real vem na v1.0
+- PDF pode ser exportado pelo perfil de cada aluno
+- WhatsApp: abre mensagem automática com situação do aluno
+- Alerta de faltas configurável (padrão: 6 faltas)
+- Para resetar senha: o ADM precisa fazer manualmente no painel
+
+POLÍTICA DE REEMBOLSO:
+- Cancelamento a qualquer momento, sem multa
+- Reembolso em até 7 dias após a cobrança
+- Após 7 dias: acesso até o fim do período pago
+- Para pedir reembolso: enviar e-mail para suporte@chamadafacil.com.br
+
+PROBLEMAS TÉCNICOS COMUNS:
+- "Perdi meus dados": na versão beta os dados ficam no dispositivo — se limpou o cache, os dados foram perdidos. Pedimos desculpas, isso será resolvido na v1.0 com banco de dados
+- "Não consigo logar": verificar se o e-mail está correto; se esqueceu a senha, pedir ao ADM para resetar
+- "PDF não funciona no iPhone": tentar pelo Chrome no celular em vez do Safari
+- "WhatsApp não abre": o sistema copia o texto automaticamente — basta colar no WhatsApp
+
+QUANDO NÃO SOUBER RESPONDER:
+- Diga que vai encaminhar para a equipe humana
+- Peça o e-mail e o problema resumido
+- Informe que o prazo de resposta é de até 24h úteis
+
+Responda sempre em português brasileiro, de forma curta e direta. Máximo 3 parágrafos por resposta. Use emojis com moderação.`;
+
+let suporteHistorico = [];
+
+async function enviarMensagemSuporte(texto) {
+  if(!texto?.trim()) return;
+  const prof = getProf();
+
+  // Adiciona mensagem do usuário
+  suporteHistorico.push({role:'user', content:texto.trim()});
+  S.suporteCarregando = true;
+  render();
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SUPORTE_SYSTEM,
+        messages: suporteHistorico
+      })
+    });
+    const data = await resp.json();
+    const resposta = data.content?.[0]?.text || 'Desculpe, não consegui processar sua mensagem. Tente novamente!';
+    suporteHistorico.push({role:'assistant', content:resposta});
+  } catch(e) {
+    suporteHistorico.push({role:'assistant', content:'Opa, tive um probleminha técnico aqui 😅 Tente novamente em instantes. Se persistir, manda um e-mail para suporte@chamadafacil.com.br'});
+  }
+
+  S.suporteCarregando = false;
+  render();
+  // Scroll para o final do chat
+  setTimeout(()=>{
+    const chat = document.getElementById('suporte-chat');
+    if(chat) chat.scrollTop = chat.scrollHeight;
+  }, 50);
+}
 function showToast(msg){
   let t=document.getElementById('_toast');
   if(!t){
@@ -796,7 +903,8 @@ function render(){
     html=`<div style="max-width:380px;margin:24px auto 0"><div class="card">
       <div style="text-align:center;margin-bottom:18px">${logoSVG(36)}<div style="font-size:15px;font-weight:700;margin-top:8px;text-transform:uppercase;letter-spacing:.04em">Cadastro de Professor</div></div>
       <div class="fl"><label>Nome Completo *</label><input class="fi" placeholder="Seu nome" oninput="S.profBuffer.nome=this.value"></div>
-      <div class="fl"><label>E-mail *</label><input class="fi" type="email" placeholder="professor@escola.com" oninput="S.profBuffer.email=this.value"></div>
+      <div class="fl"><label>E-mail *</label><input class="fi" type="email" placeholder="professor@escola.com" oninput="S.profBuffer.email=this.value"><div style="font-size:11px;color:#888;margin-top:3px">Usado para nota fiscal, atualizações e recuperação de senha</div></div>
+      <div class="fl"><label>Celular <span style="font-size:10px;color:#aaa;font-weight:400">(opcional)</span></label><input class="fi" type="tel" placeholder="(11) 99999-9999" oninput="S.profBuffer.celular=this.value" maxlength="15"><div style="font-size:11px;color:#888;margin-top:3px">Para contato direto e alertas via WhatsApp</div></div>
       <div class="fl"><label>Nome da Escola</label><input class="fi" placeholder="Ex: E.E. Prof. João Alves" oninput="S.profBuffer.escola=this.value"></div>
       <div class="fl"><label>Turma / Ano</label><select class="fi" onchange="S.profBuffer.turmaId=this.value"><option value="">Aguardar ADM atribuir</option>${turmas.map(t=>`<option value="${t.id}">${t.nome}${t.escola?' — '+t.escola:''}</option>`).join('')}</select></div>
       <div class="fl"><label>Tipo de Conta</label><select class="fi" onchange="S.profBuffer.role=this.value"><option value="prof">Professor</option><option value="diretor">Diretor</option></select></div>
@@ -808,11 +916,130 @@ function render(){
     </div></div>`;
   }
 
-  // ── TELA DE CHAMADA (professor) ────────────────────────────
+  // ── TELA DE PLANOS ─────────────────────────────────────────
+  else if(S.screen==='planos'){
+    const prof=getProf();
+    const planoAtual=PLANOS[prof?.plano||'beta']||PLANOS.beta;
+    html+=`<div style="max-width:480px;margin:0 auto">
+      <!-- Cabeçalho -->
+      <div style="text-align:center;padding:24px 16px 20px">
+        <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px">
+          ${logoSVG(32)}
+          <span style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em">Chamada Fácil</span>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:#111;margin-bottom:8px">Escolha seu plano</div>
+        <div style="font-size:13px;color:#888;max-width:320px;margin:0 auto">Comece grátis e expanda conforme sua escola cresce.</div>
+      </div>
+
+      <!-- Badge plano atual -->
+      ${prof?`<div style="text-align:center;margin-bottom:16px"><span style="background:#f0faf6;border:1px solid #5DCAA5;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#0F6E56">Plano atual: ${planoAtual.nome}</span></div>`:''}
+
+      <!-- Cards empilhados -->
+
+      <!-- BETA (grátis) -->
+      <div class="card" style="margin-bottom:10px;opacity:.8">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Beta</div>
+            <div style="font-size:24px;font-weight:700;color:#111">Grátis</div>
+            <div style="font-size:12px;color:#888;margin-top:2px">durante o período de testes</div>
+          </div>
+          ${(prof?.plano||'beta')==='beta'?`<span style="background:#f0f0f0;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#666">ATUAL</span>`:''}
+        </div>
+        <div style="border-top:1px solid #eee;padding-top:12px;display:flex;flex-direction:column;gap:7px">
+          ${['1 turma','1 escola','Chamada digital','PDF básico','WhatsApp','Sem relatórios avançados'].map((f,i)=>
+            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:${i>=5?'#bbb':'#333'}">
+              <span style="font-size:14px">${i>=5?'✕':'✓'}</span>${f}
+            </div>`
+          ).join('')}
+        </div>
+      </div>
+
+      <!-- BÁSICO -->
+      <div class="card" style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Básico</div>
+            <div style="font-size:24px;font-weight:700;color:#111">R$ 29<span style="font-size:14px;font-weight:400;color:#888">,90/mês</span></div>
+            <div style="font-size:12px;color:#888;margin-top:2px">ou R$ 23,90/mês no anual</div>
+          </div>
+          ${(prof?.plano)==='basico'?`<span style="background:#f0faf6;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#0F6E56">ATUAL</span>`:''}
+        </div>
+        <div style="border-top:1px solid #eee;padding-top:12px;display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+          ${['1 turma','1 escola','Chamada digital','Histórico individual','PDF completo','WhatsApp com saudação','Alertas de faltas'].map(f=>
+            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333">
+              <span style="font-size:14px;color:#1D9E75">✓</span>${f}
+            </div>`
+          ).join('')}
+        </div>
+        <button class="btn-primary" style="margin-top:0" onclick="showToast('Em breve! Aguarde o lançamento oficial.')">Assinar Básico</button>
+      </div>
+
+      <!-- PLUS (destaque) -->
+      <div style="background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:10px;position:relative">
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;border-radius:20px;padding:4px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">⭐ Mais popular</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#5DCAA5;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Plus</div>
+            <div style="font-size:24px;font-weight:700;color:#fff">R$ 59<span style="font-size:14px;font-weight:400;color:#9ca3af">,90/mês</span></div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px">ou R$ 47,90/mês no anual</div>
+          </div>
+          ${(prof?.plano)==='plus'?`<span style="background:rgba(29,158,117,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#5DCAA5">ATUAL</span>`:''}
+        </div>
+        <div style="border-top:1px solid #2d2d4e;padding-top:12px;display:flex;flex-direction:column;gap:7px;margin-bottom:16px">
+          ${['Até 3 turmas','Até 3 escolas','Tudo do plano Básico','Relatórios gerais','Painel de frequência','Exportação em lote','Suporte prioritário'].map(f=>
+            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#e2e8f0">
+              <span style="font-size:14px;color:#5DCAA5">✓</span>${f}
+            </div>`
+          ).join('')}
+        </div>
+        <button style="width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.04em" onclick="showToast('Em breve! Aguarde o lançamento oficial.')">Assinar Plus</button>
+      </div>
+
+      <!-- DIRETOR -->
+      <div class="card" style="margin-bottom:10px;border-color:#7F77DD">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Diretor</div>
+            <div style="font-size:24px;font-weight:700;color:#111">R$ 89<span style="font-size:14px;font-weight:400;color:#888">,90/mês</span></div>
+            <div style="font-size:12px;color:#888;margin-top:2px">ou R$ 71,90/mês no anual</div>
+          </div>
+          ${(prof?.plano)==='diretor'?`<span style="background:#EEEDFE;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#3C3489">ATUAL</span>`:''}
+        </div>
+        <div style="border-top:1px solid #eee;padding-top:12px;display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+          ${['1 escola (ilimitado)','Turmas ilimitadas','Tudo do plano Plus','Painel do diretor','Ver todos os professores','Relatório consolidado','Alertas por escola'].map(f=>
+            `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333">
+              <span style="font-size:14px;color:#7F77DD">✓</span>${f}
+            </div>`
+          ).join('')}
+        </div>
+        <button class="btn-primary" style="margin-top:0;background:#534AB7" onclick="showToast('Em breve! Aguarde o lançamento oficial.')">Assinar Diretor</button>
+      </div>
+
+      <!-- FAQ rápido -->
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Dúvidas frequentes</div>
+        ${[
+          ['Posso cancelar a qualquer momento?','Sim. Sem multa ou fidelidade. Cancele quando quiser.'],
+          ['Meus dados ficam salvos se cancelar?','Você terá 30 dias para exportar seus dados antes de perder o acesso.'],
+          ['Posso mudar de plano?','Sim. Faça upgrade ou downgrade a qualquer momento.'],
+          ['O período beta é realmente grátis?','Sim, 100% grátis enquanto o app está em fase de testes.'],
+        ].map(([p,r])=>`
+          <div style="padding:10px 0;border-bottom:1px solid #eee">
+            <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${p}</div>
+            <div style="font-size:12px;color:#888">${r}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn-secondary" style="margin-bottom:20px" onclick="S.screen='chamada';render()">← Voltar ao app</button>
+    </div>`;
+  }
   else if(S.screen==='chamada'){
     const prof=getProf(); const t=getTurma(); const lim=t?.limiteFaltas||6;
-    const presentes=t?.alunos.filter(a=>a.presente===true).length||0;
-    const ausentes=t?.alunos.filter(a=>a.presente===false).length||0;
+    const presentes=t?.alunos.filter(a=>a.presente==='P').length||0;
+    const ausentes=t?.alunos.filter(a=>a.presente==='F').length||0;
+    const justific=t?.alunos.filter(a=>a.presente==='J').length||0;
     const alerts=t?.alunos.filter(a=>a.faltas>=lim)||[];
 
     html+=`<div class="card"><div class="header-top">
@@ -823,13 +1050,15 @@ function render(){
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         ${S.authRole==='adm'||S.authRole==='diretor'?`<button class="btn-xs" onclick="S.screen='relatorio';S.tab='relatorio';render()">← Painel</button>`:''}
+        <button class="btn-xs" onclick="S.screen='planos';render()">💳 Planos</button>
         <button class="btn-xs" onclick="logout()">Sair</button>
       </div>
     </div>
-    ${t?`<div class="stats-row">
-      <div class="stat"><div class="stat-num">${t.alunos.length}</div><div class="stat-label">Alunos</div></div>
+    ${t?`<div class="stats-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+      <div class="stat"><div class="stat-num">${t.alunos.length}</div><div class="stat-label">Total</div></div>
       <div class="stat"><div class="stat-num g">${presentes}</div><div class="stat-label">Presentes</div></div>
       <div class="stat"><div class="stat-num r">${ausentes}</div><div class="stat-label">Ausentes</div></div>
+      <div class="stat"><div class="stat-num" style="color:#185FA5">${justific}</div><div class="stat-label">Justif.</div></div>
     </div>`:''}
     </div>`;
 
@@ -844,6 +1073,7 @@ function render(){
         <button class="tab ${S.tab==='alunos'?'active':''}"    onclick="S.tab='alunos';render()">👥 Alunos</button>
         <button class="tab ${S.tab==='historico'?'active':''}" onclick="S.tab='historico';render()">📅 Histórico</button>
         <button class="tab ${S.tab==='config'?'active':''}"    onclick="S.tab='config';render()">⚙️ Config</button>
+        <button class="tab ${S.tab==='suporte'?'active':''}"   onclick="S.tab='suporte';suporteHistorico=suporteHistorico.length?suporteHistorico:[];render()">💬 Suporte</button>
       </div>`;
 
       // Aba Chamada
@@ -852,17 +1082,24 @@ function render(){
         if(!t.alunos.length) html+=`<div class="empty-state">Nenhum aluno. Vá à aba Alunos para adicionar.</div>`;
         t.alunos.forEach(a=>{
           let cc='sc clickable';
-          if(a.presente===true)cc+=' present-card'; else if(a.presente===false)cc+=' absent-card'; else if(a.faltas>=lim)cc+=' alert-card';
-          const ck=a.presente===true?'present':a.presente===false?'absent':'';
-          const ci=a.presente===true?'✓':a.presente===false?'✗':'·';
+          if(a.presente==='P')cc+=' present-card';
+          else if(a.presente==='F')cc+=' absent-card';
+          else if(a.presente==='J')cc+=' justif-card';
+          else if(a.faltas>=lim)cc+=' alert-card';
+          const ck=a.presente==='P'?'present':a.presente==='F'?'absent':a.presente==='J'?'justif':'';
+          const ci=a.presente==='P'?'✓':a.presente==='F'?'✗':a.presente==='J'?'J':'·';
           html+=`<div class="${cc}" onclick="openEditAluno('${a.id}')">
             <div class="av av${a.cor%5}">${initials(a.nome)}</div>
             <div class="si"><div class="sn">${a.nome}</div>
             <div class="sm"><span class="fb ${fc(a.faltas,lim)}">${a.faltas}F</span>${a.obs?'<span>📝</span>':''}</div></div>
-            <button class="chk ${ck}" onclick="event.stopPropagation();togglePresente('${a.id}')">${ci}</button>
+            <button class="chk ${ck}" onclick="event.stopPropagation();togglePresente('${a.id}')" title="1x=Presente 2x=Ausente 3x=Justificado 4x=Limpar">${ci}</button>
           </div>`;
         });
-        html+=`<div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">Toque no ○ · 1x = Presente · 2x = Ausente · 3x = Limpar</div>`;
+        html+=`<div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px;line-height:1.6">
+          <span style="color:#1D9E75;font-weight:700">✓ Presente</span> &nbsp;→&nbsp;
+          <span style="color:#D85A30;font-weight:700">✗ Ausente</span> &nbsp;→&nbsp;
+          <span style="color:#185FA5;font-weight:700">J Justificado</span> &nbsp;→&nbsp; Limpar
+        </div>`;
       }
 
       // Aba Alunos
@@ -889,13 +1126,96 @@ function render(){
               <span style="font-size:13px;font-weight:700">${h.data}</span>
               <span style="font-size:12px;font-weight:700;color:${pct>=75?'#0a7a4e':'#b03030'}">${h.presentes.length}/${h.total} (${pct}%)</span>
             </div>
-            ${h.ausentes.length?`<div style="font-size:11px;color:#888;margin-top:3px">Ausentes: ${h.ausentes.join(', ')}</div>`:''}
+            ${h.ausentes?.length?`<div style="font-size:11px;color:#b03030;margin-top:3px">Ausentes: ${h.ausentes.join(', ')}</div>`:''}
+            ${h.justific?.length?`<div style="font-size:11px;color:#185FA5;margin-top:2px">Justificados: ${h.justific.join(', ')}</div>`:''}
             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pct>=75?'#1D9E75':'#D85A30'}"></div></div>
           </div>`;
         });
       }
 
-      // Aba Config (professor customiza turma e escola)
+      // Aba Suporte IA
+      if(S.tab==='suporte'){
+        const msgs = suporteHistorico;
+        html+=`<div style="display:flex;flex-direction:column;gap:0">
+          <!-- Cabeçalho do chat -->
+          <div style="background:#1a1a2e;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🤖</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff">Fácil — Suporte IA</div>
+              <div style="font-size:11px;color:#5DCAA5;margin-top:1px">● Online agora · Responde em segundos</div>
+            </div>
+          </div>
+
+          <!-- Histórico do chat -->
+          <div id="suporte-chat" style="min-height:280px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0;margin-bottom:10px">
+            ${msgs.length===0?`
+              <!-- Mensagem de boas-vindas -->
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
+                <div style="background:#f5f5f5;border-radius:0 12px 12px 12px;padding:12px 14px;max-width:85%">
+                  <div style="font-size:13px;color:#111;line-height:1.5">Oi! 👋 Sou o <strong>Fácil</strong>, assistente do Chamada Fácil.<br><br>Posso te ajudar com dúvidas sobre o sistema, pagamentos ou qualquer problema técnico. O que você precisa?</div>
+                </div>
+              </div>
+              <!-- Sugestões rápidas -->
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-left:42px">
+                ${['Como fazer a chamada?','Esqueci minha senha','Quero cancelar meu plano','PDF não está funcionando','Como exportar para WhatsApp?'].map(s=>
+                  `<button onclick="document.getElementById('suporte-input').value='${s}';enviarMensagemSuporte('${s}')" style="font-size:12px;padding:5px 10px;border:1px solid #1D9E75;border-radius:20px;background:#fff;color:#0F6E56;cursor:pointer;font-weight:500">${s}</button>`
+                ).join('')}
+              </div>
+            `:''}
+            ${msgs.map(m=>{
+              const isUser = m.role==='user';
+              return isUser
+                ? `<div style="display:flex;justify-content:flex-end">
+                    <div style="background:#1D9E75;border-radius:12px 12px 0 12px;padding:10px 14px;max-width:85%">
+                      <div style="font-size:13px;color:#fff;line-height:1.5">${m.content.replace(/\n/g,'<br>')}</div>
+                    </div>
+                  </div>`
+                : `<div style="display:flex;gap:10px;align-items:flex-start">
+                    <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
+                    <div style="background:#f5f5f5;border-radius:0 12px 12px 12px;padding:12px 14px;max-width:85%">
+                      <div style="font-size:13px;color:#111;line-height:1.5">${m.content.replace(/\n/g,'<br>')}</div>
+                    </div>
+                  </div>`;
+            }).join('')}
+            ${S.suporteCarregando?`
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
+                <div style="background:#f5f5f5;border-radius:0 12px 12px 12px;padding:12px 14px">
+                  <div style="display:flex;gap:4px;align-items:center">
+                    <span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s infinite"></span>
+                    <span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s .2s infinite"></span>
+                    <span style="width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1s .4s infinite"></span>
+                  </div>
+                </div>
+              </div>
+              <style>@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}</style>
+            `:''}
+          </div>
+
+          <!-- Campo de entrada -->
+          <div style="display:flex;gap:8px;align-items:flex-end">
+            <textarea id="suporte-input" rows="2" placeholder="Digite sua dúvida..." style="flex:1;padding:10px 12px;font-size:13px;border:1px solid #ccc;border-radius:10px;resize:none;font-family:sans-serif;line-height:1.4" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const v=this.value.trim();if(v){enviarMensagemSuporte(v);this.value=''}}"></textarea>
+            <button onclick="const i=document.getElementById('suporte-input');if(i.value.trim()){enviarMensagemSuporte(i.value.trim());i.value=''}" style="width:42px;height:42px;border-radius:10px;background:#1D9E75;border:none;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">➤</button>
+          </div>
+          <div style="font-size:11px;color:#aaa;text-align:center;margin-top:6px">Enter para enviar · Shift+Enter para nova linha</div>
+
+          <!-- Contato humano — aciona o ADM -->
+          ${msgs.length>=4?`
+          <div style="background:#f0faf6;border:1px dashed #5DCAA5;border-radius:10px;padding:14px;margin-top:12px">
+            <div style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:6px">Não resolveu? Falar com o ADM 👋</div>
+            <div style="font-size:12px;color:#666;margin-bottom:10px">Nossa equipe humana responde em até 24h úteis. Clique abaixo para enviar esta conversa ao suporte.</div>
+            <button onclick="acionarADM()" class="btn-wpp" style="margin-top:0">
+              <span style="font-size:16px">💬</span> Enviar conversa ao ADM via WhatsApp
+            </button>
+            <button onclick="acionarADMEmail()" class="btn-secondary" style="margin-top:8px">
+              📧 Enviar por e-mail
+            </button>
+          </div>`:''}
+
+          <!-- Limpar conversa -->
+          ${msgs.length>0?`<button onclick="suporteHistorico=[];render()" style="font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;margin-top:8px;text-align:center;width:100%">🗑 Limpar conversa</button>`:''}
+        </div>`;
       if(S.tab==='config'){
         html+=`<div class="card">
           <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Minha Turma</div>
@@ -935,7 +1255,16 @@ function render(){
       <button class="tab ${S.tab==='turmas'?'active':''}"       onclick="S.tab='turmas';render()">🏫 Turmas</button>
       <button class="tab ${S.tab==='professores'?'active':''}"  onclick="S.tab='professores';render()">👨‍🏫 Professores${pendentes.length?` <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:0 6px;font-size:11px">${pendentes.length}</span>`:''}</button>
       ${S.authRole==='adm'?`<button class="tab ${S.tab==='config'?'active':''}" onclick="S.tab='config';render()">⚙️ Config</button>`:''}
+      <button class="tab ${S.tab==='suporte'?'active':''}" onclick="S.tab='suporte';render()">💬 Suporte</button>
     </div>`;
+
+    // Aviso de suporte pendente para o ADM
+    if(S.authRole==='adm'&&S.tab!=='suporte'){
+      html+=`<div style="background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#856404;display:flex;justify-content:space-between;align-items:center">
+        <span>💬 Professores podem acionar você pelo suporte quando precisarem de ajuda.</span>
+        <button onclick="S.tab='suporte';render()" style="font-size:12px;font-weight:700;color:#856404;background:none;border:none;cursor:pointer;white-space:nowrap">Ver suporte →</button>
+      </div>`;
+    }
 
     if(S.tab==='relatorio'){
       if(!turmas.length) html+=`<div class="empty-state">Nenhuma turma criada ainda.</div>`;
@@ -992,8 +1321,14 @@ function render(){
         });
         html+=`<hr class="divider">`;
       }
-      html+=`<div class="sec-hdr"><span class="sec-title">Professores Ativos</span><button class="btn-xs" onclick="S.modal={type:'novoProf'};S.editBuf={};render()">+ Novo</button></div>`;
-      const ativos=profs.filter(p=>p.status==='ativo');
+      html+=`<div class="sec-hdr">
+        <span class="sec-title">Professores Ativos</span>
+        ${S.authRole==='adm'?`<button class="btn-xs" onclick="S.modal={type:'novoProf'};S.editBuf={};render()">+ Novo</button>`:'<span style="font-size:11px;color:#aaa">Professores que assinaram e vincularam esta escola</span>'}
+      </div>`;
+      // Diretor só vê professores da mesma escola
+      const ativos = S.authRole==='diretor'
+        ? profs.filter(p=>p.status==='ativo' && p.escola && getProf()?.escola && p.escola.toLowerCase()===getProf()?.escola.toLowerCase() && p.role==='prof')
+        : profs.filter(p=>p.status==='ativo');
       if(!ativos.length) html+=`<div class="empty-state">Nenhum professor ativo.</div>`;
       ativos.forEach(p=>{
         const turma=p.turmaId?S.turmas[p.turmaId]:null;
@@ -1017,6 +1352,13 @@ function render(){
         <div class="fl"><label>Confirmar Nova Senha</label><input class="fi" type="password" id="np2" placeholder="Repita a senha"></div>
         <button class="btn-primary" onclick="trocarSenhaAdm()">Alterar Senha ADM</button>
       </div>`;
+    }
+
+    // Aba Suporte (reutiliza o mesmo componente)
+    if(S.tab==='suporte'){
+      // Redireciona para o render do suporte — mesmo componente
+      S.screen='chamada'; S.tab='suporte';
+      render(); return;
     }
   }
 
@@ -1057,9 +1399,9 @@ function render(){
         <div class="timeline">
           ${hist.length===0?'<div style="font-size:13px;color:#aaa;text-align:center;padding:12px">Nenhum registro ainda.</div>':''}
           ${hist.slice(0,20).map(h=>{
-            const icon=h.tipo==='presente'?'✓':h.tipo==='ausente'?'✗':'📝';
-            const cls=h.tipo==='presente'?'tl-present':h.tipo==='ausente'?'tl-absent':'tl-obs';
-            const txt=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':(h.texto||'Observação');
+            const icon=h.tipo==='presente'?'✓':h.tipo==='ausente'?'✗':h.tipo==='justificado'?'J':'📝';
+            const cls=h.tipo==='presente'?'tl-present':h.tipo==='ausente'?'tl-absent':h.tipo==='justificado'?'tl-justif':'tl-obs';
+            const txt=h.tipo==='presente'?'Presente':h.tipo==='ausente'?'Ausente':h.tipo==='justificado'?'<span style="color:#185FA5;font-weight:600">Falta justificada</span>':(h.texto||'Observação');
             return `<div class="tl-item"><div class="tl-icon ${cls}">${icon}</div><div><div class="tl-date">${h.data}</div><div class="tl-text">${txt}</div></div></div>`;
           }).join('')}
         </div>
@@ -1129,7 +1471,8 @@ function render(){
     if(m.type==='novoProf'){
       mc=`<div class="modal-title">Novo Professor<button class="cls" onclick="closeModal()">×</button></div>
         <div class="fl"><label>Nome *</label><input class="fi" oninput="S.editBuf.nome=this.value" placeholder="Nome completo"></div>
-        <div class="fl"><label>E-mail *</label><input class="fi" type="email" oninput="S.editBuf.email=this.value" placeholder="email@escola.com"></div>
+        <div class="fl"><label>E-mail *</label><input class="fi" type="email" oninput="S.editBuf.email=this.value" placeholder="email@escola.com"><div style="font-size:11px;color:#888;margin-top:3px">Para nota fiscal e comunicações</div></div>
+        <div class="fl"><label>Celular <span style="font-size:10px;color:#aaa;font-weight:400">(opcional)</span></label><input class="fi" type="tel" oninput="S.editBuf.celular=this.value" placeholder="(11) 99999-9999" maxlength="15"></div>
         <div class="fl"><label>Escola</label><input class="fi" oninput="S.editBuf.escola=this.value" placeholder="Nome da escola"></div>
         <div class="fl"><label>Tipo de Conta</label><select class="fi" onchange="S.editBuf.role=this.value"><option value="prof">Professor</option><option value="diretor">Diretor</option></select></div>
         <div class="fl"><label>Senha Provisória *</label><input class="fi" type="password" oninput="S.editBuf.senha=this.value" placeholder="Mínimo 4 caracteres"></div>
