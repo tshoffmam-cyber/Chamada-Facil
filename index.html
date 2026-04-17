@@ -229,8 +229,27 @@ const PLANOS = {
 // API: Substituir localStorage por chamadas REST na v1.0
 // SEGURANÇA: Dados sensíveis não devem ficar no localStorage em produção
 // ============================================================
-const DATA_KEY = 'chamadafacil_v5';
-const ADM_KEY  = 'chamadafacil_adm_v5';
+const DATA_KEY = 'chamadafacil_v6';
+const ADM_KEY  = 'chamadafacil_adm_v6';
+
+// ── Sanitização de strings para evitar quebra de HTML/JS ─────
+// BUG CORRIGIDO: nomes com apóstrofo (D'Silva) quebravam o modal
+function esc(str){ return String(str||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function unesc(str){ return String(str||'').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>') }
+
+// ── Sanitização de texto para PDF ────────────────────────────
+// BUG CORRIGIDO: acentos e caracteres especiais quebravam o jsPDF
+function sanitizePDF(str){
+  return String(str||'')
+    .replace(/[àáâãä]/g,'a').replace(/[ÀÁÂÃÄ]/g,'A')
+    .replace(/[èéêë]/g,'e').replace(/[ÈÉÊË]/g,'E')
+    .replace(/[ìíîï]/g,'i').replace(/[ÌÍÎÏ]/g,'I')
+    .replace(/[òóôõö]/g,'o').replace(/[ÒÓÔÕÖ]/g,'O')
+    .replace(/[ùúûü]/g,'u').replace(/[ÙÚÛÜ]/g,'U')
+    .replace(/[ç]/g,'c').replace(/[Ç]/g,'C')
+    .replace(/[ñ]/g,'n').replace(/[Ñ]/g,'N')
+    .replace(/[^\x00-\x7F]/g,'?');
+}
 
 // ── Funções utilitárias ──────────────────────────────────────
 function uid()      { return Math.random().toString(36).slice(2,9) }
@@ -242,6 +261,28 @@ function getParam(k){ try{ return new URLSearchParams(window.location.search).ge
 
 // SEGURANÇA: hash simples para senhas — substituir por bcrypt no backend
 function hash(s){ let h=0; for(let i=0;i<s.length;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0} return h.toString(36) }
+
+// ── Verificação de limite por plano ──────────────────────────
+// BUG CORRIGIDO: limites de planos não eram aplicados de verdade
+function checkLimitePlano(profId, tipo){
+  const prof = S.professores[profId]; if(!prof) return false;
+  const plano = PLANOS[prof.plano||'beta']||PLANOS.beta;
+  if(tipo==='turma'){
+    const turmasDoProf = Object.values(S.turmas).filter(t=>t.profId===profId).length;
+    if(turmasDoProf >= plano.maxTurmas){
+      showToast(`Plano ${plano.nome}: limite de ${plano.maxTurmas} turma(s) atingido.`);
+      return false;
+    }
+  }
+  if(tipo==='escola'){
+    const escolasDoProf = [...new Set(Object.values(S.turmas).filter(t=>t.profId===profId).map(t=>t.escola).filter(Boolean))];
+    if(escolasDoProf.length >= plano.maxEscolas && !escolasDoProf.includes(S.editBuf.escola)){
+      showToast(`Plano ${plano.nome}: limite de ${plano.maxEscolas} escola(s) atingido.`);
+      return false;
+    }
+  }
+  return true;
+}
 
 function fc(f,lim){ if(f===0)return'ok'; if(f>=lim)return'bad'; if(f>=lim-2)return'warn'; return'ok' }
 
@@ -282,7 +323,8 @@ async function loadData() {
   } catch(e) { console.error('Erro ao carregar dados:', e) }
 
   const tid  = getParam('turma');
-  const sess = sessionStorage.getItem('auth_cf5');
+  // BUG CORRIGIDO: usando localStorage em vez de sessionStorage
+  const sess = localStorage.getItem('auth_cf6');
   if(sess){
     const p = JSON.parse(sess);
     S.authRole=p.role; S.authProfId=p.profId;
@@ -301,13 +343,15 @@ async function save() {
   await storage.set(ADM_KEY, S.admPassHash);
 }
 
+// BUG CORRIGIDO: sessão some ao fechar a aba — agora usa localStorage
 function setSession(role, profId=null) {
   S.authRole=role; S.authProfId=profId;
-  sessionStorage.setItem('auth_cf5', JSON.stringify({role,profId}));
+  // Usando localStorage em vez de sessionStorage para persistir ao fechar a aba
+  localStorage.setItem('auth_cf6', JSON.stringify({role,profId,ts:Date.now()}));
 }
 function logout() {
   S.authRole=null; S.authProfId=null; S.turmaAtiva=null; S.screen='login';
-  sessionStorage.removeItem('auth_cf5');
+  localStorage.removeItem('auth_cf6');
   render();
 }
 
