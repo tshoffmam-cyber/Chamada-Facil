@@ -154,7 +154,8 @@ let S={
   turmas:{},professores:{},editBuf:{},profBuffer:{}
 };
 
-// ── Logo SVG ─────────────────────────────────────────────────
+function doLogin(){tryLogin(S._lu||'',S._lp||'')}
+function doRegister(){S.screen='register';S.loginErr='';S.profBuffer={};render()}
 function logoSVG(size){
   size=size||40;
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#1D9E75"/><path d="M10 21L17 28L30 13" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -520,10 +521,11 @@ function render(){
       +'<div style="background:#16213e;border:1px solid #0f3460;border-radius:10px;padding:16px 12px"><div style="font-size:22px;margin-bottom:5px">🔐</div><div style="font-size:11px;font-weight:700;color:#e2e8f0;text-transform:uppercase;letter-spacing:.04em">Seguro</div><div style="font-size:10px;color:#6b7280;margin-top:3px">Senhas protegidas</div></div>'
       +'</div></div>'
       +'<div class="card">'
-      +'<div class="fl"><label>E-mail (ou "adm")</label><input class="fi" id="lu" type="text" placeholder="professor@escola.com" oninput="S._lu=this.value" onkeydown="if(event.key===\'Enter\')tryLogin(S._lu||\'\',S._lp||\'\')"></div>'
-      +'<div class="fl"><label>Senha</label><input class="fi" type="password" placeholder="••••••" oninput="S._lp=this.value" onkeydown="if(event.key===\'Enter\')tryLogin(S._lu||\'\',S._lp||\'\')"></div>'
+      +'<div class="fl"><label>E-mail (ou adm)</label><input class="fi" id="lu" type="text" placeholder="professor@escola.com" oninput="S._lu=this.value" onkeydown="if(event.key===\'Enter\')doLogin()"></div>'
+      +'<div class="fl"><label>Senha</label><input class="fi" type="password" placeholder="••••••" oninput="S._lp=this.value" onkeydown="if(event.key===\'Enter\')doLogin()"></div>'
       +(S.loginErr?'<div class="err">⚠ '+S.loginErr+'</div>':'')
-      +'<button class="btn-primary" onclick="tryLogin(S._lu||\'\',S._lp||\'\')">Entrar no Sistema</button>'
+      +'<button class="btn-primary" onclick="doLogin()">Entrar no Sistema</button>'
+      +'<button class="btn-secondary" onclick="doRegister()">Sou Professor — Criar Minha Conta</button>'
       +'<button class="btn-secondary" onclick="S.screen=\'register\';S.loginErr=\'\';S.profBuffer={};render()">Sou Professor — Criar Minha Conta</button>'
       +'<div class="beta-box"><div class="beta-title">🧪 Acesso de Teste (Beta)</div>'
       +'<button class="beta-btn" onclick="entrarDemo(\'adm\')"><span style="font-size:18px">👑</span><div><div style="font-weight:700">Diretor / ADM</div><div class="beta-hint">adm / admin123</div></div></button>'
