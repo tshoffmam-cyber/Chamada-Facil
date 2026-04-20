@@ -64,7 +64,8 @@ textarea.fi{resize:vertical;min-height:70px;font-family:inherit}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:flex-end;justify-content:center}
 .modal{background:#fff;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
 .modal-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;color:#111}
-.cls{background:#fff;border:none;font-size:22px;cursor:pointer;color:#888;padding:2px 6px;line-height:1}
+.cls{background:#f0f0f0;border:none;font-size:18px;cursor:pointer;color:#555;padding:4px 8px;line-height:1;border-radius:8px;flex-shrink:0;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center}
+.cls:hover{background:#e0e0e0}
 .alert-banner{background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:9px 13px;margin-bottom:10px;font-size:12px;color:#856404}
 .err{color:#b03030;font-size:12px;margin-top:6px;text-align:center;font-weight:600}
 .hist-item{padding:9px 0;border-bottom:1px solid #eee}
@@ -599,7 +600,11 @@ function admCriarProf(){
 }
 function getLinkTurma(id){return window.location.href.split('?')[0]+'?turma='+id}
 function copyLink(id){try{navigator.clipboard.writeText(getLinkTurma(id));showToast('Link copiado!');}catch(e){}}
-function closeModal(){S.modal=null;render();}
+function closeModal(){
+  S.modal=null;
+  document.querySelectorAll('.modal-bg').forEach(el=>el.remove());
+  render();
+}
 
 function showToast(msg){
   let t=document.getElementById('_toast');
@@ -609,6 +614,173 @@ function showToast(msg){
     fontSize:'13px',fontWeight:'700',zIndex:'999',transition:'opacity .3s',pointerEvents:'none',whiteSpace:'nowrap'});
     document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2200);
+}
+
+// ── Calendário ──────────────────────────────────────────────
+// Feriados nacionais via BrasilAPI (gratuita, sem chave, sempre atualizada)
+// BACKEND: cachear resposta no servidor para evitar chamadas desnecessárias
+let _feriadosCache={};
+async function carregarFeriados(ano){
+  if(_feriadosCache[ano])return _feriadosCache[ano];
+  try{
+    const r=await fetch(`https://brasilapi.com.br/api/feriados/v1/${ano}`);
+    const d=await r.json();
+    _feriadosCache[ano]=d;
+    return d;
+  }catch(e){return[];}
+}
+
+function getEventosDia(dataStr){
+  // dataStr = 'YYYY-MM-DD'
+  const prof=getProf();
+  const eventos=prof?.eventos||{};
+  return eventos[dataStr]||[];
+}
+function adicionarEvento(dataStr,txt){
+  const prof=getProf();if(!prof)return;
+  if(!prof.eventos)prof.eventos={};
+  if(!prof.eventos[dataStr])prof.eventos[dataStr]=[];
+  prof.eventos[dataStr].push({id:uid(),txt:txt.trim(),criado:nowStr()});
+  save();render();
+}
+function removerEvento(dataStr,eid){
+  const prof=getProf();if(!prof)return;
+  if(!prof.eventos?.[dataStr])return;
+  prof.eventos[dataStr]=prof.eventos[dataStr].filter(e=>e.id!==eid);
+  save();render();
+}
+
+async function renderCalendario(container){
+  const ano=S._calAno||(new Date().getFullYear());
+  const mes=S._calMes!==undefined?S._calMes:new Date().getMonth();
+  S._calAno=ano;S._calMes=mes;
+
+  // Carrega feriados do ano atual e próximo (para dezembro → janeiro)
+  const [feriados,feriadosProx]=await Promise.all([
+    carregarFeriados(ano),
+    carregarFeriados(ano+1)
+  ]);
+  const todosFeriados=[...feriados,...feriadosProx];
+  // Mapeia feriados por data 'YYYY-MM-DD'
+  const ferMap={};
+  todosFeriados.forEach(f=>{ferMap[f.date]=f.name;});
+  // Feriados customizados do professor
+  const prof=getProf();
+  const ferCustom=prof?.feriadosCustom||{};
+
+  const hoje=new Date();
+  const primeiroDia=new Date(ano,mes,1);
+  const ultimoDia=new Date(ano,mes+1,0);
+  const diaSemanaInicio=primeiroDia.getDay(); // 0=Dom
+  const totalDias=ultimoDia.getDate();
+  const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const diasSemana=['D','S','T','Q','Q','S','S'];
+
+  let html=`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px">`;
+  // Header do mês
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <button class="btn-xs" onclick="S._calMes=${mes===0?11:mes-1};if(${mes===0})S._calAno=${ano-1};S._calDia=null;renderCalendarioTab()">‹</button>
+    <div style="font-size:15px;font-weight:700;color:#1a1a2e">${nomesMes[mes]} ${ano}</div>
+    <button class="btn-xs" onclick="S._calMes=${mes===11?0:mes+1};if(${mes===11})S._calAno=${ano+1};S._calDia=null;renderCalendarioTab()">›</button>
+  </div>`;
+  // Dias da semana
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">`;
+  diasSemana.forEach((d,i)=>{
+    html+=`<div style="text-align:center;font-size:10px;font-weight:700;color:${i===0?'#b03030':'#9ca3af'};padding:2px 0">${d}</div>`;
+  });
+  html+=`</div>`;
+  // Grid de dias
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">`;
+  // Espaços vazios antes do primeiro dia
+  for(let i=0;i<diaSemanaInicio;i++){
+    html+=`<div></div>`;
+  }
+  for(let d=1;d<=totalDias;d++){
+    const dataStr=`${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ehHoje=d===hoje.getDate()&&mes===hoje.getMonth()&&ano===hoje.getFullYear();
+    const ehFeriado=!!ferMap[dataStr];
+    const ehCustom=!!ferCustom[dataStr];
+    const temEvento=getEventosDia(dataStr).length>0;
+    const ehSelecionado=S._calDia===dataStr;
+    const diaSem=(diaSemanaInicio+d-1)%7;
+    const ehDom=diaSem===0;
+
+    let bg=ehSelecionado?'#1a1a2e':ehHoje?'#1D9E75':ehFeriado||ehCustom?'#fff3cd':'#f9f9f9';
+    let cor=ehSelecionado?'#5DCAA5':ehHoje?'#fff':ehFeriado||ehCustom?'#856404':ehDom?'#b03030':'#111';
+    let border=ehSelecionado?'2px solid #5DCAA5':ehHoje?'2px solid #1D9E75':ehFeriado||ehCustom?'1px solid #f0c040':'1px solid #eee';
+
+    html+=`<div onclick="S._calDia=S._calDia==='${dataStr}'?null:'${dataStr}';renderCalendarioTab()"
+      style="border-radius:8px;padding:5px 2px;text-align:center;cursor:pointer;background:${bg};border:${border};position:relative;min-height:34px">
+      <div style="font-size:12px;font-weight:${ehHoje||ehSelecionado?'700':'500'};color:${cor}">${d}</div>
+      ${temEvento?`<div style="width:5px;height:5px;border-radius:50%;background:#1D9E75;margin:0 auto;margin-top:1px"></div>`:''}
+      ${ehFeriado||ehCustom?`<div style="width:5px;height:5px;border-radius:50%;background:#f0c040;margin:0 auto;margin-top:1px"></div>`:''}
+    </div>`;
+  }
+  html+=`</div></div>`;
+
+  // Painel do dia selecionado
+  if(S._calDia){
+    const dataStr=S._calDia;
+    const [y,m2,d2]=dataStr.split('-');
+    const nomeDia=new Date(parseInt(y),parseInt(m2)-1,parseInt(d2)).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    const ferNome=ferMap[dataStr]||ferCustom[dataStr];
+    const eventos=getEventosDia(dataStr);
+
+    html+=`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:8px;text-transform:capitalize">${nomeDia}</div>
+      ${ferNome?`<div style="background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:7px 10px;font-size:12px;color:#856404;margin-bottom:8px">🎉 Feriado: ${ferNome}</div>`:''}
+      ${eventos.length?eventos.map(e=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0">
+          <span style="font-size:13px;color:#111">📌 ${esc(e.txt)}</span>
+          <button class="btn-xs" style="color:#b03030;border-color:#f09090;font-size:11px" onclick="removerEvento('${dataStr}','${e.id}')">✕</button>
+        </div>`).join(''):'<div style="font-size:12px;color:#aaa;margin-bottom:8px">Nenhum evento.</div>'}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input class="fi" id="novo-evento-input" placeholder="Adicionar evento ou feriado local..." style="flex:1;font-size:13px"
+          onkeydown="if(event.key==='Enter'){const v=document.getElementById('novo-evento-input')?.value?.trim();if(v)adicionarEvento('${dataStr}',v);}">
+        <button class="btn-xs green" onclick="const v=document.getElementById('novo-evento-input')?.value?.trim();if(v)adicionarEvento('${dataStr}',v)">+ Add</button>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px">
+        ${!ferCustom[dataStr]&&!ferMap[dataStr]?`<button class="btn-xs" style="font-size:11px;color:#856404;border-color:#f0c040" onclick="marcarFeriadoCustom('${dataStr}')">🎉 Marcar como feriado</button>`:''}
+        ${ferCustom[dataStr]?`<button class="btn-xs" style="font-size:11px;color:#b03030;border-color:#f09090" onclick="removerFeriadoCustom('${dataStr}')">✕ Remover feriado</button>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Próximos feriados
+  html+=`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px">
+    <div class="sec-title" style="margin-bottom:8px">📅 Próximos feriados nacionais</div>`;
+  const hojeStr=hoje.toISOString().split('T')[0];
+  const proxFeriados=todosFeriados.filter(f=>f.date>=hojeStr).slice(0,5);
+  if(!proxFeriados.length)html+=`<div style="font-size:12px;color:#aaa">Nenhum feriado próximo encontrado.</div>`;
+  proxFeriados.forEach(f=>{
+    const dt=new Date(f.date+'T12:00:00');
+    const dtFmt=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+    html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px">
+      <span style="color:#111">${f.name}</span>
+      <span style="color:#856404;font-weight:600">${dtFmt}</span>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  container.innerHTML=html;
+}
+
+function marcarFeriadoCustom(dataStr){
+  const nome=prompt('Nome do feriado estadual/municipal:');
+  if(!nome?.trim())return;
+  const prof=getProf();if(!prof)return;
+  if(!prof.feriadosCustom)prof.feriadosCustom={};
+  prof.feriadosCustom[dataStr]=nome.trim();
+  save();renderCalendarioTab();
+}
+function removerFeriadoCustom(dataStr){
+  const prof=getProf();if(!prof)return;
+  if(prof.feriadosCustom)delete prof.feriadosCustom[dataStr];
+  save();renderCalendarioTab();
+}
+function renderCalendarioTab(){
+  const container=document.getElementById('cal-container');
+  if(container)renderCalendario(container);
 }
 
 // ════════════════════════════════════════════════
@@ -796,9 +968,11 @@ function render(){
       minhasTurmas.forEach(tm=>{
         const lmt=tm.limiteFaltas||6;
         const alertas=tm.alunos.filter(a=>a.faltas>=lmt).length;
-        html+=`<div class="sc clickable" onclick="S.modal={type:'editTurma',tid:'${tm.id}'};S.editBuf={nome:${JSON.stringify(tm.nome)},escola:${JSON.stringify(tm.escola||'')},lim:${tm.limiteFaltas||6}};render()">
+        const tmNomeEsc=esc(tm.nome);
+        const tmEscolaEsc=esc(tm.escola||'');
+        html+=`<div class="sc clickable" onclick="S.modal={type:'editTurma',tid:'${tm.id}'};S.editBuf={nome:S.turmas['${tm.id}'].nome,escola:S.turmas['${tm.id}'].escola||'',lim:${tm.limiteFaltas||6}};render()">
           <div class="av av0" style="background:#1a1a2e;color:#5DCAA5">T</div>
-          <div class="si"><div class="sn">${esc(tm.nome)}</div><div class="sm">${tm.escola?esc(tm.escola)+' · ':''}${tm.alunos.length} alunos · ${(tm.materias||[]).length} matérias</div></div>
+          <div class="si"><div class="sn">${tmNomeEsc}</div><div class="sm">${tmEscolaEsc?tmEscolaEsc+' · ':''}${tm.alunos.length} alunos · ${(tm.materias||[]).length} matérias</div></div>
           ${alertas?`<span class="fb bad">⚠ ${alertas}</span>`:`<span class="fb ok">lim ${lmt}f</span>`}
         </div>`;
       });
@@ -1059,13 +1233,23 @@ function render(){
       }
     }
 
+    // ── ABA CALENDÁRIO ──
+    if(S.tab==='calendario'){
+      html+=`<div class="sec-hdr"><span class="sec-title">Calendário Escolar</span></div>`;
+      html+=`<div id="cal-container"><div class="empty-state">⏳ Carregando feriados...</div></div>`;
+    }
+
     // Bottom nav
     html+=`<nav class="bottom-nav">`;
-    [{id:'chamada',icon:'📋',label:'Chamada'},{id:'alunos',icon:'👥',label:'Alunos'},{id:'turmas',icon:'🏫',label:'Turmas'},{id:'historico',icon:'📅',label:'Histórico'},{id:'config',icon:'⚙️',label:'Config'}].forEach(tab=>{
+    [{id:'chamada',icon:'📋',label:'Chamada'},{id:'alunos',icon:'👥',label:'Alunos'},{id:'turmas',icon:'🏫',label:'Turmas'},{id:'historico',icon:'📅',label:'Histórico'},{id:'calendario',icon:'🗓',label:'Agenda'},{id:'config',icon:'⚙️',label:'Config'}].forEach(tab=>{
       html+=`<button class="nav-item ${S.tab===tab.id?'active':''}" onclick="S.tab='${tab.id}';render()"><span class="nav-icon">${tab.icon}</span><span class="nav-label">${tab.label}</span></button>`;
     });
     html+=`</nav>`;
     root.innerHTML=html;
+    // Renderiza calendário após inserir HTML (precisa do container no DOM)
+    if(S.tab==='calendario'){
+      renderCalendarioTab();
+    }
   }
 
   // ── PAINEL ADM ──
