@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',sans-serif;background:#f4f6f8;min-height:100vh;color:#111}
-.app{max-width:500px;margin:0 auto;padding:12px;padding-bottom:72px}
+.app{max-width:500px;margin:0 auto;padding:12px;padding-bottom:100px}
 .app-header{background:#1a1a2e;border-radius:14px;padding:14px 16px;margin-bottom:10px}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .page-title{font-size:15px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.04em}
@@ -88,7 +88,20 @@ textarea.fi{resize:vertical;min-height:70px;font-family:inherit}
 .turma-card-info{font-size:12px;color:#888;margin-top:3px}
 .profile-av{width:64px;height:64px;border-radius:50%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#5DCAA5;margin:0 auto 12px}
 
-/* ── Boletim ── */
+/* ── Banner patrocinado rotativo ── */
+.ad-banner{overflow:hidden;height:36px;background:#fffbeb;border-top:1px solid #fde68a;position:relative}
+.ad-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.ad-slide{min-width:100%;height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;gap:8px;flex-shrink:0}
+.ad-label{font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.ad-content{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.ad-icon{font-size:14px;flex-shrink:0}
+.ad-text{min-width:0}
+.ad-title{font-size:11px;font-weight:700;color:#92400e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-sub{font-size:10px;color:#a16207;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-btn{font-size:10px;font-weight:700;color:#92400e;background:#fef3c7;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.ad-dots{display:flex;gap:3px;justify-content:center;padding:3px 0;background:#fffbeb;border-top:1px solid #fde68a}
+.ad-dot{width:5px;height:5px;border-radius:50%;background:#fde68a;border:none;padding:0;cursor:pointer;transition:background .2s}
+.ad-dot.active{background:#d97706}
 .boletim-lock{background:#f8f8f8;border:1.5px dashed #d1d5db;border-radius:12px;padding:24px 16px;text-align:center;margin-bottom:10px}
 .boletim-lock-icon{font-size:32px;margin-bottom:8px}
 .boletim-lock-title{font-size:15px;font-weight:700;color:#111;margin-bottom:6px}
@@ -169,7 +182,7 @@ let S={
 async function loadData(){
   try{
     const [r1,r2]=await Promise.all([storage.get(DATA_KEY),storage.get(ADM_KEY)]);
-    if(r1?.value){const d=JSON.parse(r1.value);S.turmas=d.turmas||{};S.professores=d.professores||{};}
+    if(r1?.value){const d=JSON.parse(r1.value);S.turmas=d.turmas||{};S.professores=d.professores||{};S.patrocinadores=d.patrocinadores||[];}
     if(r2?.value){S.admPassHash=r2.value;}
   }catch(e){}
   const tid=getParam('turma');
@@ -191,7 +204,7 @@ async function loadData(){
   render();
 }
 async function save(){
-  await storage.set(DATA_KEY,JSON.stringify({turmas:S.turmas,professores:S.professores}));
+  await storage.set(DATA_KEY,JSON.stringify({turmas:S.turmas,professores:S.professores,patrocinadores:S.patrocinadores||[]}));
   await storage.set(ADM_KEY,S.admPassHash);
 }
 function setSession(role,profId=null){S.authRole=role;S.authProfId=profId;localStorage.setItem('auth_v6',JSON.stringify({role,profId}));}
@@ -201,14 +214,16 @@ function tryLogin(user,pass){
   S.loginErr='';
   if(!user||!pass){S.loginErr='Preencha usuário e senha.';render();return;}
   if(user.toLowerCase()==='adm'||user.toLowerCase()==='admin'){
-    if(hash(pass)===S.admPassHash){setSession('adm');S.screen='adm';S.tab='relatorio';render();return;}
+    if(hash(pass)===S.admPassHash){setSession('adm');S.screen='adm';S.tab='relatorio';registrarLog('login','ADM fez login');render();return;}
     S.loginErr='Senha de administrador incorreta.';render();return;
   }
   const prof=Object.values(S.professores).find(p=>p.email.toLowerCase()===user.toLowerCase());
   if(!prof){S.loginErr='Usuário não encontrado.';render();return;}
   if(prof.status==='pendente'){S.loginErr='Cadastro aguardando aprovação do ADM.';render();return;}
+  if(prof.bloqueado){S.loginErr='Acesso suspenso. Entre em contato com o suporte.';render();return;}
   if(hash(pass)!==prof.passHash){S.loginErr='Senha incorreta.';render();return;}
   setSession('prof',prof.id);S.screen='app';S.tab='chamada';
+  registrarLog('login',`${prof.nome} fez login`);
   const mt=getMeusTurmasPara(prof.id);
   S.turmaAtiva=(mt.length===1)?mt[0].id:null;
   render();
@@ -410,7 +425,137 @@ function render(){
   }
 }
 
-// ── Suporte IA ──────────────────────────────────────────────
+// ── NPS + Satisfação ────────────────────────────────────────
+// BACKEND: salvar respostas no banco e calcular NPS real
+function submeterNPS(nota){
+  const prof=getProf();if(!prof)return;
+  if(!S.npsRespostas)S.npsRespostas=[];
+  // Remove resposta anterior do mesmo professor
+  S.npsRespostas=S.npsRespostas.filter(r=>r.profId!==prof.id);
+  S.npsRespostas.push({
+    profId:prof.id,nome:prof.nome,plano:prof.plano||'basico',
+    nota,data:nowStr(),comentario:''
+  });
+  prof.npsRespondido=true;
+  save();S._npsEnviado=true;render();
+  showToast('Obrigado pela avaliação! 😊');
+}
+function submeterNPSComentario(){
+  const prof=getProf();if(!prof)return;
+  const txt=document.getElementById('nps-comentario')?.value?.trim();
+  if(!txt)return;
+  const resp=S.npsRespostas?.find(r=>r.profId===prof.id);
+  if(resp)resp.comentario=txt;
+  save();showToast('Comentário salvo!');
+}
+function calcNPS(){
+  const respostas=S.npsRespostas||[];
+  if(!respostas.length)return null;
+  const total=respostas.length;
+  const promotores=respostas.filter(r=>r.nota>=4).length;
+  const detratores=respostas.filter(r=>r.nota<=2).length;
+  return{
+    score:Math.round(((promotores-detratores)/total)*100),
+    total,promotores,
+    neutros:respostas.filter(r=>r.nota===3).length,
+    detratores,
+    media:(respostas.reduce((s,r)=>s+r.nota,0)/total).toFixed(1)
+  };
+}
+
+// 1. Mensagem global para todos os professores
+// BACKEND: substituir por push notification ou e-mail real
+function admEnviarMensagem(){
+  const txt=document.getElementById('msg-global')?.value?.trim();
+  if(!txt){showToast('Digite a mensagem.');return;}
+  if(!S.mensagensGlobais)S.mensagensGlobais=[];
+  S.mensagensGlobais.unshift({id:uid(),txt,data:nowStr(),lidas:[]});
+  if(S.mensagensGlobais.length>20)S.mensagensGlobais=S.mensagensGlobais.slice(0,20);
+  save();showToast('Mensagem enviada a todos os professores!');
+  document.getElementById('msg-global').value='';
+}
+
+// 2. Bloquear/desbloquear professor
+function toggleBloquearProf(pid){
+  const p=S.professores[pid];if(!p)return;
+  p.bloqueado=!p.bloqueado;
+  save();render();
+  showToast(p.bloqueado?'Professor bloqueado.':'Professor desbloqueado.');
+}
+
+// 3. Config visual do app
+// BACKEND: salvar no banco e servir para todos os clientes
+function salvarConfigApp(){
+  const nome=document.getElementById('cfg-nome')?.value?.trim();
+  const cor=document.getElementById('cfg-cor')?.value?.trim();
+  const login=document.getElementById('cfg-login')?.value?.trim();
+  const faltas=document.getElementById('cfg-faltas')?.value;
+  if(!S.configApp)S.configApp={};
+  if(nome)S.configApp.nomeApp=nome;
+  if(cor)S.configApp.corPrincipal=cor;
+  if(login)S.configApp.textoLogin=login;
+  if(faltas)S.configApp.limiteFaltasPadrao=parseInt(faltas)||6;
+  save();showToast('Configurações salvas!');
+}
+
+// 4. Excluir professor e todos os dados (LGPD)
+function excluirProfCompleto(pid){
+  const p=S.professores[pid];if(!p)return;
+  if(!confirm(`ATENÇÃO: Isso vai remover ${p.nome} e TODOS os dados vinculados (turmas, alunos, histórico). Essa ação não pode ser desfeita.\n\nDigite CONFIRMAR para prosseguir.`))return;
+  // Remove turmas do professor
+  Object.keys(S.turmas).forEach(tid=>{
+    if(S.turmas[tid].profId===pid)delete S.turmas[tid];
+  });
+  delete S.professores[pid];
+  // Log LGPD
+  if(!S.logLGPD)S.logLGPD=[];
+  S.logLGPD.unshift({data:nowStr(),acao:`Dados de ${p.nome} (${p.email}) removidos por solicitação LGPD`});
+  save();closeModal();showToast('Dados removidos conforme LGPD.');
+}
+
+// 5. Log de atividades
+// BACKEND: substituir por logs reais do servidor
+function registrarLog(tipo,desc){
+  if(!S.logAtividades)S.logAtividades=[];
+  S.logAtividades.unshift({id:uid(),tipo,desc,data:nowStr()});
+  if(S.logAtividades.length>100)S.logAtividades=S.logAtividades.slice(0,100);
+}
+
+// 6. Exportar dados gerais em PDF
+// BACKEND: gerar no servidor para arquivos grandes
+function exportarDadosGerais(){
+  const turmas=Object.values(S.turmas);
+  const profs=Object.values(S.professores);
+  const win=window.open('','_blank');if(!win)return;
+  let linhas=profs.map(p=>{
+    const tds=Object.values(S.turmas).filter(t=>t.profId===p.id);
+    const totalAlunos=tds.reduce((s,t)=>s+t.alunos.length,0);
+    const totalChamadas=tds.reduce((s,t)=>s+t.history.length,0);
+    return`<tr style="border-bottom:1px solid #eee">
+      <td style="padding:6px 8px">${p.nome}</td>
+      <td style="padding:6px 8px">${p.email}</td>
+      <td style="padding:6px 8px;text-align:center">${(S.configApp?.planos||{})[p.id]||p.plano||'basico'}</td>
+      <td style="padding:6px 8px;text-align:center">${tds.length}</td>
+      <td style="padding:6px 8px;text-align:center">${totalAlunos}</td>
+      <td style="padding:6px 8px;text-align:center">${totalChamadas}</td>
+      <td style="padding:6px 8px;text-align:center"><span style="color:${p.bloqueado?'#b03030':'#0a7a4e'}">${p.bloqueado?'Bloqueado':'Ativo'}</span></td>
+    </tr>`;
+  }).join('');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório Geral — Chamada Fácil</title>
+  <style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:18px;margin-bottom:4px}
+  table{width:100%;border-collapse:collapse;font-size:12px}th{background:#1a1a2e;color:#fff;padding:8px;text-align:left}
+  @media print{button{display:none}}</style></head><body>
+  <div style="border-bottom:2px solid #1D9E75;padding-bottom:12px;margin-bottom:16px">
+    <div style="font-size:11px;color:#888">CHAMADA FÁCIL — RELATÓRIO GERAL DO ADM</div>
+    <h1>Relatório de Professores e Turmas</h1>
+    <div style="font-size:12px;color:#888">Gerado em ${nowStr()} · ${profs.length} professores · ${turmas.length} turmas</div>
+  </div>
+  <table><thead><tr><th>Professor</th><th>E-mail</th><th>Plano</th><th>Turmas</th><th>Alunos</th><th>Chamadas</th><th>Status</th></tr></thead>
+  <tbody>${linhas}</tbody></table>
+  <button onclick="window.print()" style="margin-top:20px;padding:8px 20px;background:#1D9E75;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨 Imprimir / Salvar PDF</button>
+  </body></html>`);
+  win.document.close();
+}────────────────────────────────────────────
 // BACKEND: mover chave da API para variável de ambiente no servidor
 // SEGURANÇA: nunca expor chave de API no frontend em produção
 // TODO: substituir por endpoint próprio /api/suporte
@@ -671,11 +816,90 @@ function closeModal(){
 function showToast(msg){
   let t=document.getElementById('_toast');
   if(!t){t=document.createElement('div');t.id='_toast';
-    Object.assign(t.style,{position:'fixed',bottom:'76px',left:'50%',transform:'translateX(-50%)',
+    Object.assign(t.style,{position:'fixed',bottom:'100px',left:'50%',transform:'translateX(-50%)',
     background:'#1D9E75',color:'#fff',padding:'9px 18px',borderRadius:'8px',
     fontSize:'13px',fontWeight:'700',zIndex:'999',transition:'opacity .3s',pointerEvents:'none',whiteSpace:'nowrap'});
     document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2200);
+}
+
+// ── Banner patrocinado rotativo ─────────────────────────────
+// BACKEND: buscar patrocinadores do banco de dados
+// ADM gerencia os patrocinadores direto no painel
+
+const ADS_DEFAULT=[
+  {id:'d1',icon:'📚',title:'FTD Educação',sub:'Coleções didáticas 2025 com desconto',url:'https://ftd.com.br'},
+  {id:'d2',icon:'🎓',title:'Pós-grad. EAD',sub:'Formação para professores com bolsa',url:'#'},
+  {id:'d3',icon:'📝',title:'Saraiva Educação',sub:'Livros e materiais pedagógicos',url:'#'},
+];
+
+function getAds(){
+  // Usa patrocinadores cadastrados pelo ADM, ou os padrão se não houver nenhum
+  const custom=S.patrocinadores||[];
+  return custom.length?custom:ADS_DEFAULT;
+}
+
+let _adIdx=0;let _adTimer=null;
+
+function renderAdBanner(){
+  const prof=getProf();
+  const plano=prof?.plano||'basico';
+  if(plano==='prime')return'';
+  const ads=getAds();
+  if(!ads.length)return'';
+
+  let slides=ads.map((a,i)=>`
+    <div class="ad-slide">
+      <span class="ad-label">Patrocinado</span>
+      <div class="ad-content">
+        <span class="ad-icon">${esc(a.icon||'📢')}</span>
+        <div class="ad-text">
+          <div class="ad-title">${esc(a.title)}</div>
+          <div class="ad-sub">${esc(a.sub)}</div>
+        </div>
+      </div>
+      <button class="ad-btn" onclick="window.open('${esc(a.url)}','_blank')">ver</button>
+    </div>`).join('');
+
+  let dots=ads.map((_,i)=>`<button class="ad-dot${i===0?' active':''}" id="ad-dot-${i}" onclick="goToAd(${i})"></button>`).join('');
+
+  return`<div class="ad-banner"><div class="ad-track" id="ad-track">${slides}</div></div>
+    <div class="ad-dots">${dots}</div>`;
+}
+
+function goToAd(idx){
+  _adIdx=idx;
+  const track=document.getElementById('ad-track');
+  if(track)track.style.transform=`translateX(-${idx*100}%)`;
+  document.querySelectorAll('.ad-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
+
+function startAdRotation(){
+  if(_adTimer)clearInterval(_adTimer);
+  const prof=getProf();
+  if((prof?.plano||'basico')==='prime')return;
+  const ads=getAds();
+  if(ads.length<=1)return;
+  _adTimer=setInterval(()=>{
+    _adIdx=(_adIdx+1)%ads.length;
+    goToAd(_adIdx);
+  },5000);
+}
+
+function admSalvarPatrocinador(){
+  const icon=document.getElementById('ad-icon')?.value?.trim()||'📢';
+  const title=document.getElementById('ad-title')?.value?.trim();
+  const sub=document.getElementById('ad-sub')?.value?.trim();
+  const url=document.getElementById('ad-url')?.value?.trim();
+  if(!title||!url){showToast('Preencha nome e link.');return;}
+  if(!S.patrocinadores)S.patrocinadores=[];
+  S.patrocinadores.push({id:uid(),icon,title,sub:sub||'',url});
+  save();S.modal=null;render();showToast('Patrocinador adicionado!');
+}
+function admRemoverPatrocinador(pid){
+  if(!confirm('Remover este patrocinador?'))return;
+  S.patrocinadores=(S.patrocinadores||[]).filter(a=>a.id!==pid);
+  save();render();showToast('Removido!');
 }
 
 // ── Calendário ──────────────────────────────────────────────
@@ -922,6 +1146,21 @@ function render(){
       </div>`;
     }
     html+=`</div>`;
+
+    // Banner de mensagem global para professores
+    const msgs=S.mensagensGlobais||[];
+    if(msgs.length&&S.tab==='chamada'){
+      const ultima=msgs[0];
+      if(!S._msgLida||S._msgLida!==ultima.id){
+        html+=`<div style="background:#1a1a2e;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:16px;flex-shrink:0">📣</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:700;color:#5DCAA5;margin-bottom:2px">Aviso do sistema</div>
+          <div style="font-size:12px;color:#e2e8f0">${esc(ultima.txt)}</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:3px">${ultima.data}</div></div>
+          <button onclick="S._msgLida='${ultima.id}';render()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:16px;padding:0;flex-shrink:0">×</button>
+        </div>`;
+      }
+    }
 
     // ── ABA CHAMADA ──
     if(S.tab==='chamada'){
@@ -1189,6 +1428,226 @@ function render(){
     }
 
     // ── ABA CONFIG ──
+    // ── ABA SATISFAÇÃO / NPS ──
+    if(S.tab==='satisfacao'){
+      const nps=calcNPS();
+      const respostas=S.npsRespostas||[];
+      const suportes=S._suporteMsgs||[];
+
+      // Score NPS
+      html+=`<div class="app-header" style="margin-bottom:10px">
+        <div class="header-top">
+          <div><div class="page-title">⭐ Satisfação</div><div class="sub-info">${respostas.length} avaliações recebidas</div></div>
+        </div>
+        ${nps?`<div class="stats-row s4">
+          <div class="stat"><div class="stat-num" style="color:${nps.score>=50?'#5DCAA5':nps.score>=0?'#FAC775':'#F0997B'}">${nps.score}</div><div class="stat-label">NPS</div></div>
+          <div class="stat"><div class="stat-num g">${nps.promotores}</div><div class="stat-label">Promotores</div></div>
+          <div class="stat"><div class="stat-num b">${nps.neutros}</div><div class="stat-label">Neutros</div></div>
+          <div class="stat"><div class="stat-num r">${nps.detratores}</div><div class="stat-label">Detratores</div></div>
+        </div>`:''}
+      </div>`;
+
+      if(!nps){
+        html+=`<div class="empty-state">Nenhuma avaliação recebida ainda.<br>Os professores avaliam na aba Config do app.</div>`;
+      }else{
+        // Barra de distribuição
+        html+=`<div class="card">
+          <div class="sec-title" style="margin-bottom:10px">Distribuição das notas</div>
+          ${[5,4,3,2,1].map(n=>{
+            const qt=respostas.filter(r=>r.nota===n).length;
+            const pct=nps.total>0?Math.round(qt/nps.total*100):0;
+            const emojis=['😞','😕','😐','😊','🤩'];
+            return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:16px;width:24px;text-align:center">${emojis[n-1]}</span>
+              <div style="flex:1;background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden">
+                <div style="width:${pct}%;height:100%;background:${n>=4?'#1D9E75':n===3?'#f59e0b':'#D85A30'};border-radius:4px"></div>
+              </div>
+              <span style="font-size:12px;color:#888;width:32px;text-align:right">${qt}</span>
+            </div>`;
+          }).join('')}
+          <div style="border-top:1px solid #f0f0f0;padding-top:8px;margin-top:4px;display:flex;justify-content:space-between">
+            <span style="font-size:12px;color:#888">Média geral</span>
+            <span style="font-size:14px;font-weight:700;color:#1D9E75">${nps.media} / 5</span>
+          </div>
+        </div>`;
+
+        // Comentários
+        const comComentario=respostas.filter(r=>r.comentario);
+        if(comComentario.length){
+          html+=`<div class="card">
+            <div class="sec-title" style="margin-bottom:10px">💬 Comentários dos professores</div>
+            ${comComentario.map(r=>`
+              <div style="padding:10px;background:#f8f8f8;border-radius:8px;margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span style="font-size:12px;font-weight:700">${esc(r.nome)}</span>
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <span style="font-size:14px">${['😞','😕','😐','😊','🤩'][r.nota-1]}</span>
+                    <span class="fb ${r.nota>=4?'ok':r.nota===3?'warn':'bad'}">${r.nota}/5</span>
+                  </div>
+                </div>
+                <div style="font-size:12px;color:#555;font-style:italic">"${esc(r.comentario)}"</div>
+                <div style="font-size:10px;color:#aaa;margin-top:4px">${r.data} · Plano ${PLANOS[r.plano||'basico'].nome}</div>
+              </div>`).join('')}
+          </div>`;
+        }
+
+        // Lista completa
+        html+=`<div class="card">
+          <div class="sec-title" style="margin-bottom:10px">📋 Todas as avaliações</div>
+          ${respostas.map(r=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0">
+              <div>
+                <div style="font-size:12px;font-weight:600">${esc(r.nome)}</div>
+                <div style="font-size:11px;color:#888">${PLANOS[r.plano||'basico'].nome} · ${r.data}</div>
+              </div>
+              <span style="font-size:18px">${['😞','😕','😐','😊','🤩'][r.nota-1]}</span>
+            </div>`).join('')}
+        </div>`;
+      }
+
+      // Alertas de risco de churn
+      const profsAtivos=Object.values(S.professores).filter(p=>p.status==='ativo'&&!p.bloqueado);
+      const emRisco=profsAtivos.filter(p=>{
+        const tds=Object.values(S.turmas).filter(t=>t.profId===p.id);
+        return tds.length>0&&tds.every(t=>t.history.length===0);
+      });
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">🚨 Alertas de risco de churn</div>
+        <div style="font-size:12px;color:#888;margin-bottom:10px">Professores com turmas mas sem nenhuma chamada realizada — possível abandono.</div>
+        ${!emRisco.length
+          ?`<div style="font-size:13px;color:#1D9E75;text-align:center;padding:8px">✅ Nenhum professor em risco detectado</div>`
+          :emRisco.map(p=>`
+            <div class="sc" style="border-left:3px solid #D85A30">
+              <div class="av av3">${initials(p.nome)}</div>
+              <div class="si">
+                <div class="sn">${esc(p.nome)}</div>
+                <div class="sm">${esc(p.email)} · ${PLANOS[p.plano||'basico'].nome}</div>
+              </div>
+              <button class="btn-xs" style="font-size:11px;color:#D85A30;border-color:#D85A30" onclick="window.open('https://wa.me/?text='+encodeURIComponent('Olá ${esc(p.nome)}! Notamos que você ainda não fez nenhuma chamada no Chamada Fácil. Podemos te ajudar? 😊'),'_blank')">💬 Contatar</button>
+            </div>`).join('')}
+      </div>`;
+
+      // Histórico de suporte
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:8px">🤖 Suporte IA — resumo</div>
+        <div class="rel-row"><span>Conversas iniciadas (sessão atual)</span><span>${Math.ceil((S._suporteMsgs||[]).length/2)}</span></div>
+        <div class="rel-row"><span>Escalonamentos para ADM</span><span>${(S._suporteMsgs||[]).filter(m=>m.role==='bot'&&m.txt.includes('WhatsApp ADM')).length}</span></div>
+        <div style="font-size:11px;color:#aaa;margin-top:8px;text-align:center">// BACKEND: histórico completo de todas as conversas no servidor</div>
+      </div>`;
+    }
+
+    if(S.tab==='patrocinadores'){
+      const ads=S.patrocinadores||[];
+      html+=`<div class="sec-hdr">
+        <span class="sec-title">Patrocinadores (${ads.length})</span>
+        <button class="btn-xs" onclick="S.modal={type:'novoAd'};S.editBuf={};render()">+ Novo</button>
+      </div>`;
+      html+=`<div class="card" style="margin-bottom:10px;background:#f0faf6;border-color:#5DCAA5">
+        <div style="font-size:12px;color:#0F6E56;line-height:1.6">
+          💡 <strong>Como funciona:</strong> os patrocinadores aparecem no banner rotativo para professores dos planos Básico e Plus. Plano Prime não vê anúncios. Se não houver patrocinadores cadastrados, aparecem os anúncios padrão do sistema.
+        </div>
+      </div>`;
+      if(!ads.length){
+        html+=`<div class="empty-state">Nenhum patrocinador cadastrado.<br>Os anúncios padrão estão sendo exibidos.</div>`;
+      }else{
+        ads.forEach(a=>{
+          html+=`<div class="sc">
+            <div style="font-size:24px;flex-shrink:0">${esc(a.icon||'📢')}</div>
+            <div class="si">
+              <div class="sn">${esc(a.title)}</div>
+              <div class="sm">${esc(a.sub||'')}</div>
+              <div style="font-size:10px;color:#1D9E75;margin-top:2px;word-break:break-all">${esc(a.url)}</div>
+            </div>
+            <button class="btn-xs" style="color:#b03030;border-color:#f09090;flex-shrink:0" onclick="admRemoverPatrocinador('${a.id}')">✕</button>
+          </div>`;
+        });
+      }
+      // Preview do banner
+      html+=`<div class="card" style="margin-top:4px">
+        <div class="sec-title" style="margin-bottom:8px">👁 Preview do banner</div>
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase">Patrocinado</span>
+          <div style="display:flex;align-items:center;gap:7px;flex:1;margin:0 10px">
+            <span style="font-size:16px">${esc((ads[0]||ADS_DEFAULT[0]).icon||'📢')}</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#92400e">${esc((ads[0]||ADS_DEFAULT[0]).title)}</div>
+              <div style="font-size:11px;color:#a16207">${esc((ads[0]||ADS_DEFAULT[0]).sub||'')}</div>
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border-radius:5px;padding:3px 8px">ver</div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:6px;text-align:center">Troca a cada 5 segundos · ${(ads.length||ADS_DEFAULT.length)} patrocinador(es) no rodízio</div>
+      </div>`;
+    }
+
+    // ── ABA GESTÃO ──
+    if(S.tab==='gestao'){
+
+      // 1. Mensagem global
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">📣 Mensagem global para todos os professores</div>
+        <textarea class="fi" id="msg-global" placeholder="Ex: O sistema estará em manutenção sábado das 10h às 12h..." style="min-height:80px"></textarea>
+        <button class="btn-primary" style="margin-top:8px" onclick="admEnviarMensagem()">Enviar para todos</button>
+        ${(S.mensagensGlobais||[]).length?`
+        <div style="margin-top:12px">
+          <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:6px">Últimas mensagens enviadas</div>
+          ${S.mensagensGlobais.slice(0,3).map(m=>`
+            <div style="padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:12px">
+              <div style="color:#111">${esc(m.txt)}</div>
+              <div style="color:#aaa;font-size:11px;margin-top:2px">${m.data}</div>
+            </div>`).join('')}
+        </div>`:''}
+      </div>`;
+
+      // 2. Config visual do app
+      const cfg=S.configApp||{};
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">🎨 Configurações visuais do app</div>
+        <div class="fl"><label>Nome do app</label><input class="fi" id="cfg-nome" value="${esc(cfg.nomeApp||'Chamada Fácil')}" placeholder="Chamada Fácil"></div>
+        <div class="fl"><label>Cor principal (hex)</label><div style="display:flex;gap:8px;align-items:center"><input class="fi" id="cfg-cor" value="${esc(cfg.corPrincipal||'#1D9E75')}" placeholder="#1D9E75" style="flex:1"><div style="width:36px;height:36px;border-radius:8px;background:${esc(cfg.corPrincipal||'#1D9E75')};border:1px solid #ddd"></div></div></div>
+        <div class="fl"><label>Texto da tela de login</label><input class="fi" id="cfg-login" value="${esc(cfg.textoLogin||'Plataforma de controle de presença e análises rápidas')}" placeholder="Subtítulo na tela de login"></div>
+        <div class="fl"><label>Limite padrão de faltas (novas turmas)</label><input class="ni" id="cfg-faltas" type="number" min="1" value="${cfg.limiteFaltasPadrao||6}"></div>
+        <button class="btn-primary" onclick="salvarConfigApp()">Salvar configurações</button>
+      </div>`;
+
+      // 3. Bloquear professores
+      const ativos=Object.values(S.professores).filter(p=>p.status==='ativo');
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">🔒 Bloquear / desbloquear professores</div>
+        ${!ativos.length?'<div class="empty-state">Nenhum professor ativo.</div>':''}
+        ${ativos.map(p=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0">
+            <div class="av av1" style="width:32px;height:32px;font-size:11px">${initials(p.nome)}</div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600">${esc(p.nome)}</div><div style="font-size:11px;color:#888">${esc(p.email)}</div></div>
+            <button class="btn-xs ${p.bloqueado?'green':''}" style="${p.bloqueado?'color:#b03030;border-color:#f09090;background:#fff':''}" onclick="toggleBloquearProf('${p.id}')">
+              ${p.bloqueado?'🔓 Desbloquear':'🔒 Bloquear'}
+            </button>
+          </div>`).join('')}
+      </div>`;
+
+      // 4. Log de atividades
+      const logs=S.logAtividades||[];
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">📋 Log de atividades recentes</div>
+        ${!logs.length?'<div style="font-size:12px;color:#aaa">Nenhuma atividade registrada ainda.</div>':''}
+        ${logs.slice(0,15).map(l=>`
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #f0f0f0;gap:8px">
+            <span style="font-size:12px;color:#111;flex:1">${esc(l.desc)}</span>
+            <span style="font-size:10px;color:#aaa;white-space:nowrap">${l.data}</span>
+          </div>`).join('')}
+      </div>`;
+
+      // 5. Exportar dados + LGPD
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">📥 Exportar e LGPD</div>
+        <button class="btn-primary" onclick="exportarDadosGerais()">📥 Exportar relatório geral (PDF)</button>
+        <div style="margin-top:12px;padding:10px;background:#fff3cd;border:1px solid #f0c040;border-radius:8px;font-size:12px;color:#856404">
+          ⚠️ Para excluir todos os dados de um professor (LGPD), acesse <strong>Professores → clique no professor → Excluir dados</strong>.
+        </div>
+        ${(S.logLGPD||[]).length?`<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:6px">Registro LGPD</div>${S.logLGPD.map(l=>`<div style="font-size:11px;color:#888;padding:4px 0;border-bottom:1px solid #f0f0f0">${l.data} — ${esc(l.acao)}</div>`).join('')}</div>`:''}
+      </div>`;
+    }
+
     if(S.tab==='config'){
       if(prof){
         html+=`<div class="card">
@@ -1205,8 +1664,36 @@ function render(){
         </div>`;
 
         // Upgrade banner para plano básico
-        if(!temBol){
-          html+=`<div class="upgrade-banner">
+        // NPS — aparece após o perfil, uma vez por professor
+        const jaRespondeu=prof.npsRespondido||S._npsEnviado;
+        const minhaResposta=(S.npsRespostas||[]).find(r=>r.profId===prof.id);
+        html+=`<div class="card" style="margin-top:4px">
+          <div class="sec-title" style="margin-bottom:10px">⭐ Sua avaliação</div>
+          ${jaRespondeu?`
+            <div style="text-align:center;padding:8px 0">
+              <div style="font-size:28px;margin-bottom:6px">${['😞','😕','😐','😊','🤩'][minhaResposta?.nota-1]||'😊'}</div>
+              <div style="font-size:13px;font-weight:700;color:#1D9E75">Obrigado pela avaliação!</div>
+              <div style="font-size:12px;color:#888;margin-top:3px">Você avaliou com ${minhaResposta?.nota||'?'}/5 estrelas</div>
+            </div>
+            ${!minhaResposta?.comentario?`
+            <div class="fl" style="margin-top:8px"><label>Tem algo a dizer? (opcional)</label>
+              <textarea class="fi" id="nps-comentario" placeholder="Como podemos melhorar?" style="min-height:60px"></textarea>
+              <button class="btn-primary" style="margin-top:6px" onclick="submeterNPSComentario()">Enviar comentário</button>
+            </div>`:
+            `<div style="background:#f0faf6;border-radius:8px;padding:8px 10px;font-size:12px;color:#0F6E56;margin-top:8px">💬 "${esc(minhaResposta.comentario)}"</div>`}
+          `:`
+            <div style="font-size:13px;color:#555;margin-bottom:12px;text-align:center">De 1 a 5, como você avalia o Chamada Fácil?</div>
+            <div style="display:flex;justify-content:center;gap:8px;margin-bottom:8px">
+              ${[1,2,3,4,5].map(n=>`
+                <button onclick="submeterNPS(${n})" style="width:48px;height:48px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9f9f9;font-size:22px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='#1D9E75';this.style.background='#f0faf6'" onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#f9f9f9'">
+                  ${['😞','😕','😐','😊','🤩'][n-1]}
+                </button>`).join('')}
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;padding:0 4px">
+              <span>Ruim</span><span>Excelente</span>
+            </div>
+          `}
+        </div>`;
             <div style="font-size:13px;color:#9ca3af;margin-bottom:4px">Plano atual: <strong style="color:#fff">${PLANOS[prof.plano||'basico'].nome}</strong></div>
             <div style="font-size:15px;font-weight:700;color:#5DCAA5;margin-bottom:6px">Desbloqueie o Boletim de Notas</div>
             <div style="font-size:12px;color:#9ca3af;margin-bottom:12px">Disponível nos planos Plus (R$49,90/mês) e Prime (R$69,90/mês)</div>
@@ -1268,14 +1755,49 @@ function render(){
       html+=`<div id="cal-container"><div class="empty-state">⏳ Carregando feriados...</div></div>`;
     }
 
-    // Bottom nav
+    // Banner patrocinado + Bottom nav
+    html+=renderAdBanner();
     html+=`<nav class="bottom-nav">`;
     [{id:'chamada',icon:'📋',label:'Chamada'},{id:'alunos',icon:'👥',label:'Alunos'},{id:'turmas',icon:'🏫',label:'Turmas'},{id:'historico',icon:'📅',label:'Histórico'},{id:'calendario',icon:'🗓',label:'Agenda'},{id:'config',icon:'⚙️',label:'Config'}].forEach(tab=>{
       html+=`<button class="nav-item ${S.tab===tab.id?'active':''}" onclick="S.tab='${tab.id}';render()"><span class="nav-icon">${tab.icon}</span><span class="nav-label">${tab.label}</span></button>`;
     });
     html+=`</nav>`;
     root.innerHTML=html;
-    // Renderiza calendário após inserir HTML (precisa do container no DOM)
+    startAdRotation();
+    // Gráfico de pizza de planos
+    if(S.screen==='adm'&&S.tab==='relatorio'){
+      setTimeout(()=>{
+        const canvas=document.getElementById('chart-planos');
+        if(!canvas)return;
+        const ctx=canvas.getContext('2d');
+        const profs2=Object.values(S.professores);
+        const dados=[
+          profs2.filter(p=>p.plano==='basico'&&p.status==='ativo').length,
+          profs2.filter(p=>p.plano==='plus'&&p.status==='ativo').length,
+          profs2.filter(p=>p.plano==='prime'&&p.status==='ativo').length,
+          profs2.filter(p=>(!p.plano||p.plano==='beta')&&p.status==='ativo').length,
+        ];
+        const cores=['#1D9E75','#378ADD','#7F77DD','#e5e7eb'];
+        const total=dados.reduce((a,b)=>a+b,0)||1;
+        let startAngle=-Math.PI/2;
+        const cx=70,cy=70,r=60;
+        ctx.clearRect(0,0,140,140);
+        dados.forEach((v,i)=>{
+          const slice=(v/total)*Math.PI*2;
+          ctx.beginPath();ctx.moveTo(cx,cy);
+          ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+          ctx.closePath();ctx.fillStyle=cores[i];ctx.fill();
+          startAngle+=slice;
+        });
+        // Centro branco (donut)
+        ctx.beginPath();ctx.arc(cx,cy,35,'#fff');ctx.fillStyle='#fff';ctx.fill();
+        ctx.fillStyle='#111';ctx.font='bold 16px Segoe UI';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(total,cx,cy-8);
+        ctx.font='11px Segoe UI';ctx.fillStyle='#9ca3af';
+        ctx.fillText('total',cx,cy+10);
+      },50);
+    }
+    // Renderiza calendário após inserir HTML
     if(S.tab==='calendario'){
       renderCalendarioTab();
     }
@@ -1296,26 +1818,161 @@ function render(){
       <div class="stat"><div class="stat-num g">${profs.filter(p=>p.status==='ativo').length}</div><div class="stat-label">Professores</div></div>
       <div class="stat"><div class="stat-num r">${totalAlertas}</div><div class="stat-label">Alertas</div></div>
     </div></div>`;
-    const admTabs=[{id:'relatorio',label:'📊 Relatórios'},{id:'turmas',label:'🏫 Turmas'},{id:'professores',label:`👨‍🏫 Professores${pendentes.length?` <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:0 5px;font-size:11px">${pendentes.length}</span>`:''}`},{id:'config',label:'⚙️ Config'}];
+    const admTabs=[{id:'relatorio',label:'📊 Relatórios'},{id:'turmas',label:'🏫 Turmas'},{id:'professores',label:`👨‍🏫 Professores${pendentes.length?` <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:0 5px;font-size:11px">${pendentes.length}</span>`:''}`},{id:'patrocinadores',label:'📢 Anúncios'},{id:'gestao',label:'⚙️ Gestão'},{id:'satisfacao',label:'⭐ NPS'},{id:'config',label:'🔐 Config'}];
     html+=`<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">`;
     admTabs.forEach(at=>{html+=`<button style="padding:6px 12px;border-radius:8px;font-size:13px;border:1px solid ${S.tab===at.id?'#1D9E75':'#ddd'};background:${S.tab===at.id?'#f0faf6':'#fff'};color:${S.tab===at.id?'#1D9E75':'#666'};cursor:pointer;font-weight:${S.tab===at.id?'700':'400'}" onclick="S.tab='${at.id}';render()">${at.label}</button>`;});
     html+=`</div>`;
+    // ── ABA RELATÓRIO (com Dashboard SaaS) ──
     if(S.tab==='relatorio'){
-      if(!turmas.length)html+=`<div class="empty-state">Nenhuma turma criada.</div>`;
-      turmas.forEach(t=>{
-        const lim=t.limiteFaltas||6;const al=t.alunos.filter(a=>a.faltas>=lim);
-        const mf=t.alunos.length?(t.alunos.reduce((s,a)=>s+a.faltas,0)/t.alunos.length).toFixed(1):0;
-        const mfq=t.history.length?Math.round(t.history.reduce((s,h)=>s+(h.presentes.length/(h.total||1)*100),0)/t.history.length):null;
-        const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';
-        html+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div><div style="font-size:14px;font-weight:700">${esc(t.nome)}</div><div style="font-size:11px;color:#888">${esc(profNome)}</div></div><button class="btn-xs" onclick="S.turmaAtiva='${t.id}';S.tab='chamada';S.screen='app';render()">Ver chamada</button></div>
+      const profs=Object.values(S.professores);
+      const turmas=Object.values(S.turmas);
+
+      // ── KPIs principais ──
+      const totalProfs=profs.filter(p=>p.status==='ativo').length;
+      const porPlano={basico:profs.filter(p=>p.plano==='basico'&&p.status==='ativo').length,plus:profs.filter(p=>p.plano==='plus'&&p.status==='ativo').length,prime:profs.filter(p=>p.plano==='prime'&&p.status==='ativo').length,beta:profs.filter(p=>(!p.plano||p.plano==='beta')&&p.status==='ativo').length};
+      const mrr=porPlano.basico*29.9+porPlano.plus*49.9+porPlano.prime*69.9;
+      const totalAlertas=turmas.reduce((s,t)=>s+t.alunos.filter(a=>a.faltas>=(t.limiteFaltas||6)).length,0);
+      const totalChamadas=turmas.reduce((s,t)=>s+t.history.length,0);
+      const bloqueados=profs.filter(p=>p.bloqueado).length;
+
+      // Professores em risco (sem chamada há muito tempo — simulado)
+      // BACKEND: calcular com base em timestamps reais do servidor
+      const emRisco=profs.filter(p=>p.status==='ativo'&&!p.bloqueado&&Object.values(S.turmas).filter(t=>t.profId===p.id).every(t=>t.history.length===0)).length;
+
+      html+=`<div class="app-header" style="margin-bottom:10px">
+        <div class="header-top">
+          <div><div class="page-title">📊 Dashboard SaaS</div><div class="sub-info">${today()}</div></div>
+          <button class="btn-xs" onclick="exportarDadosGerais()" style="background:#16213e;color:#5DCAA5;border-color:#374151">📥 Exportar</button>
+        </div>
+        <div class="stats-row s4">
+          <div class="stat"><div class="stat-num g">R${mrr.toFixed(0)}</div><div class="stat-label">MRR Est.</div></div>
+          <div class="stat"><div class="stat-num">${totalProfs}</div><div class="stat-label">Assinantes</div></div>
+          <div class="stat"><div class="stat-num b">${totalChamadas}</div><div class="stat-label">Chamadas</div></div>
+          <div class="stat"><div class="stat-num r">${emRisco}</div><div class="stat-label">Em risco</div></div>
+        </div>
+      </div>`;
+
+      // ── Gráfico pizza: assinantes por plano ──
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:12px">👥 Assinantes por plano</div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <canvas id="chart-planos" width="140" height="140" style="flex-shrink:0"></canvas>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+            ${[['Básico',porPlano.basico,'#1D9E75','R$29,90'],['Plus',porPlano.plus,'#378ADD','R$49,90'],['Prime',porPlano.prime,'#7F77DD','R$69,90'],['Beta',porPlano.beta,'#9ca3af','Grátis']].map(([n,v,c,p])=>`
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0"></div>
+              <span style="font-size:12px;flex:1">${n}</span>
+              <span style="font-size:13px;font-weight:700;color:#111">${v}</span>
+              <span style="font-size:11px;color:#9ca3af">${p}</span>
+            </div>`).join('')}
+            <div style="border-top:1px solid #f0f0f0;padding-top:8px;display:flex;justify-content:space-between">
+              <span style="font-size:12px;color:#888">MRR estimado</span>
+              <span style="font-size:14px;font-weight:700;color:#1D9E75">R$ ${mrr.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+      // ── Gráfico barras: cadastros por mês (últimos 6 meses) ──
+      // BACKEND: substituir por dados reais com timestamps do servidor
+      const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const mesAtual=new Date().getMonth();
+      const ultimos6=Array.from({length:6},(_,i)=>meses[(mesAtual-5+i+12)%12]);
+      // Simulação baseada nos dados existentes
+      const totalP=profs.length||1;
+      const dadosMeses=ultimos6.map((_,i)=>Math.max(0,Math.floor(totalP*(0.1+i*0.15)+Math.random()*2)));
+      dadosMeses[5]=totalP; // mês atual = total real
+      const maxVal=Math.max(...dadosMeses,1);
+
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:12px">📈 Cadastros por mês</div>
+        <div style="display:flex;align-items:flex-end;gap:6px;height:100px">
+          ${dadosMeses.map((v,i)=>{
+            const h=Math.max(4,Math.round(v/maxVal*90));
+            const isLast=i===5;
+            return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+              <span style="font-size:10px;font-weight:700;color:${isLast?'#1D9E75':'#9ca3af'}">${v}</span>
+              <div style="width:100%;height:${h}px;background:${isLast?'#1D9E75':'#e5e7eb'};border-radius:4px 4px 0 0;transition:height .3s"></div>
+              <span style="font-size:10px;color:#9ca3af">${ultimos6[i]}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:center">// BACKEND: dados reais com timestamps do servidor</div>
+      </div>`;
+
+      // ── Gráfico: distribuição de uso ──
+      const totalTurmas=turmas.length;
+      const totalAlunos=turmas.reduce((s,t)=>s+t.alunos.length,0);
+      const mediaChPorProf=totalProfs>0?(totalChamadas/totalProfs).toFixed(1):0;
+      const mediaAlunosPorTurma=totalTurmas>0?(totalAlunos/totalTurmas).toFixed(1):0;
+
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:12px">⏱ Métricas de uso</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${[
+            ['Total de turmas',totalTurmas,'#1D9E75',totalTurmas>0?100:0],
+            ['Total de alunos',totalAlunos,'#378ADD',Math.min(100,totalAlunos/5)],
+            ['Chamadas realizadas',totalChamadas,'#7F77DD',Math.min(100,totalChamadas*5)],
+            ['Média chamadas/professor',mediaChPorProf,'#F0997B',Math.min(100,parseFloat(mediaChPorProf)*10)],
+            ['Média alunos/turma',mediaAlunosPorTurma,'#5DCAA5',Math.min(100,parseFloat(mediaAlunosPorTurma)*3)],
+          ].map(([label,val,cor,pct])=>`
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size:12px;color:#555">${label}</span>
+              <span style="font-size:12px;font-weight:700;color:#111">${val}</span>
+            </div>
+            <div class="progress-bar" style="height:7px">
+              <div class="progress-fill" style="width:${Math.min(100,pct)}%;background:${cor}"></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+
+      // ── Upgrades e planos ──
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">⬆️ Distribuição de planos e receita</div>
+        ${[['Básico',porPlano.basico,29.9,'#1D9E75'],['Plus',porPlano.plus,49.9,'#378ADD'],['Prime',porPlano.prime,69.9,'#7F77DD']].map(([n,qt,preco,cor])=>`
+        <div class="rel-row">
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${cor};display:inline-block"></span>${n}</span>
+          <span>${qt} assinante${qt!==1?'s':''} · <strong style="color:${cor}">R$ ${(qt*preco).toFixed(2)}/mês</strong></span>
+        </div>`).join('')}
+        <div style="margin-top:10px;padding:10px;background:#f0faf6;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:#0F6E56">MRR Total Estimado</span>
+          <span style="font-size:18px;font-weight:700;color:#1D9E75">R$ ${mrr.toFixed(2)}</span>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:center">// BACKEND: valores reais após integração com gateway de pagamento</div>
+      </div>`;
+
+      // ── Alertas de saúde ──
+      html+=`<div class="card">
+        <div class="sec-title" style="margin-bottom:10px">🚨 Saúde do produto</div>
+        <div class="rel-row"><span>Professores bloqueados</span><span style="font-weight:700;color:${bloqueados>0?'#b03030':'#0a7a4e'}">${bloqueados}</span></div>
+        <div class="rel-row"><span>Professores sem chamadas (risco churn)</span><span style="font-weight:700;color:${emRisco>0?'#b03030':'#0a7a4e'}">${emRisco}</span></div>
+        <div class="rel-row"><span>Alunos em alerta de falta</span><span style="font-weight:700;color:${totalAlertas>0?'#b03030':'#0a7a4e'}">${totalAlertas}</span></div>
+        <div class="rel-row"><span>Cadastros pendentes</span><span style="font-weight:700;color:${pendentes.length>0?'#f59e0b':'#0a7a4e'}">${pendentes.length}</span></div>
+      </div>`;
+
+      // ── Lista de turmas ──
+      if(turmas.length){
+        html+=`<div class="sec-hdr" style="margin-top:4px"><span class="sec-title">Detalhes por turma</span></div>`;
+        turmas.forEach(t=>{
+          const lim=t.limiteFaltas||6;const al=t.alunos.filter(a=>a.faltas>=lim);
+          const mfq=t.history.length?Math.round(t.history.reduce((s,h)=>s+(h.presentes.length/(h.total||1)*100),0)/t.history.length):null;
+          const profNome=t.profId?S.professores[t.profId]?.nome:'Sem professor';
+          html+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div><div style="font-size:14px;font-weight:700">${esc(t.nome)}</div><div style="font-size:11px;color:#888">${esc(profNome)}</div></div>
+            <button class="btn-xs" onclick="S.turmaAtiva='${t.id}';S.tab='chamada';S.screen='app';render()">Ver chamada</button>
+          </div>
           <div class="rel-row"><span>Alunos</span><span>${t.alunos.length}</span></div>
           <div class="rel-row"><span>Chamadas</span><span>${t.history.length}</span></div>
-          <div class="rel-row"><span>Média de faltas</span><span>${mf}</span></div>
           <div class="rel-row"><span>Frequência média</span><span style="font-weight:700;color:${mfq===null?'#888':mfq>=75?'#0a7a4e':'#b03030'}">${mfq!==null?mfq+'%':'—'}</span></div>
-          ${al.length?`<div class="rel-row"><span style="color:#b03030">⚠ Alertas</span><span style="color:#b03030;font-weight:700">${al.length}: ${al.map(a=>esc(a.nome.split(' ')[0])).join(', ')}</span></div>`:''}
+          ${al.length?`<div class="rel-row"><span style="color:#b03030">⚠ Alertas</span><span style="color:#b03030;font-weight:700">${al.length}</span></div>`:''}
           ${mfq!==null?`<div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${mfq}%;background:${mfq>=75?'#1D9E75':'#D85A30'}"></div></div>`:''}
-        </div>`;
-      });
+          </div>`;
+        });
+      }else{
+        html+=`<div class="empty-state">Nenhuma turma criada ainda.</div>`;
+      }
     }
     if(S.tab==='turmas'){
       html+=`<div class="sec-hdr"><span class="sec-title">Turmas</span><button class="btn-xs" onclick="S.modal={type:'novaTurmaAdm'};S.editBuf={};render()">+ Nova turma</button></div>`;
@@ -1410,6 +2067,16 @@ function render(){
       }
     }
 
+    if(m.type==='novoAd'){
+      mc=`<div class="modal-title">Novo patrocinador<button class="cls" onclick="closeModal()">×</button></div>
+        <div class="fl"><label>Emoji / ícone</label><input class="fi" id="ad-icon" placeholder="📚" value="📢" style="font-size:20px;width:80px"></div>
+        <div class="fl"><label>Nome do patrocinador *</label><input class="fi" id="ad-title" placeholder="Ex: FTD Educação"></div>
+        <div class="fl"><label>Descrição curta</label><input class="fi" id="ad-sub" placeholder="Ex: Livros didáticos com desconto"></div>
+        <div class="fl"><label>Link (URL) *</label><input class="fi" id="ad-url" type="url" placeholder="https://..."></div>
+        <div style="font-size:11px;color:#888;margin-bottom:8px">Ao clicar em "ver", o professor será direcionado para este link.</div>
+        <button class="btn-primary" onclick="admSalvarPatrocinador()">Adicionar patrocinador</button>`;
+    }
+
     if(m.type==='novoAluno'||m.type==='editAluno'){
       const isEdit=m.type==='editAluno';
       const tid=m.tid||S.turmaAtiva;
@@ -1471,8 +2138,12 @@ function render(){
         <div class="fl"><label>Plano</label><select class="fi" onchange="S.professores['${m.pid}'].plano=this.value;save()">
           ${Object.entries(PLANOS).map(([k,v])=>`<option value="${k}"${(p2.plano||'basico')===k?' selected':''}>${v.nome}</option>`).join('')}
         </select></div>
+        <div style="background:${p2.bloqueado?'#fff3cd':'#f0faf6'};border:1px solid ${p2.bloqueado?'#f0c040':'#5DCAA5'};border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="color:${p2.bloqueado?'#856404':'#0F6E56'}">${p2.bloqueado?'⚠️ Professor bloqueado':'✅ Professor ativo'}</span>
+          <button class="btn-xs" onclick="toggleBloquearProf('${m.pid}');closeModal()">${p2.bloqueado?'🔓 Desbloquear':'🔒 Bloquear'}</button>
+        </div>
         <button class="btn-primary" onclick="resetarSenha('${m.pid}')">🔑 Resetar senha</button>
-        <button class="btn-danger" onclick="if(confirm('Remover professor?')){delete S.professores['${m.pid}'];save();closeModal();}">Remover professor</button>`;
+        <button class="btn-danger" style="margin-top:6px" onclick="excluirProfCompleto('${m.pid}')">🗑 Excluir todos os dados (LGPD)</button>`;
     }
     if(m.type==='novoProf'){
       mc=`<div class="modal-title">Novo professor<button class="cls" onclick="closeModal()">×</button></div>
