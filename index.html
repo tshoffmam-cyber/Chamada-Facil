@@ -348,6 +348,68 @@ function abrirBoletim(aid,tid){
   render();
 }
 
+// ── Atualiza lista de alunos no histórico sem recriar o input ──
+function atualizarListaAlunos(){
+  const container=document.getElementById('lista-alunos-hist');
+  if(!container)return;
+  const ht=S.turmas[S._histTurma];
+  if(!ht)return;
+  const lmt=ht.limiteFaltas||6;
+  const search=(S._histSearch||'').toLowerCase().trim();
+  const alunosOrdenados=[...ht.alunos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const alunosFiltrados=search?alunosOrdenados.filter(a=>a.nome.toLowerCase().includes(search)):alunosOrdenados;
+  let html='';
+  if(!alunosFiltrados.length){
+    html='<div class="empty-state">Nenhum aluno encontrado.</div>';
+  }else{
+    let letraAtual='';
+    alunosFiltrados.forEach(a=>{
+      const letra=a.nome[0].toUpperCase();
+      if(letra!==letraAtual){
+        letraAtual=letra;
+        html+=`<div style="font-size:11px;font-weight:700;color:#9ca3af;padding:6px 0 3px;letter-spacing:.08em">${letra}</div>`;
+      }
+      const m1=calcMedia(a.notas?.s1);
+      const m2=calcMedia(a.notas?.s2);
+      const mediaAnual=(m1!==null&&m2!==null)?(m1+m2)/2:(m1!==null?m1:m2);
+      const mb=notaBadge(mediaAnual);
+      const totalChamadas=ht.history.length;
+      const presencas=ht.history.filter(h=>h.presentes.includes(a.nome)).length;
+      const freq=totalChamadas>0?Math.round(presencas/totalChamadas*100):null;
+      const temBol=temBoletim();
+      html+=`<div class="sc clickable" onclick="S._histAluno='${a.id}';render()">
+        <div class="av av${a.cor%5}">${initials(a.nome)}</div>
+        <div class="si">
+          <div class="sn">${esc(a.nome)}</div>
+          <div class="sm">
+            <span class="fb ${fc(a.faltas,lmt)}">${a.faltas} falta${a.faltas!==1?'s':''}</span>
+            ${freq!==null?`<span class="fb blue">${freq}% freq.</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+          ${temBol&&mb.txt!=='—'?`<div class="nota-badge ${mb.cls}" style="width:40px;height:26px;font-size:12px">${mb.txt}</div>`:''}
+          <span style="font-size:18px;color:#9ca3af">›</span>
+        </div>
+      </div>`;
+    });
+  }
+  container.innerHTML=html;
+}
+
+// ── Atualiza lista após render ──
+const _renderOriginal=render;
+function render(){
+  _renderOriginal();
+  // Após render, popula lista de alunos e mantém foco no campo de busca
+  if(S.tab==='historico'&&S._histTurma&&!S._histAluno){
+    atualizarListaAlunos();
+    const inp=document.getElementById('hist-search');
+    if(inp&&document.activeElement!==inp){
+      // Não força foco para não atrapalhar navegação
+    }
+  }
+}
+
 // ── Suporte IA ──────────────────────────────────────────────
 // BACKEND: mover chave da API para variável de ambiente no servidor
 // SEGURANÇA: nunca expor chave de API no frontend em produção
@@ -1035,49 +1097,16 @@ function render(){
           <button class="btn-xs" onclick="S._histTurma=null;render()">← Turmas</button>
         </div>`;
 
-        // Campo de busca como filtro extra
-        html+=`<div style="margin-bottom:10px">
-          <input class="fi" placeholder="🔍 Filtrar aluno..." oninput="S._histSearch=this.value;render()" value="${esc(S._histSearch||'')}">
+        // Campo de busca — sem render a cada tecla, atualiza só a lista
+        html+=`<div style="margin-bottom:10px;position:relative">
+          <input class="fi" id="hist-search" placeholder="🔍 Buscar aluno..." 
+            value="${esc(S._histSearch||'')}"
+            oninput="S._histSearch=this.value;atualizarListaAlunos()"
+            style="padding-left:12px">
         </div>`;
 
-        const search=(S._histSearch||'').toLowerCase().trim();
-        // Lista visual alfabética
-        const alunosOrdenados=[...ht.alunos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-        const alunosFiltrados=search?alunosOrdenados.filter(a=>a.nome.toLowerCase().includes(search)):alunosOrdenados;
-
-        if(!alunosFiltrados.length)html+=`<div class="empty-state">Nenhum aluno encontrado.</div>`;
-
-        // Agrupa por letra inicial
-        let letraAtual='';
-        alunosFiltrados.forEach(a=>{
-          const letra=a.nome[0].toUpperCase();
-          if(letra!==letraAtual){
-            letraAtual=letra;
-            html+=`<div style="font-size:11px;font-weight:700;color:#9ca3af;padding:6px 0 3px;letter-spacing:.08em">${letra}</div>`;
-          }
-          const m1=calcMedia(a.notas?.s1);
-          const m2=calcMedia(a.notas?.s2);
-          const mediaAnual=(m1!==null&&m2!==null)?(m1+m2)/2:(m1!==null?m1:m2);
-          const mb=notaBadge(mediaAnual);
-          // Conta chamadas do aluno
-          const totalChamadas=ht.history.length;
-          const presencas=ht.history.filter(h=>h.presentes.includes(a.nome)).length;
-          const freq=totalChamadas>0?Math.round(presencas/totalChamadas*100):null;
-          html+=`<div class="sc clickable" onclick="S._histAluno='${a.id}';render()">
-            <div class="av av${a.cor%5}">${initials(a.nome)}</div>
-            <div class="si">
-              <div class="sn">${esc(a.nome)}</div>
-              <div class="sm">
-                <span class="fb ${fc(a.faltas,lmt)}">${a.faltas} falta${a.faltas!==1?'s':''}</span>
-                ${freq!==null?`<span class="fb blue">${freq}% freq.</span>`:''}
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-              ${temBol&&mb.txt!=='—'?`<div class="nota-badge ${mb.cls}" style="width:40px;height:26px;font-size:12px">${mb.txt}</div>`:''}
-              <span style="font-size:18px;color:#9ca3af">›</span>
-            </div>
-          </div>`;
-        });
+        // Lista de alunos — container separado para atualizar sem recriar o input
+        html+=`<div id="lista-alunos-hist"></div>`;
 
       // NÍVEL 3: relatório completo do aluno
       }else if(S._histTurma&&S._histAluno){
