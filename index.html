@@ -160,7 +160,9 @@ let S={
   turmaAtiva:null,tab:'chamada',modal:null,loginErr:'',
   admPassHash:hash('admin123'),turmas:{},professores:{},
   editBuf:{},profBuffer:{},
-  _semestre:1, _histSearch:'',_boletimAluno:null
+  _semestre:1,_histSearch:'',_boletimAluno:null,
+  // Histórico navegação: turma → aluno
+  _histTurma:null,_histAluno:null
 };
 
 async function loadData(){
@@ -262,6 +264,15 @@ function getPlano(){const p=getProf();return PLANOS[p?.plano||'basico']}
 function temBoletim(){return getPlano()?.boletim===true}
 
 // ── Chamada ──
+// BACKEND: registrar chamada no banco de dados com timestamp do servidor
+function todosPresentes(tid){
+  const t=S.turmas[tid];if(!t)return;
+  // Se todos já estão presentes, limpa. Senão, marca todos.
+  const todosJaMarcados=t.alunos.every(a=>a.presente==='P');
+  t.alunos=t.alunos.map(a=>({...a,presente:todosJaMarcados?null:'P'}));
+  save();render();
+  showToast(todosJaMarcados?'Seleção limpa!':'Todos marcados como presentes!');
+}
 function togglePresente(aid){
   const t=getTurmaAtiva();if(!t)return;
   t.alunos=t.alunos.map(a=>{
@@ -334,6 +345,204 @@ function abrirBoletim(aid,tid){
   S.modal={type:'boletim',aid,tid};
   S._semestre=1;
   render();
+}
+
+// ── Suporte IA ──────────────────────────────────────────────
+// BACKEND: mover chave da API para variável de ambiente no servidor
+// SEGURANÇA: nunca expor chave de API no frontend em produção
+// TODO: substituir por endpoint próprio /api/suporte
+const ADM_WHATSAPP='5511999999999'; // TODO: trocar pelo número real
+const ADM_EMAIL='suporte@chamadafacil.com.br'; // TODO: trocar pelo e-mail real
+
+const SUPORTE_SYSTEM=`Você é o assistente "Fácil" do app Chamada Fácil, um sistema de controle de presença e boletim escolar para professores brasileiros.
+Responda em português informal e acolhedor. Máximo 3 parágrafos curtos.
+Você sabe sobre: fazer chamada, marcar presença/falta/justificado, cadastrar alunos, criar turmas, boletim de notas, histórico, exportar PDF, compartilhar via WhatsApp, planos (Básico R$29,90, Plus R$49,90, Prime R$69,90), e problemas técnicos comuns.
+Se não souber, oriente o usuário a falar com o suporte humano.`;
+
+async function enviarSuporteMsg(txt){
+  if(!txt?.trim())return;
+  if(!S._suporteMsgs)S._suporteMsgs=[];
+  // Limpa o input
+  const inp=document.getElementById('suporte-input');
+  if(inp)inp.value='';
+  S._suporteMsgs.push({role:'user',txt:txt.trim()});
+  S._suporteCarregando=true;
+  render();
+  // Scroll para baixo
+  setTimeout(()=>{const el=document.getElementById('suporte-msgs');if(el)el.scrollTop=el.scrollHeight;},50);
+  try{
+    // BACKEND: substituir por chamada ao endpoint /api/suporte em produção
+    const msgs=S._suporteMsgs.slice(-10).map(m=>({role:m.role==='user'?'user':'assistant',content:m.txt}));
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        system:SUPORTE_SYSTEM,
+        messages:msgs
+      })
+    });
+    const data=await res.json();
+    const resp=data?.content?.[0]?.text||'Desculpe, não consegui responder agora. Tente novamente.';
+    S._suporteMsgs.push({role:'bot',txt:resp});
+  }catch(e){
+    S._suporteMsgs.push({role:'bot',txt:'Tive um problema de conexão. Tente novamente ou fale com o suporte humano.'});
+  }
+  S._suporteCarregando=false;
+  render();
+  setTimeout(()=>{const el=document.getElementById('suporte-msgs');if(el)el.scrollTop=el.scrollHeight;},50);
+}
+
+function acionarADM(){
+  const prof=getProf();
+  const hist=(S._suporteMsgs||[]).map(m=>(m.role==='user'?'👤 ':'🤖 ')+m.txt).join('\n');
+  const msg=`*Chamada Fácil — Suporte*\n\nProfessor: ${prof?.nome||'?'}\nE-mail: ${prof?.email||'?'}\nPlano: ${PLANOS[prof?.plano||'basico'].nome}\n\n*Histórico do chat:*\n${hist}\n\nAguardo retorno. Obrigado!`;
+  try{window.open('https://wa.me/'+ADM_WHATSAPP+'?text='+encodeURIComponent(msg),'_blank');}
+  catch(e){navigator.clipboard?.writeText(msg);showToast('Mensagem copiada!');}
+}
+function acionarADMEmail(){
+  const prof=getProf();
+  const hist=(S._suporteMsgs||[]).map(m=>(m.role==='user'?'Eu: ':'Fácil: ')+m.txt).join('\n');
+  const sub=encodeURIComponent('Suporte Chamada Fácil — '+( prof?.nome||''));
+  const body=encodeURIComponent(`Professor: ${prof?.nome||'?'}\nE-mail: ${prof?.email||'?'}\nPlano: ${PLANOS[prof?.plano||'basico'].nome}\n\nHistórico:\n${hist}`);
+  window.location.href=`mailto:${ADM_EMAIL}?subject=${sub}&body=${body}`;
+}
+
+// ════════════════════════════
+// COMENTÁRIOS PARA O PROGRAMADOR
+// ════════════════════════════
+// LGPD: dados dos alunos são sensíveis (menores de idade)
+//   - Exigir consentimento dos responsáveis ao cadastrar aluno
+//   - Política de privacidade e termos de uso obrigatórios
+//   - Direito de exclusão: botão "apagar meus dados" no perfil
+//   - Logs de acesso a dados sensíveis
+//   - Prazo de retenção de dados definido em contrato
+//
+// SEGURANÇA:
+//   - Substituir hash() por bcrypt no backend
+//   - Autenticação via JWT com refresh token
+//   - HTTPS obrigatório em produção
+//   - Rate limiting nas rotas de login
+//   - Sanitização de inputs no backend também
+//
+// BACKEND (Node.js / Python FastAPI sugerido):
+//   - POST /api/auth/login — retorna JWT
+//   - POST /api/auth/register — cadastro professor
+//   - GET/POST /api/turmas — CRUD turmas
+//   - GET/POST /api/alunos — CRUD alunos
+//   - POST /api/chamada — salvar chamada
+//   - GET /api/relatorio/:alunoId — relatório completo
+//   - POST /api/suporte — proxy para IA (esconde chave)
+//   - POST /api/pagamento/webhook — receber evento do gateway
+//
+// BANCO DE DADOS (PostgreSQL sugerido):
+//   - tabela usuarios (id, nome, email, senha_hash, plano, escola, role)
+//   - tabela turmas (id, nome, escola, prof_id, limite_faltas)
+//   - tabela alunos (id, nome, obs, turma_id, cor)
+//   - tabela chamadas (id, turma_id, data, criada_em)
+//   - tabela chamada_alunos (chamada_id, aluno_id, status) -- P/F/J
+//   - tabela notas (aluno_id, materia, semestre, valor, ano)
+//   - tabela materias (id, nome, turma_id)
+//
+// PAGAMENTO (MercadoPago recomendado para BR):
+//   - Criar plano recorrente no painel MP
+//   - Webhook /api/pagamento/webhook atualiza campo plano do usuario
+//   - Testar com sandbox antes de produção
+// ════════════════════════════
+
+// ── Relatório PDF do aluno ──
+// BACKEND: gerar PDF no servidor para melhor compatibilidade
+function gerarRelatorioAluno(aid,tid){
+  const ht=S.turmas[tid];
+  const aluno=ht?.alunos.find(a=>a.id===aid);
+  if(!ht||!aluno)return;
+  const prof=getProf();
+  const lmt=ht.limiteFaltas||6;
+  const totalCham=ht.history.length;
+  const presencas=ht.history.filter(h=>h.presentes.includes(aluno.nome)).length;
+  const freq=totalCham>0?Math.round(presencas/totalCham*100):null;
+  const m1=calcMedia(aluno.notas?.s1);
+  const m2=calcMedia(aluno.notas?.s2);
+  const mediaAnual=(m1!==null&&m2!==null)?(m1+m2)/2:(m1!==null?m1:m2);
+
+  // Monta linhas de notas
+  let notasHTML='';
+  if((ht.materias||[]).length){
+    notasHTML=`<h3 style="margin:16px 0 8px;font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.05em">Boletim de Notas</h3><table style="width:100%;border-collapse:collapse;font-size:12px">
+      <tr style="background:#f0f0f0"><th style="padding:5px 8px;text-align:left">Matéria</th><th style="padding:5px 8px;text-align:center">1º Sem.</th><th style="padding:5px 8px;text-align:center">2º Sem.</th><th style="padding:5px 8px;text-align:center">Média</th></tr>`;
+    ht.materias.forEach(mat=>{
+      const n1=aluno.notas?.s1?.[mat];const n2=aluno.notas?.s2?.[mat];
+      const med=(n1!==undefined&&n1!==''&&n2!==undefined&&n2!=='')?((parseFloat(n1)+parseFloat(n2))/2).toFixed(1):'—';
+      notasHTML+=`<tr style="border-bottom:1px solid #eee"><td style="padding:5px 8px">${mat}</td><td style="padding:5px 8px;text-align:center">${n1!==undefined&&n1!==''?n1:'—'}</td><td style="padding:5px 8px;text-align:center">${n2!==undefined&&n2!==''?n2:'—'}</td><td style="padding:5px 8px;text-align:center;font-weight:700">${med}</td></tr>`;
+    });
+    notasHTML+=`</table>`;
+  }
+
+  // Chamadas do aluno
+  const chamAlu=ht.history.filter(h=>[...h.presentes,...(h.ausentes||[]),...(h.justificados||[])].includes(aluno.nome));
+  let chamHTML=chamAlu.slice(0,20).map(h=>{
+    const st=h.presentes.includes(aluno.nome)?'Presente':(h.justificados||[]).includes(aluno.nome)?'Justificado':'Ausente';
+    return `<tr style="border-bottom:1px solid #eee"><td style="padding:4px 8px;font-size:11px">${h.data}</td><td style="padding:4px 8px;font-size:11px;font-weight:600;color:${st==='Presente'?'#166534':st==='Justificado'?'#185fa5':'#b03030'}">${st}</td></tr>`;
+  }).join('');
+
+  const win=window.open('','_blank');
+  if(!win)return;
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatorio - ${aluno.nome}</title>
+  <style>body{font-family:Arial,sans-serif;padding:24px;max-width:600px;margin:0 auto;color:#111}
+  h1{font-size:18px;margin-bottom:4px}h2{font-size:13px;color:#888;font-weight:400;margin-bottom:16px}
+  .chip{display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;margin:2px}
+  .ok{background:#dcfce7;color:#166534}.bad{background:#ffe4e6;color:#9f1239}.blue{background:#e6f1fb;color:#185fa5}
+  @media print{button{display:none}}</style></head><body>
+  <div style="border-bottom:2px solid #1D9E75;padding-bottom:12px;margin-bottom:16px">
+    <div style="font-size:11px;color:#888;margin-bottom:4px">CHAMADA FÁCIL — RELATÓRIO DO ALUNO</div>
+    <h1>${aluno.nome}</h1>
+    <h2>${esc(ht.nome)} · ${esc(ht.escola||'')} · ${prof?esc(prof.nome):''}</h2>
+    <div>
+      <span class="chip ${freq!==null&&freq>=75?'ok':'bad'}">${freq!==null?freq+'% frequência':'—'}</span>
+      <span class="chip ${fc(aluno.faltas,lmt)==='bad'?'bad':'ok'}">${aluno.faltas} falta${aluno.faltas!==1?'s':''}</span>
+      ${mediaAnual!==null?`<span class="chip ${mediaAnual>=7?'ok':mediaAnual>=5?'':'bad'}">${mediaAnual.toFixed(1)} média anual</span>`:''}
+    </div>
+  </div>
+  ${aluno.obs?`<div style="background:#f8f8f8;border-radius:6px;padding:10px;margin-bottom:16px;font-size:12px"><strong>Observações:</strong> ${esc(aluno.obs)}</div>`:''}
+  ${notasHTML}
+  ${chamHTML?`<h3 style="margin:16px 0 8px;font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.05em">Histórico de Chamadas</h3><table style="width:100%;border-collapse:collapse">${chamHTML}</table>`:''}
+  <div style="margin-top:24px;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:8px">
+    Gerado em ${nowStr()} · Chamada Fácil · ${prof?esc(prof.nome):''}
+  </div>
+  <button onclick="window.print()" style="margin-top:16px;padding:8px 20px;background:#1D9E75;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">🖨 Imprimir / Salvar PDF</button>
+  </body></html>`);
+  win.document.close();
+}
+
+// ── Compartilhar aluno via WhatsApp ──
+// BACKEND: gerar link de relatório online em vez de texto
+function compartilharAluno(aid,tid){
+  const ht=S.turmas[tid];
+  const aluno=ht?.alunos.find(a=>a.id===aid);
+  if(!ht||!aluno)return;
+  const prof=getProf();
+  const hora=new Date().getHours();
+  const saud=hora<12?'Bom dia':hora<18?'Boa tarde':'Boa noite';
+  const lmt=ht.limiteFaltas||6;
+  const totalCham=ht.history.length;
+  const presencas=ht.history.filter(h=>h.presentes.includes(aluno.nome)).length;
+  const freq=totalCham>0?Math.round(presencas/totalCham*100):null;
+  const m1=calcMedia(aluno.notas?.s1);
+  const m2=calcMedia(aluno.notas?.s2);
+  const mediaAnual=(m1!==null&&m2!==null)?(m1+m2)/2:(m1!==null?m1:m2);
+
+  let msg=`${saud}! 👋\n\nAqui é *${prof?prof.nome:'o(a) professor(a)'}* da turma *${ht.nome}*${ht.escola?' — '+ht.escola:''}.\n\nGostaria de compartilhar algumas informações sobre *${aluno.nome}*:\n\n`;
+  msg+=`📊 *Frequência:* ${freq!==null?freq+'%':'Não disponível'}\n`;
+  msg+=`📌 *Faltas registradas:* ${aluno.faltas}${aluno.faltas>=lmt?' ⚠️ Atenção: limite atingido':''}\n`;
+  if(mediaAnual!==null)msg+=`📝 *Média anual:* ${mediaAnual.toFixed(1)}${mediaAnual>=7?' ✅':mediaAnual>=5?' ⚠️':' ❌'}\n`;
+  if(aluno.obs)msg+=`\n💬 *Observações:* ${aluno.obs}\n`;
+  msg+=`\nQuaisquer dúvidas, estou à disposição. 😊`;
+
+  const url='https://wa.me/?text='+encodeURIComponent(msg);
+  try{window.open(url,'_blank');}catch(e){
+    navigator.clipboard?.writeText(msg);showToast('Mensagem copiada! Cole no WhatsApp.');
+  }
 }
 
 // ── Matérias ──
@@ -501,6 +710,7 @@ function render(){
           <span class="sec-title">Marque a presença</span>
           <div style="display:flex;gap:5px">
             ${minhasTurmas.length>1?`<button class="btn-xs" onclick="S.turmaAtiva=null;render()">Trocar</button>`:''}
+            <button class="btn-xs ${t.alunos.every(a=>a.presente==='P')?'green':''}" onclick="todosPresentes('${t.id}')">${t.alunos.every(a=>a.presente==='P')?'✗ Limpar':'✓ Todos'}</button>
             <button class="btn-xs green" onclick="salvarChamada()">💾 Salvar</button>
           </div>
         </div>`;
@@ -619,36 +829,159 @@ function render(){
     }
 
     // ── ABA HISTÓRICO ──
+    // Estrutura: turma → aluno → relatório completo
     if(S.tab==='historico'){
-      if(minhasTurmas.length>1&&!S.turmaAtiva){
-        html+=`<div class="sec-hdr"><span class="sec-title">Selecione a turma</span></div>`;
+
+      // NÍVEL 1: escolher turma (se mais de uma)
+      if(!S._histTurma){
+        html+=`<div class="sec-hdr"><span class="sec-title">Histórico por turma</span></div>`;
+        if(!minhasTurmas.length)html+=`<div class="empty-state">Nenhuma turma ainda.</div>`;
         minhasTurmas.forEach(tm=>{
-          html+=`<div class="turma-card" onclick="S.turmaAtiva='${tm.id}';render()">
-            <div><div class="turma-card-nome">${esc(tm.nome)}</div><div class="turma-card-info">${tm.history.length} chamada${tm.history.length!==1?'s':''}</div></div>
-            <span style="font-size:20px;color:#9ca3af">›</span>
-          </div>`;
-        });
-      }else if(t){
-        html+=`<div class="sec-hdr">
-          <span class="sec-title">${esc(t.nome)}</span>
-          ${minhasTurmas.length>1?`<button class="btn-xs" onclick="S.turmaAtiva=null;render()">Trocar</button>`:''}
-        </div>`;
-        html+=`<div style="margin-bottom:10px"><input class="fi" placeholder="🔍 Buscar aluno..." oninput="S._histSearch=this.value;render()" value="${esc(S._histSearch||'')}"></div>`;
-        const search=(S._histSearch||'').toLowerCase().trim();
-        if(!t.history.length)html+=`<div class="empty-state">Nenhuma chamada salva ainda.</div>`;
-        t.history.forEach(h=>{
-          if(search){const match=[...h.presentes,...(h.ausentes||[]),...(h.justificados||[])].some(n=>n.toLowerCase().includes(search));if(!match)return;}
-          const pct=h.total>0?Math.round(h.presentes.length/h.total*100):0;
-          html+=`<div class="hist-item">
-            <div style="display:flex;justify-content:space-between">
-              <span style="font-size:13px;font-weight:600">${h.data}</span>
-              <span style="font-size:12px;font-weight:600;color:${pct>=75?'#0a7a4e':'#b03030'}">${h.presentes.length}/${h.total} (${pct}%)</span>
+          const alertas=tm.alunos.filter(a=>a.faltas>=(tm.limiteFaltas||6)).length;
+          html+=`<div class="turma-card" onclick="S._histTurma='${tm.id}';S._histAluno=null;S._histSearch='';render()">
+            <div>
+              <div class="turma-card-nome">${esc(tm.nome)}</div>
+              <div class="turma-card-info">${esc(tm.escola||'')} · ${tm.alunos.length} alunos · ${tm.history.length} chamadas</div>
             </div>
-            ${h.ausentes?.length?`<div style="font-size:11px;color:#888;margin-top:2px">Ausentes: ${h.ausentes.map(esc).join(', ')}</div>`:''}
-            ${h.justificados?.length?`<div style="font-size:11px;color:#378ADD;margin-top:2px">Justificados: ${h.justificados.map(esc).join(', ')}</div>`:''}
-            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pct>=75?'#1D9E75':'#D85A30'}"></div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              ${alertas?`<span class="fb bad">⚠ ${alertas}</span>`:''}
+              <span style="font-size:20px;color:#9ca3af">›</span>
+            </div>
           </div>`;
         });
+
+      // NÍVEL 2: lista de alunos da turma (visual + busca extra)
+      }else if(S._histTurma&&!S._histAluno){
+        const ht=S.turmas[S._histTurma];
+        if(!ht){S._histTurma=null;render();return;}
+        const lmt=ht.limiteFaltas||6;
+
+        html+=`<div class="sec-hdr">
+          <span class="sec-title">${esc(ht.nome)}</span>
+          <button class="btn-xs" onclick="S._histTurma=null;render()">← Turmas</button>
+        </div>`;
+
+        // Campo de busca como filtro extra
+        html+=`<div style="margin-bottom:10px">
+          <input class="fi" placeholder="🔍 Filtrar aluno..." oninput="S._histSearch=this.value;render()" value="${esc(S._histSearch||'')}">
+        </div>`;
+
+        const search=(S._histSearch||'').toLowerCase().trim();
+        // Lista visual alfabética
+        const alunosOrdenados=[...ht.alunos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+        const alunosFiltrados=search?alunosOrdenados.filter(a=>a.nome.toLowerCase().includes(search)):alunosOrdenados;
+
+        if(!alunosFiltrados.length)html+=`<div class="empty-state">Nenhum aluno encontrado.</div>`;
+
+        // Agrupa por letra inicial
+        let letraAtual='';
+        alunosFiltrados.forEach(a=>{
+          const letra=a.nome[0].toUpperCase();
+          if(letra!==letraAtual){
+            letraAtual=letra;
+            html+=`<div style="font-size:11px;font-weight:700;color:#9ca3af;padding:6px 0 3px;letter-spacing:.08em">${letra}</div>`;
+          }
+          const m1=calcMedia(a.notas?.s1);
+          const m2=calcMedia(a.notas?.s2);
+          const mediaAnual=(m1!==null&&m2!==null)?(m1+m2)/2:(m1!==null?m1:m2);
+          const mb=notaBadge(mediaAnual);
+          // Conta chamadas do aluno
+          const totalChamadas=ht.history.length;
+          const presencas=ht.history.filter(h=>h.presentes.includes(a.nome)).length;
+          const freq=totalChamadas>0?Math.round(presencas/totalChamadas*100):null;
+          html+=`<div class="sc clickable" onclick="S._histAluno='${a.id}';render()">
+            <div class="av av${a.cor%5}">${initials(a.nome)}</div>
+            <div class="si">
+              <div class="sn">${esc(a.nome)}</div>
+              <div class="sm">
+                <span class="fb ${fc(a.faltas,lmt)}">${a.faltas} falta${a.faltas!==1?'s':''}</span>
+                ${freq!==null?`<span class="fb blue">${freq}% freq.</span>`:''}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+              ${temBol&&mb.txt!=='—'?`<div class="nota-badge ${mb.cls}" style="width:40px;height:26px;font-size:12px">${mb.txt}</div>`:''}
+              <span style="font-size:18px;color:#9ca3af">›</span>
+            </div>
+          </div>`;
+        });
+
+      // NÍVEL 3: relatório completo do aluno
+      }else if(S._histTurma&&S._histAluno){
+        const ht=S.turmas[S._histTurma];
+        const aluno=ht?.alunos.find(a=>a.id===S._histAluno);
+        if(!ht||!aluno){S._histAluno=null;render();return;}
+        const lmt=ht.limiteFaltas||6;
+
+        html+=`<div class="sec-hdr">
+          <span class="sec-title">${esc(aluno.nome)}</span>
+          <button class="btn-xs" onclick="S._histAluno=null;render()">← Alunos</button>
+        </div>`;
+
+        // Card resumo
+        const totalCham=ht.history.length;
+        const presencas=ht.history.filter(h=>h.presentes.includes(aluno.nome)).length;
+        const ausencias=ht.history.filter(h=>(h.ausentes||[]).includes(aluno.nome)).length;
+        const justifs=ht.history.filter(h=>(h.justificados||[]).includes(aluno.nome)).length;
+        const freq=totalCham>0?Math.round(presencas/totalCham*100):null;
+        const m1=calcMedia(aluno.notas?.s1);
+        const m2=calcMedia(aluno.notas?.s2);
+        const mediaAnual=(m1!==null&&m2!==null)?(m1+m2)/2:(m1!==null?m1:m2);
+        const mb=notaBadge(mediaAnual);
+
+        html+=`<div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div class="av av${aluno.cor%5}" style="width:48px;height:48px;font-size:15px">${initials(aluno.nome)}</div>
+            <div>
+              <div style="font-size:15px;font-weight:700">${esc(aluno.nome)}</div>
+              <div style="font-size:12px;color:#888">${esc(ht.nome)} · ${esc(ht.escola||'')}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:12px">
+            <div class="stat" style="background:#f4f6f8"><div class="stat-num" style="color:#111;font-size:16px">${freq!==null?freq+'%':'—'}</div><div class="stat-label" style="color:#888">Freq.</div></div>
+            <div class="stat" style="background:#f4f6f8"><div class="stat-num r" style="font-size:16px">${aluno.faltas}</div><div class="stat-label" style="color:#888">Faltas</div></div>
+            <div class="stat" style="background:#f4f6f8"><div class="stat-num b" style="font-size:16px">${justifs}</div><div class="stat-label" style="color:#888">Justif.</div></div>
+            <div class="stat" style="background:#f4f6f8"><div class="nota-badge ${mb.cls}" style="width:100%;height:28px;border-radius:6px;font-size:13px;margin:2px auto">${mb.txt}</div><div class="stat-label" style="color:#888">Média</div></div>
+          </div>
+          ${aluno.obs?`<div style="background:#f8f8f8;border-radius:8px;padding:8px 10px;font-size:12px;color:#555;margin-bottom:8px">📝 ${esc(aluno.obs)}</div>`:''}
+          <div style="display:flex;gap:6px">
+            <button class="btn-xs green" style="flex:1;padding:8px;font-size:12px" onclick="gerarRelatorioAluno('${aluno.id}','${ht.id}')">📄 PDF</button>
+            <button class="btn-xs" style="flex:1;padding:8px;font-size:12px;background:#25D366;color:#fff;border-color:#25D366" onclick="compartilharAluno('${aluno.id}','${ht.id}')">💬 WhatsApp</button>
+          </div>
+        </div>`;
+
+        // Notas por semestre
+        if(temBol&&(ht.materias||[]).length){
+          html+=`<div class="card">
+            <div class="sec-title" style="margin-bottom:10px">📊 Boletim</div>
+            <div class="sem-tabs">
+              <button class="sem-tab ${S._semestre===1?'active':''}" onclick="S._semestre=1;render()">1º Semestre</button>
+              <button class="sem-tab ${S._semestre===2?'active':''}" onclick="S._semestre=2;render()">2º Semestre</button>
+            </div>`;
+          const semKey='s'+S._semestre;
+          const notasSem=aluno.notas?.[semKey]||{};
+          ht.materias.forEach(mat=>{
+            const nb=notaBadge(notasSem[mat]);
+            html+=`<div class="nota-row"><div class="nota-materia">${esc(mat)}</div><div class="nota-badge ${nb.cls}">${nb.txt}</div></div>`;
+          });
+          const mediaSem=calcMedia(notasSem);const msb=notaBadge(mediaSem);
+          html+=`<div class="media-row"><span style="font-size:13px;font-weight:700">Média ${S._semestre}º Sem.</span><div class="nota-badge ${msb.cls}" style="width:52px;height:32px;font-size:14px">${msb.txt}</div></div>`;
+          if(m1!==null&&m2!==null)html+=`<div class="media-row" style="border-top:none;padding-top:0"><span style="font-size:13px;font-weight:700;color:#1D9E75">Média anual</span><div class="nota-badge ${mb.cls}" style="width:52px;height:32px;font-size:14px">${mb.txt}</div></div>`;
+          html+=`</div>`;
+        }
+
+        // Histórico de chamadas do aluno
+        html+=`<div class="card">
+          <div class="sec-title" style="margin-bottom:8px">📅 Chamadas</div>`;
+        const chamAlu=ht.history.filter(h=>[...h.presentes,...(h.ausentes||[]),...(h.justificados||[])].includes(aluno.nome));
+        if(!chamAlu.length)html+=`<div style="font-size:12px;color:#aaa;padding:4px 0">Nenhuma chamada registrada.</div>`;
+        chamAlu.forEach(h=>{
+          const st=h.presentes.includes(aluno.nome)?{txt:'Presente',cls:'ok'}:(h.justificados||[]).includes(aluno.nome)?{txt:'Justificado',cls:'blue'}:{txt:'Ausente',cls:'bad'};
+          html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0">
+            <span style="font-size:12px;color:#555">${h.data}</span>
+            <span class="fb ${st.cls}">${st.txt}</span>
+          </div>`;
+        });
+        html+=`</div>`;
       }
     }
 
@@ -663,18 +996,66 @@ function render(){
             <span class="fb ok" style="margin-top:4px;display:inline-block">${PLANOS[prof.plano||'basico'].nome}</span>
           </div>
           <div class="fl"><label>Nome</label><input class="fi" value="${esc(prof.nome)}" oninput="S.professores['${prof.id}'].nome=this.value;save()"></div>
-          <div class="fl"><label>Escola</label><input class="fi" value="${esc(prof.escola||'')}" oninput="S.professores['${prof.id}'].escola=this.value;save()"></div>
+          <div class="fl"><label>Escola padrão</label><input class="fi" value="${esc(prof.escola||'')}" placeholder="Usado ao criar novas turmas" oninput="S.professores['${prof.id}'].escola=this.value;save()"></div>
           <div class="fl"><label>Nova senha</label><input class="fi" type="password" id="np_prof" placeholder="Deixe em branco para manter"></div>
           <button class="btn-primary" onclick="(function(){const v=document.getElementById('np_prof')?.value;if(v&&v.length>=4){S.professores['${prof.id}'].passHash=hash(v);save();showToast('Senha alterada!');}else if(v){showToast('Mínimo 4 caracteres.');}else{showToast('Perfil salvo!');}})()">Salvar perfil</button>
         </div>`;
+
+        // Upgrade banner para plano básico
         if(!temBol){
           html+=`<div class="upgrade-banner">
-            <div style="font-size:13px;color:#9ca3af;margin-bottom:4px">Seu plano atual: <strong style="color:#fff">${PLANOS[prof.plano||'basico'].nome}</strong></div>
-            <div style="font-size:15px;font-weight:700;color:#5DCAA5;margin-bottom:8px">Desbloqueie o Boletim de Notas</div>
+            <div style="font-size:13px;color:#9ca3af;margin-bottom:4px">Plano atual: <strong style="color:#fff">${PLANOS[prof.plano||'basico'].nome}</strong></div>
+            <div style="font-size:15px;font-weight:700;color:#5DCAA5;margin-bottom:6px">Desbloqueie o Boletim de Notas</div>
             <div style="font-size:12px;color:#9ca3af;margin-bottom:12px">Disponível nos planos Plus (R$49,90/mês) e Prime (R$69,90/mês)</div>
             <div class="btn-upgrade">⬆ Ver planos e fazer upgrade</div>
           </div>`;
         }
+
+        // Suporte IA dentro do Config
+        html+=`<div class="card" style="margin-top:4px">
+          <div class="sec-title" style="margin-bottom:10px">💬 Suporte</div>
+          <div id="suporte-msgs" style="max-height:260px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px">`;
+
+        const msgs=S._suporteMsgs||[];
+        if(!msgs.length){
+          html+=`<div style="text-align:center;padding:12px 0">
+            <div style="font-size:22px;margin-bottom:6px">🤖</div>
+            <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">Assistente Fácil</div>
+            <div style="font-size:12px;color:#888">Tire dúvidas sobre o sistema, planos ou problemas técnicos.</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px">
+            ${['Como fazer a chamada?','Como exportar PDF?','Como adicionar alunos?','Falar com suporte humano'].map(q=>`<button class="btn-xs" style="font-size:11px" onclick="enviarSuporteMsg('${q}')">${q}</button>`).join('')}
+          </div>`;
+        }else{
+          msgs.forEach(m=>{
+            if(m.role==='user'){
+              html+=`<div style="align-self:flex-end;background:#1D9E75;color:#fff;border-radius:12px 12px 2px 12px;padding:8px 12px;font-size:13px;max-width:85%">${esc(m.txt)}</div>`;
+            }else{
+              html+=`<div style="align-self:flex-start;background:#f4f6f8;border-radius:12px 12px 12px 2px;padding:8px 12px;font-size:13px;max-width:85%;color:#111">${esc(m.txt)}</div>`;
+            }
+          });
+          if(S._suporteCarregando){
+            html+=`<div style="align-self:flex-start;background:#f4f6f8;border-radius:12px;padding:8px 12px;font-size:13px;color:#888">digitando...</div>`;
+          }
+          // Escalonamento humano após 4 mensagens
+          if(msgs.length>=8){
+            html+=`<div style="background:#f0faf6;border:1px dashed #1D9E75;border-radius:10px;padding:12px;margin-top:4px;text-align:center">
+              <div style="font-size:12px;font-weight:700;color:#0F6E56;margin-bottom:6px">Falar com o suporte humano</div>
+              <div style="display:flex;gap:6px;justify-content:center">
+                <button class="btn-xs green" style="font-size:11px" onclick="acionarADM()">💬 WhatsApp ADM</button>
+                <button class="btn-xs" style="font-size:11px" onclick="acionarADMEmail()">📧 E-mail</button>
+              </div>
+            </div>`;
+          }
+        }
+        html+=`</div>
+          <div style="display:flex;gap:6px">
+            <input class="fi" id="suporte-input" placeholder="Digite sua dúvida..." style="flex:1;font-size:13px"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const v=document.getElementById('suporte-input')?.value?.trim();if(v)enviarSuporteMsg(v);}">
+            <button class="btn-xs green" style="padding:8px 12px" onclick="const v=document.getElementById('suporte-input')?.value?.trim();if(v)enviarSuporteMsg(v)">Enviar</button>
+          </div>
+          ${msgs.length?`<button class="btn-xs" style="width:100%;margin-top:8px;font-size:11px;color:#888" onclick="S._suporteMsgs=[];render()">🗑 Limpar conversa</button>`:''}
+        </div>`;
       }
     }
 
@@ -896,7 +1277,10 @@ function render(){
         <button class="btn-primary" onclick="closeModal()">Fechar</button>`;
     }
     if(mc){
-      const mbg=document.createElement('div');mbg.className='modal-bg';mbg.onclick=closeModal;
+      // BUG CORRIGIDO: remover modal anterior antes de criar novo
+      document.querySelectorAll('.modal-bg').forEach(el=>el.remove());
+      const mbg=document.createElement('div');mbg.className='modal-bg';
+      mbg.onclick=e=>{if(e.target===mbg)closeModal();};
       const mdl=document.createElement('div');mdl.className='modal';mdl.onclick=e=>e.stopPropagation();
       mdl.innerHTML=mc;mbg.appendChild(mdl);document.body.appendChild(mbg);
     }
