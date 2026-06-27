@@ -1,5 +1,5 @@
-import DashboardProfessor from "./pages/DashboardProfessor";
+import DashboardProfessor from "./páginas/DashboardProfessor";
 
 export default function App() {
-    return <DashboardProfessor />;
+      return <DashboardProfessor />;
 }
