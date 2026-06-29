@@ -15,43 +15,78 @@ import CommunicationPanel from "../components/CommunicationPanel";
 import VidaEscolarTimeline from "../components/VidaEscolarTimeline";
 import SmartAgenda from "../components/SmartAgenda";
 import ClassMode from "../components/ClassMode";
+import ProfessorWorkspace from "../components/ProfessorWorkspace";
 
 export default function DashboardProfessor() {
+  const stats = [
+    { icon: "BookOpen", label: "Aulas hoje", value: "4", sub: "2 concluidas" },
+    { icon: "Users", label: "Alunos ativos", value: "127", sub: "3 turmas" },
+    { icon: "ClipboardCheck", label: "Chamadas feitas", value: "3/4", sub: "1 pendente" },
+    { icon: "BarChart3", label: "Media frequencia", value: "94%", sub: "Este mes" },
+  ];
+
+  const actions = [
+    { icon: "ClipboardCheck", label: "Fazer Chamada" },
+    { icon: "FileText", label: "Lancar Notas" },
+    { icon: "MessageCircle", label: "Avisos" },
+    { icon: "CalendarDays", label: "Agenda" },
+    { icon: "BarChart3", label: "Relatorios" },
+    { icon: "GraduationCap", label: "Alunos" },
+  ];
+
+  const proximasAulas = [
+    { turma: "9 Ano A", disciplina: "Matematica", horario: "07:30", sala: "Sala 12" },
+    { turma: "8 Ano B", disciplina: "Portugues", horario: "09:10", sala: "Lab Info" },
+    { turma: "7 Ano C", disciplina: "Matematica", horario: "10:50", sala: "Sala 08" },
+  ];
+
   return (
-    <main className="app-shell">
-      <section className="hero-card">
+    <main className="app-container">
+      <header className="app-header">
+        <div className="header-left">
+          <div className="avatar">JP</div>
+          <div>
+            <strong>Joao Pedro</strong>
+            <span>Professor de Matematica</span>
+          </div>
+        </div>
+        <button className="notif-btn">
+          <span>3</span>
+        </button>
+      </header>
+
+      <div className="hero-card">
         <div>
-          <p className="eyebrow">EduFam</p>
-          <h1>Bom dia, Professor</h1>
-          <p className="subtitle">A vida escolar na palma da mao.</p>
+          <p className="hero-greeting">Bom dia, Professor!</p>
+          <h1 className="hero-title">Proxima aula em 12 min</h1>
+          <p className="hero-sub">9 Ano A · Matematica · Sala 12</p>
         </div>
-        <div className="profile-badge">
-          <GraduationCap size={24} />
-        </div>
-      </section>
+        <button className="hero-btn">Iniciar Aula</button>
+      </div>
 
       <SmartAgenda />
       <ClassMode />
+      <ProfessorWorkspace />
 
-      <section className="stats-grid">
-        <StatCard icon={<BookOpen />} title="Turmas" value="4" highlight />
-        <StatCard icon={<Users />} title="Alunos" value="126" />
-        <StatCard icon={<ClipboardCheck />} title="Avaliacoes" value="2" />
-        <StatCard icon={<BarChart3 />} title="Frequencia" value="97%" />
+      <section className="section">
+        <div className="section-header">
+          <h2>Resumo do dia</h2>
+        </div>
+        <div className="stats-grid">
+          {stats.map((s) => (
+            <StatCard key={s.label} {...s} />
+          ))}
+        </div>
       </section>
 
       <section className="section">
         <div className="section-header">
           <h2>Acoes rapidas</h2>
-          <span>Ate 3 toques</span>
         </div>
         <div className="actions-grid">
-          <QuickAction icon={<ClipboardCheck />} title="Iniciar chamada" subtitle="Registrar presenca" />
-          <QuickAction icon={<FileText />} title="Lancar notas" subtitle="Avaliacoes e trabalhos" />
-          <QuickAction icon={<BookOpen />} title="Vida Escolar" subtitle="Historico do aluno" />
-          <QuickAction icon={<MessageCircle />} title="Comunicacao" subtitle="Enviar aos pais" />
-          <QuickAction icon={<CalendarDays />} title="Agenda" subtitle="Aulas e reunioes" />
-          <QuickAction icon={<BarChart3 />} title="Relatorios" subtitle="Turma e aluno" />
+          {actions.map((a) => (
+            <QuickAction key={a.label} {...a} />
+          ))}
         </div>
       </section>
 
@@ -60,19 +95,17 @@ export default function DashboardProfessor() {
           <h2>Proximas aulas</h2>
           <span>Hoje</span>
         </div>
-        <div className="class-card">
-          <div>
-            <strong>9 Ano A</strong>
-            <span>Matematica - 08:00</span>
-          </div>
-          <button>Entrar</button>
-        </div>
-        <div className="class-card">
-          <div>
-            <strong>8 Ano B</strong>
-            <span>Portugues - 10:00</span>
-          </div>
-          <button>Entrar</button>
+        <div className="classes-list">
+          {proximasAulas.map((aula) => (
+            <div className="class-item" key={aula.turma}>
+              <div className="class-time">{aula.horario}</div>
+              <div className="class-info">
+                <strong>{aula.turma}</strong>
+                <span>{aula.disciplina} · {aula.sala}</span>
+              </div>
+              <button className="class-btn">Entrar</button>
+            </div>
+          ))}
         </div>
       </section>
 
