@@ -579,3 +579,354 @@ h1 {
   font-size: 12px;
   line-height: 1.45;
 }
+
+.class-mode-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.class-mode-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.mode-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+}
+
+.class-mode-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.class-mode-header p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mode-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--blue-light);
+  color: var(--blue);
+  border-radius: 14px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mode-status-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.done {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.soft {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 5px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+}
+
+.mode-tabs button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  background: transparent;
+  font-weight: 800;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mode-tabs button.active {
+  background: white;
+  color: var(--blue);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.mode-actions-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.mode-action {
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 20px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mode-action:hover {
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.mode-action-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  background: var(--blue-light);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mode-action strong,
+.student-info strong {
+  display: block;
+  font-size: 14px;
+}
+
+.mode-action span,
+.student-info span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mode-action small {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--blue);
+  background: var(--blue-light);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.attendance-summary div {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+}
+
+.attendance-summary strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.attendance-summary span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.students-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.student-attendance-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 12px;
+}
+
+.student-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  background: var(--blue-light);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.student-info {
+  flex: 1;
+}
+
+.attendance-toggle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: #f8fafc;
+  color: var(--muted);
+  font-weight: 900;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.attendance-toggle.present {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: white;
+}
+
+.attendance-toggle.absent {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.attendance-toggle.justified {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.attendance-toggle:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  border-radius: 18px;
+  padding: 14px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tip-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+}
+
+.tip-card {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-radius: 26px;
+  padding: 22px;
+  position: relative;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+}
+
+.tip-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: none;
+  background: #f1f5f9;
+  color: var(--muted);
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.tip-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: var(--blue-light);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.tip-card h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.tip-card p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.tip-steps {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tip-steps span {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
