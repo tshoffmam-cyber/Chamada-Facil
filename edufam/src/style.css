@@ -400,3 +400,182 @@ h1 {
       color: var(--muted);
       font-weight: 700;
 }
+
+.agenda-main-card,
+.ai-summary-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+
+.agenda-main-top,
+.agenda-current,
+.agenda-warning,
+.lesson-card,
+.ai-summary-head,
+.summary-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agenda-main-top {
+  margin-bottom: 16px;
+}
+
+.agenda-main-top strong,
+.ai-summary-head strong {
+  display: block;
+  font-size: 15px;
+}
+
+.agenda-main-top span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.agenda-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: var(--blue-light);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agenda-current {
+  justify-content: space-between;
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+}
+
+.agenda-current p {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.agenda-current span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.agenda-current button,
+.ai-summary-card button {
+  border: none;
+  background: var(--blue);
+  color: white;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.agenda-warning {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.lesson-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.lesson-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.lesson-time {
+  width: 92px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.lesson-info {
+  flex: 1;
+}
+
+.lesson-info strong {
+  display: block;
+  font-size: 14px;
+}
+
+.lesson-info span,
+.lesson-info small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.lesson-status {
+  text-align: right;
+}
+
+.lesson-status span {
+  display: block;
+  font-size: 11px;
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.lesson-status small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ai-summary-card {
+  background: linear-gradient(135deg, #ffffff, #eff6ff);
+}
+
+.ai-summary-head {
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+
+.ai-summary-card p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.summary-preview {
+  align-items: flex-start;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
