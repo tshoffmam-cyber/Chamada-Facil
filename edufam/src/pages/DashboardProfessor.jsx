@@ -14,6 +14,7 @@ import QuickAction from "../components/QuickAction";
 import CommunicationPanel from "../components/CommunicationPanel";
 import VidaEscolarTimeline from "../components/VidaEscolarTimeline";
 import SmartAgenda from "../components/SmartAgenda";
+import ClassMode from "../components/ClassMode";
 
 export default function DashboardProfessor() {
   return (
@@ -24,13 +25,13 @@ export default function DashboardProfessor() {
           <h1>Bom dia, Professor</h1>
           <p className="subtitle">A vida escolar na palma da mao.</p>
         </div>
-
         <div className="profile-badge">
           <GraduationCap size={24} />
         </div>
       </section>
 
       <SmartAgenda />
+      <ClassMode />
 
       <section className="stats-grid">
         <StatCard icon={<BookOpen />} title="Turmas" value="4" highlight />
@@ -44,7 +45,6 @@ export default function DashboardProfessor() {
           <h2>Acoes rapidas</h2>
           <span>Ate 3 toques</span>
         </div>
-
         <div className="actions-grid">
           <QuickAction icon={<ClipboardCheck />} title="Iniciar chamada" subtitle="Registrar presenca" />
           <QuickAction icon={<FileText />} title="Lancar notas" subtitle="Avaliacoes e trabalhos" />
@@ -60,7 +60,6 @@ export default function DashboardProfessor() {
           <h2>Proximas aulas</h2>
           <span>Hoje</span>
         </div>
-
         <div className="class-card">
           <div>
             <strong>9 Ano A</strong>
@@ -68,7 +67,6 @@ export default function DashboardProfessor() {
           </div>
           <button>Entrar</button>
         </div>
-
         <div className="class-card">
           <div>
             <strong>8 Ano B</strong>
