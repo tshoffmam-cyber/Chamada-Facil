@@ -1,103 +1,119 @@
-import {
-  CalendarDays,
-  Clock,
-  ClipboardCheck,
-  Sparkles,
-  TimerReset,
-} from "lucide-react";
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  EduFam — src/components/SmartAgenda.jsx                    ║
+// ║  Agenda inteligente — lê agenda real de DATA.eventos         ║
+// ║  Marca cada aula como ativa/próxima/passada em tempo real    ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-const aulas = [
-  {
-    horario: "07:30 - 08:20",
-    organizacao: "Escola Estadual Esperanca",
-    turma: "9 Ano A",
-    materia: "Matematica",
-    status: "Em andamento",
-    chamada: "Pendente",
-  },
-  {
-    horario: "08:30 - 09:20",
-    organizacao: "Escola Estadual Esperanca",
-    turma: "8 Ano B",
-    materia: "Portugues",
-    status: "Proxima aula",
-    chamada: "Aguardando",
-  },
-  {
-    horario: "10:00 - 10:50",
-    organizacao: "Preparatorio PM",
-    turma: "PMES Soldado",
-    materia: "Legislacao",
-    status: "Mais tarde",
-    chamada: "Aguardando",
-  },
-];
+import { useState, useEffect } from 'react';
+import { eventos, turmas, horaParaMin } from '../data';
 
-export default function SmartAgenda() {
+/**
+ * Lista de aulas de hoje do professor, com status em tempo real.
+ *
+ * @param {string}   profId       ID do professor logado
+ * @param {function} onAbrirAula  Callback(turmaId) ao clicar numa aula
+ */
+export default function SmartAgenda({ profId, onAbrirAula }) {
+  // Re-renderiza a cada minuto para atualizar status ativa/próxima/passada
+  const [minuto, setMinuto] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setMinuto(m => m + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const agora         = new Date();
+  const diaSemanaHoje = agora.getDay();
+  const minAgora      = agora.getHours() * 60 + agora.getMinutes();
+
+  // Filtrar aulas de hoje do professor
+  const aulasHoje = eventos
+    .filter(ev =>
+      ev.tipo === 'aula' &&
+      ev.profId === profId &&
+      ev.recorrencia === 'semanal' &&
+      ev.diaSemana === diaSemanaHoje &&
+      ev.horaInicio
+    )
+    .sort((a, b) => horaParaMin(a.horaInicio) - horaParaMin(b.horaInicio));
+
+  if (!aulasHoje.length) {
+    return (
+      <div style={S.card}>
+        <div style={S.secHeader}>
+          <span style={S.lbl}>Agenda de hoje</span>
+        </div>
+        <div style={{ color:'#94A3B8', fontSize:14, textAlign:'center', padding:'16px 0' }}>
+          😊 Sem aulas hoje!
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <section className="section">
-      <div className="section-header">
-        <h2>Agenda Inteligente</h2>
-        <span>Hoje</span>
+    <div style={S.card}>
+      <div style={S.secHeader}>
+        <span style={S.lbl}>Agenda de hoje</span>
+        <span style={{ fontSize:12, color:'#64748B' }}>{aulasHoje.length} aulas</span>
       </div>
 
-      <div className="agenda-main-card">
-        <div className="agenda-main-top">
-          <div className="agenda-icon">
-            <CalendarDays size={22} />
-          </div>
-          <div>
-            <strong>Sua aula em andamento</strong>
-            <span>O EduFam organiza sua rotina automaticamente.</span>
-          </div>
-        </div>
+      {aulasHoje.map((ev, i) => {
+        const turmaId   = ev.turmaIds?.[0];
+        const turma     = turmas.find(t => t.id === turmaId);
+        const inicioMin = horaParaMin(ev.horaInicio);
+        const fimMin    = horaParaMin(ev.horaFim || ev.horaInicio) + 50;
 
-        <div className="agenda-current">
-          <div>
-            <p>9 Ano A</p>
-            <span>Matematica - Escola Estadual Esperanca</span>
-          </div>
-          <button>Modo Aula</button>
-        </div>
+        // Status em tempo real
+        const emAndamento = minAgora >= inicioMin && minAgora < fimMin;
+        const futura      = minAgora < inicioMin;
+        const passada     = minAgora >= fimMin;
 
-        <div className="agenda-warning">
-          <TimerReset size={18} />
-          <span>Chamada pendente. Ao final da aula, o EduFam lembrara voce de finalizar.</span>
-        </div>
-      </div>
+        const barColor = emAndamento ? '#2563EB' : futura ? '#16A34A' : '#E2E8F0';
 
-      <div className="lesson-list">
-        {aulas.map((aula) => (
-          <div className="lesson-card" key={aula.turma + aula.horario}>
-            <div className="lesson-time">
-              <Clock size={17} />
-              <span>{aula.horario}</span>
+        return (
+          <div
+            key={ev.id}
+            onClick={() => onAbrirAula(turmaId)}
+            style={{
+              display:'flex', gap:12, alignItems:'center',
+              padding:'10px 0',
+              borderBottom: i < aulasHoje.length - 1 ? '1px solid #F1F5F9' : 'none',
+              cursor:'pointer',
+              opacity: passada ? 0.5 : 1,
+            }}
+          >
+            {/* Hora */}
+            <div style={{ fontSize:12, fontWeight:700, color:'#94A3B8', width:40, flexShrink:0 }}>
+              {ev.horaInicio}
             </div>
-            <div className="lesson-info">
-              <strong>{aula.turma}</strong>
-              <span>{aula.materia}</span>
-              <small>{aula.organizacao}</small>
-            </div>
-            <div className="lesson-status">
-              <span>{aula.status}</span>
-              <small>{aula.chamada}</small>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      <div className="ai-summary-card">
-        <div className="ai-summary-head">
-          <Sparkles size={20} />
-          <strong>Resumo de aula com IA</strong>
-        </div>
-        <p>Ao final da aula, a EduFam podera sugerir um resumo para registrar na Vida Escolar da turma.</p>
-        <div className="summary-preview">
-          <ClipboardCheck size={18} />
-          <span>Hoje a turma teve dificuldade em fracoes. Recomendo revisar o conteudo na proxima aula.</span>
-        </div>
-        <button>Gerar resumo da aula</button>
-      </div>
-    </section>
+            {/* Barra colorida */}
+            <div style={{ width:3, height:36, borderRadius:2, background:barColor, flexShrink:0 }} />
+
+            {/* Info */}
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:600 }}>
+                {ev.titulo.split('—')[0].trim()}
+              </div>
+              <div style={{ fontSize:12, color:'#64748B' }}>
+                {turma?.nome || ''} · Sala {ev.sala || '—'} · até {ev.horaFim || '?'}
+              </div>
+            </div>
+
+            {/* Badge status */}
+            {emAndamento && (
+              <span style={{ background:'#EFF6FF', color:'#2563EB', fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:20 }}>
+                ● Em aula
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
+
+const S = {
+  card:      { background:'#fff', borderRadius:20, padding:20, boxShadow:'0 1px 4px rgba(0,0,0,.06)', marginBottom:12 },
+  secHeader: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 },
+  lbl:       { fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#94A3B8' },
+};
