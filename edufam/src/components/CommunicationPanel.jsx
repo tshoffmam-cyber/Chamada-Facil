@@ -1,76 +1,25 @@
-import { MessageCircle, ShieldCheck, AlertTriangle } from "lucide-react";
-
-const conversas = [
-  {
-        aluno: "João Pedro",
-        tipo: "Recado",
-        status: "Atenção",
-        limite: "3 de 5 mensagens usadas",
-        mensagem: "Responsável informou que o aluno ficou doente.",
-  },
-  {
-        aluno: "Maria Clara",
-        tipo: "Comunicado",
-        status: "Enviado",
-        limite: "Sem resposta permitida",
-        mensagem: "Reunião de pais enviada para os responsáveis.",
-  },
-  ];
-
-export default function CommunicationPanel() {
-    return (
-          <section className="section">
-                <div className="section-header">
-                        <h2>Comunicação</h2>h2>
-                        <span>Canal oficial</span>span>
-                </div>div>
-          
-                <div className="info-card blue-soft">
-                        <ShieldCheck size={22} />
-                        <div>
-                                  <strong>Conversa protegida</strong>strong>
-                                  <span>
-                                              O professor conversa com os responsáveis pela EduFam, sem usar seu número pessoal.
-                                  </span>span>
-                        </div>div>
-                </div>div>
-          
-            {conversas.map((item) => (
-                    <div className="communication-card" key={item.aluno}>
-                              <div className="communication-top">
-                                          <div>
-                                                        <strong>{item.aluno}</strong>strong>
-                                                        <span>{item.tipo}</span>span>
-                                          </div>div>
-                              
-                                          <span className={item.status === "Atenção" ? "badge warning" : "badge success"}>
-                                            {item.status}
-                                          </span>span>
-                              </div>div>
-                    
-                              <p>{item.mensagem}</p>p>
-                    
-                              <div className="communication-footer">
-                                          <span>{item.limite}</span>span>
-                                          <button>Ver conversa</button>button>
-                              </div>div>
-                    </div>div>
-                  ))}
-          
-                <div className="info-card warning-soft">
-                        <AlertTriangle size={22} />
-                        <div>
-                                  <strong>Limite inteligente</strong>strong>
-                                  <span>
-                                              Quando a conversa ficar longa, a EduFam orienta o responsável a procurar a escola.
-                                  </span>span>
-                        </div>div>
-                </div>div>
-          
-                <button className="primary-button">
-                        <MessageCircle size={18} />
-                        Novo comunicado
-                </button>button>
-          </section>section>
-        );
-}</section>
+export default function CommunicationPanel({ mensagens }) {
+  const lista = mensagens || [];
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <span style={{ fontSize:15, fontWeight:700, color:'#1E293B' }}>&#128172; Comunicados</span>
+        <span style={{ fontSize:11, color:'#64748B' }}>{lista.length} mensagens</span>
+      </div>
+      {lista.slice(0, 3).map((msg, i) => (
+        <div key={i} style={{ background:'#fff', borderRadius:12, padding:'12px 14px', marginBottom:8, borderLeft: msg.lida ? '3px solid #E2E8F0' : '3px solid #4F46E5' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+            <span style={{ fontSize:13, fontWeight:700, color:'#1E293B' }}>{msg.de || 'Escola'}</span>
+            <span style={{ fontSize:10, color:'#94A3B8' }}>{msg.hora || ''}</span>
+          </div>
+          <p style={{ fontSize:12, color:'#475569', margin:0 }}>{msg.texto}</p>
+        </div>
+      ))}
+      {lista.length === 0 && (
+        <div style={{ background:'#F8FAFC', borderRadius:12, padding:16, textAlign:'center', color:'#94A3B8', fontSize:13 }}>
+          Nenhuma mensagem ainda
+        </div>
+      )}
+    </div>
+  );
+}
