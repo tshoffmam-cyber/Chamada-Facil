@@ -4,22 +4,22 @@
 import { useState } from 'react';
 import { useClock } from '../hooks/useTimer';
 import { turmas, alunos, mensagens, eventos, proximaAulaHoje } from '../data';
-import HeroProximaAula     from '../components/HeroProximaAula';
-import SmartAgenda         from '../components/SmartAgenda';
-import ClassMode           from '../components/ClassMode';
-import StatCard            from '../components/StatCard';
-import CommunicationPanel  from '../components/CommunicationPanel';
+import HeroProximaAula from '../components/HeroProximaAula';
+import SmartAgenda from '../components/SmartAgenda';
+import ClassMode from '../components/ClassMode';
+import StatCard from '../components/StatCard';
+import CommunicationPanel from '../components/CommunicationPanel';
 import VidaEscolarTimeline from '../components/VidaEscolarTimeline';
-import ProfessorWorkspace  from '../components/ProfessorWorkspace';
+import ProfessorWorkspace from '../components/ProfessorWorkspace';
 
-const PROF_ID = 'u3'; // Em produção: vem do Auth
+const PROF_ID = 'u3'; // Em producao: vem do Auth
 
 export default function DashboardProfessor() {
-  const hora         = useClock();
+  const hora = useClock();
   const minhasTurmas = turmas.filter(t => t.profId === PROF_ID);
-  const proxima      = proximaAulaHoje(PROF_ID);
+  const proxima = proximaAulaHoje(PROF_ID);
 
-  const [tab, setTab]             = useState('home');
+  const [aba, setAba] = useState('home');
   const [aulaAtual, setAulaAtual] = useState(null);
 
   function abrirModoAula(turmaId) {
@@ -34,25 +34,25 @@ export default function DashboardProfessor() {
     );
     setAulaAtual({
       turmaId,
-      disc:       t.disc,
-      nome:       t.nome,
+      disc: t.disc,
+      nome: t.nome,
       horaInicio: evAula?.horaInicio || '07:30',
       horaFim:    evAula?.horaFim    || '08:20',
       sala:       evAula?.sala       || t.sala,
-      alunos:     alunos.filter(a => a.turmaId === t.id).length,
+      alunos: alunos.filter(a => a.turmaId === t.id).length,
     });
-    setTab('modo-aula');
+    setAba('modo-aula');
   }
 
-  if (tab === 'modo-aula') {
+  if (aba === 'modo-aula') {
     return (
       <div style={S.shell}>
         <StatusBar hora={hora} />
         <div style={S.scroll}>
           <ClassMode
             aulaAtual={aulaAtual}
-            onEncerrar={() => { setAulaAtual(null); setTab('home'); }}
-            onVoltar={() => setTab('home')}
+            onEncerrar={() => { setAulaAtual(null); setAba('home'); }}
+            onVoltar={() => setAba('home')}
           />
         </div>
       </div>
@@ -64,14 +64,14 @@ export default function DashboardProfessor() {
       <StatusBar hora={hora} />
       <div style={S.scroll}>
 
-        {tab === 'home' && (
+        {aba === 'home' && (
           <div style={S.sc}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:24 }}>
               <div>
                 <div style={S.lbl}>Bom dia ☀️</div>
-                <div style={S.txl}>Prof. João<br />Silva</div>
+                <div style={S.txl}>Professor João<br />Silva</div>
               </div>
-              <div onClick={() => setTab('perfil')} style={S.avatar}>JS</div>
+              <div onClick={() => setAba('perfil')} style={S.avatar}>JS</div>
             </div>
 
             <HeroProximaAula
@@ -81,10 +81,10 @@ export default function DashboardProfessor() {
             />
 
             <div style={S.g2}>
-              <StatCard label="Aulas hoje"  value={minhasTurmas.length}                                                        icon="🏫" color="blue"   onClick={() => setTab('turmas')} />
-              <StatCard label="Mensagens"   value={mensagens.filter(m => !m.lida).length}                                     icon="💬" color="orange" onClick={() => setTab('msgs')}   />
-              <StatCard label="Pendências"  value={2}                                                                      icon="⚠️" color="red"                                     />
-              <StatCard label="Alunos"      value={alunos.filter(a => minhasTurmas.some(t => t.id === a.turmaId)).length}     icon="👥" color="purple" onClick={() => setTab('turmas')} />
+              <StatCard label="Aulas hoje"  value={minhasTurmas.length} icon="🏫" cor="blue"   onClick={() => setAba('turmas')} />
+              <StatCard label="Mensagens"   value={mensagens.filter(m => !m.lida).length} icon="💬" cor="orange" onClick={() => setAba('mensagens')} />
+              <StatCard label="Pendências"   value={2}  icon="⚠️" cor="red" />
+              <StatCard label="Alunos"      value={alunos.filter(a => minhasTurmas.some(t => t.id === a.turmaId)).length} icon="👥" cor="purple" onClick={() => setAba('turmas')} />
             </div>
 
             <SmartAgenda profId={PROF_ID} onAbrirAula={abrirModoAula} />
@@ -103,7 +103,7 @@ export default function DashboardProfessor() {
           </div>
         )}
 
-        {tab === 'turmas' && (
+        {aba === 'turmas' && (
           <div style={S.sc}>
             <div style={{ marginBottom:22, paddingTop:4 }}>
               <div style={S.tlg}>Minhas Turmas</div>
@@ -113,88 +113,86 @@ export default function DashboardProfessor() {
           </div>
         )}
 
-        {tab === 'msgs' && (
+        {aba === 'mensagens' && (
           <div style={S.sc}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:22, paddingTop:4 }}>
               <div>
                 <div style={S.tlg}>Mensagens</div>
-                <div style={{ fontSize:12, color:'#64748B', marginTop:3 }}>Comunicação escolar</div>
+                <div style={{ fontSize:12, color:'#64748B', marginTop:3 }}>{mensagens.length} conversas</div>
               </div>
-              <button style={S.btnPri}>Nova</button>
             </div>
-            <CommunicationPanel mensagens={mensagens} expandido />
+            <CommunicationPanel mensagens={mensagens} />
           </div>
         )}
 
-        {tab === 'perfil' && (
+        {aba === 'perfil' && (
           <div style={S.sc}>
-            <div style={{ textAlign:'center', padding:'20px 0 18px' }}>
-              <div style={{ ...S.avatar, width:64, height:64, fontSize:22, margin:'0 auto 14px' }}>JS</div>
-              <div style={S.tlg}>Prof. João Silva</div>
-              <div style={{ fontSize:12, color:'#64748B', marginTop:4 }}>joao@escola.edu.br</div>
-              <div style={{ display:'flex', justifyContent:'center', gap:8, marginTop:10 }}>
-                <span style={{ background:'#EFF6FF', color:'#2563EB', fontSize:11, fontWeight:700, padding:'4px 10px', borderRadius:20 }}>Professor</span>
-                <span style={{ background:'#F0FDF4', color:'#16A34A', fontSize:11, fontWeight:700, padding:'4px 10px', borderRadius:20 }}>Plus</span>
-              </div>
+            <div style={{ marginBottom:22, paddingTop:4 }}>
+              <div style={S.tlg}>Perfil</div>
             </div>
-            {['👤 Dados pessoais','🏫 Minhas organizações','🔔 Notificações','🔐 Segurança'].map(o => (
-              <div key={o} style={S.perfilRow}>{o} <span style={{ color:'#CBD5E1' }}>›</span></div>
-            ))}
-            <div style={{ background:'linear-gradient(135deg,#2563EB,#7C3AED)', borderRadius:16, padding:18, color:'#fff', marginTop:12, marginBottom:12 }}>
-              <div style={{ fontSize:13, color:'rgba(255,255,255,.75)', marginBottom:4 }}>Próxima cobrança</div>
-              <div style={{ fontSize:24, fontWeight:800 }}>R$ 49,90</div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,.7)', marginTop:2 }}>em 15 dias</div>
+            <div style={{ background:'#fff', borderRadius:16, padding:20, textAlign:'center' }}>
+              <div style={{ ...S.avatar, margin:'0 auto 12px', width:64, height:64, fontSize:24 }}>JS</div>
+              <div style={{ fontSize:18, fontWeight:700 }}>Prof. João Silva</div>
+              <div style={{ fontSize:13, color:'#64748B', marginTop:4 }}>joao@escola.edu.br</div>
+              <div style={{ fontSize:13, color:'#64748B', marginTop:2 }}>Matemática • {minhasTurmas.length} turmas</div>
             </div>
-            <button style={S.btnSair}>Sair da conta</button>
           </div>
         )}
 
       </div>
 
-      <nav style={S.bnav}>
-        <NavBtn ico="🏠" lbl="Home"      ativo={tab==='home'}   onClick={() => setTab('home')} />
-        <NavBtn ico="📚" lbl="Turmas"    ativo={tab==='turmas'} onClick={() => setTab('turmas')} />
-        <button style={S.iaBtn}>🤖</button>
-        <NavBtn ico="💬" lbl="Mensagens" ativo={tab==='msgs'}   onClick={() => setTab('msgs')} badge={mensagens.filter(m=>!m.lida).length} />
-        <NavBtn ico="👤" lbl="Perfil"    ativo={tab==='perfil'} onClick={() => setTab('perfil')} />
-      </nav>
+      <BottomNav aba={aba} setAba={setAba} msgs={mensagens.filter(m => !m.lida).length} />
     </div>
   );
 }
 
 function StatusBar({ hora }) {
   return (
-    <div style={{ height:44, background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', flexShrink:0, borderBottom:'1px solid #F1F5F9' }}>
-      <span style={{ fontWeight:700, fontSize:15 }}>{hora}</span>
-      <div style={{ display:'flex', gap:6, fontSize:14 }}><span>📧</span><span>🔋</span></div>
+    <div style={S.statusBar}>
+      <span style={{ fontSize:12, fontWeight:600, color:'#1e293b' }}>{hora}</span>
+      <span style={{ fontSize:12, color:'#64748b' }}>EduFam</span>
     </div>
   );
 }
 
-function NavBtn({ ico, lbl, ativo, onClick, badge }) {
+function BottomNav({ aba, setAba, msgs }) {
+  const tabs = [
+    { id:'home',     icon:'🏠', label:'Início' },
+    { id:'turmas',   icon:'🏫', label:'Turmas' },
+    { id:'mensagens',icon:'💬', label:'Msgs', badge: msgs },
+    { id:'perfil',   icon:'👤', label:'Perfil' },
+  ];
   return (
-    <button onClick={onClick} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4, padding:'8px 4px', border:'none', background:'none', cursor:'pointer', position:'relative' }}>
-      <span style={{ fontSize:22 }}>{ico}</span>
-      <span style={{ fontSize:10, fontWeight:ativo?700:500, color:ativo?'#2563EB':'#94A3B8' }}>{lbl}</span>
-      {badge > 0 && <span style={{ position:'absolute', top:4, right:'50%', marginRight:-16, width:8, height:8, borderRadius:'50%', background:'#DC2626', border:'2px solid #fff' }} />}
-    </button>
+    <div style={S.nav}>
+      {tabs.map(t => (
+        <button key={t.id} onClick={() => setAba(t.id)} style={{ ...S.navBtn, ...(aba===t.id ? S.navActive : {}) }}>
+          <div style={{ position:'relative', display:'inline-block' }}>
+            <span style={{ fontSize:20 }}>{t.icon}</span>
+            {t.badge > 0 && (
+              <span style={S.badge}>{t.badge}</span>
+            )}
+          </div>
+          <span style={{ fontSize:10, marginTop:2 }}>{t.label}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
 const S = {
-  shell:     { width:'100%', maxWidth:430, height:'100dvh', margin:'0 auto', background:'#F8FAFC', display:'flex', flexDirection:'column', overflow:'hidden' },
-  scroll:    { flex:1, overflowY:'auto', overflowX:'hidden' },
-  sc:        { padding:20, paddingBottom:100 },
-  bnav:      { height:80, background:'#fff', borderTop:'1px solid #F1F5F9', display:'flex', alignItems:'center', justifyContent:'space-around', padding:'0 8px', flexShrink:0 },
-  iaBtn:     { width:56, height:56, borderRadius:'50%', background:'linear-gradient(135deg,#2563EB,#7C3AED)', border:'none', cursor:'pointer', fontSize:24, boxShadow:'0 4px 16px rgba(124,58,237,.35)', marginTop:-20, flexShrink:0 },
-  lbl:       { fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#94A3B8', marginBottom:4, display:'block' },
-  txl:       { fontSize:26, fontWeight:800, letterSpacing:'-.5px', lineHeight:1.2 },
-  tlg:       { fontSize:20, fontWeight:700, letterSpacing:'-.3px' },
-  g2:        { display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 },
-  avatar:    { width:48, height:48, borderRadius:'50%', background:'#EFF6FF', color:'#2563EB', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:16, cursor:'pointer' },
-  iaCard:    { background:'#F5F3FF', border:'1.5px solid #DDD6FE', borderRadius:20, padding:20, marginBottom:12, display:'flex', gap:12, alignItems:'flex-start', cursor:'pointer' },
-  iaIcon:    { width:40, height:40, borderRadius:14, background:'#7C3AED', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 },
-  perfilRow: { display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', background:'#fff', borderRadius:16, marginBottom:8, fontSize:14, fontWeight:500, cursor:'pointer', boxShadow:'0 1px 4px rgba(0,0,0,.04)' },
-  btnPri:    { background:'#2563EB', color:'#fff', border:'none', borderRadius:14, padding:'10px 16px', fontSize:13, fontWeight:700, cursor:'pointer' },
-  btnSair:   { width:'100%', padding:14, background:'#FEF2F2', color:'#DC2626', border:'none', borderRadius:18, fontSize:15, fontWeight:700, cursor:'pointer', marginTop:4 },
+  shell:     { display:'flex', flexDirection:'column', height:'100vh', maxWidth:430, margin:'0 auto', background:'#F1F5F9', fontFamily:'system-ui,sans-serif', position:'relative' },
+  statusBar: { display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 16px', background:'#fff', borderBottom:'1px solid #E2E8F0' },
+  scroll:    { flex:1, overflowY:'auto', padding:'0 0 80px' },
+  sc:        { padding:'16px 14px 8px' },
+  nav:       { position:'fixed', bottom:0, left:'50%', transform:'translateX(-50%)', width:'100%', maxWidth:430, display:'flex', justifyContent:'space-around', background:'#fff', borderTop:'1px solid #E2E8F0', padding:'6px 0 10px', zIndex:100 },
+  navBtn:    { display:'flex', flexDirection:'column', alignItems:'center', background:'none', border:'none', cursor:'pointer', color:'#64748B', padding:'4px 12px', borderRadius:8, transition:'color .15s' },
+  navActive: { color:'#4F46E5' },
+  badge:     { position:'absolute', top:-4, right:-8, background:'#EF4444', color:'#fff', fontSize:9, fontWeight:700, borderRadius:999, padding:'1px 4px', minWidth:14, textAlign:'center' },
+  lbl:       { fontSize:12, color:'#64748B', fontWeight:500, letterSpacing:.5 },
+  txl:       { fontSize:22, fontWeight:800, color:'#1E293B', lineHeight:1.2, marginTop:2 },
+  tlg:       { fontSize:18, fontWeight:800, color:'#1E293B' },
+  g2:        { display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 },
+  avatar:    { width:42, height:42, borderRadius:999, background:'#4F46E5', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700, fontSize:15, cursor:'pointer' },
+  iaCard:    { display:'flex', gap:12, alignItems:'center', background:'#EDE9FE', borderRadius:14, padding:'12px 14px', marginBottom:14 },
+  iaIcon:    { fontSize:24 },
 };
