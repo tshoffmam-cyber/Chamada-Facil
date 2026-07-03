@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { DataProvider } from './context/DataContext'
 
 // Layouts
 import AppLayout from './layouts/AppLayout'
@@ -27,29 +28,27 @@ function PrivateRoute({ children }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename="/Chamada-Facil">
-        <Routes>
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/" element={
-            <PrivateRoute>
-              <AppLayout />
-            </PrivateRoute>
-          }>
-            <Route index element={<Navigate to="/home" replace />} />
-            <Route path="home" element={<HomeProfessor />} />
-            <Route path="organizacoes" element={<OrganizacoesProfessor />} />
-            <Route path="ia" element={<IAScreen />} />
-            <Route path="comunicacao" element={<ComunicacaoScreen />} />
-            <Route path="perfil" element={<PerfilScreen />} />
-            <Route path="modo-aula/:turmaId" element={<ModoAula />} />
-            <Route path="chamada/:turmaId" element={<ChamadaScreen />} />
-            <Route path="atividade/:turmaId" element={<AtividadeScreen />} />
-            <Route path="aluno/:alunoId" element={<AlunoPerfilScreen />} />
-            <Route path="vida-escolar/:alunoId" element={<VidaEscolarScreen />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <DataProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginScreen />} />
+            <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+              <Route index element={<Navigate to="/home" replace />} />
+              <Route path="home" element={<HomeProfessor />} />
+              <Route path="organizacoes" element={<OrganizacoesProfessor />} />
+              <Route path="turma/:turmaId" element={<ModoAula />} />
+              <Route path="turma/:turmaId/chamada" element={<ChamadaScreen />} />
+              <Route path="turma/:turmaId/atividade" element={<AtividadeScreen />} />
+              <Route path="turma/:turmaId/aluno/:alunoId" element={<AlunoPerfilScreen />} />
+              <Route path="turma/:turmaId/vida-escolar" element={<VidaEscolarScreen />} />
+              <Route path="comunicacao" element={<ComunicacaoScreen />} />
+              <Route path="ia" element={<IAScreen />} />
+              <Route path="perfil" element={<PerfilScreen />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </DataProvider>
     </AuthProvider>
   )
 }
