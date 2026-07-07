@@ -29,7 +29,7 @@ export default function App() {
   return (
     <AuthProvider>
       <DataProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/Chamada-Facil">
           <Routes>
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
