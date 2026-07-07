@@ -59,3 +59,11 @@ Por fim: substituir os dados mockados por um backend real com FastAPI e PostgreS
 
 ## Como retomar se a conversa se perder
 Abrir uma nova conversa, apontar para o repositorio Chamada-Facil do usuario tshoffmam-cyber e pedir para ler este arquivo PRD EDUFAM antes de continuar. As secoes de diagnostico e roadmap acima mostram exatamente o que ja foi encontrado e o que falta fazer, na ordem certa.
+
+## Atualizacao de progresso (07/07/2026)
+
+Foram concluidas as correcoes do Fase 1 do roadmap: o BrowserRouter passou a usar basename Chamada-Facil, o que corrige o F5 e os links diretos no GitHub Pages. Os doze arquivos de codigo morto foram removidos, incluindo o data.js duplicado da raiz, o DashboardProfessor.jsx orfao e toda a pasta components antiga.
+
+A agenda pedida pelo usuario foi construida e publicada: existe agora uma tela Agenda em src/pages/professor/AgendaScreen.jsx, acessivel por um card na Home, com selecao de dia, lista de aulas geradas automaticamente a partir dos horarios das turmas e compromissos que o professor pode cadastrar, editar e remover. Os compromissos ficam salvos no DataContext, em localStorage, com as novas funcoes adicionarEvento, editarEvento e removerEvento, e a Home mostra quantos compromissos existem no dia atual.
+
+Proximo passo do roadmap: completar as acoes do Modo Aula que ainda faltam, Registro Positivo, Ocorrencia e Arquivos, e depois iniciar a fase de aplicar o design system oficial.
