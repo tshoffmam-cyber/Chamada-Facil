@@ -8,6 +8,7 @@ export function DataProvider({ children }) {
   const [atividades, setAtividades] = useState(() => ls('edufam_atividades', mockAtividades))
   const [vidaEscolar, setVidaEscolar] = useState(() => ls('edufam_vida_escolar', mockVidaEscolar))
   const [mensagens, setMensagens] = useState(() => ls('edufam_mensagens', mockMensagens))
+  const [eventos, setEventos] = useState(() => ls('edufam_eventos', []))
 
   const salvarChamada = useCallback((turmaId, data, registros) => {
     setChamadas(prev => {
@@ -33,8 +34,32 @@ export function DataProvider({ children }) {
     })
   }, [])
 
+  const adicionarEvento = useCallback((evento) => {
+    setEventos(prev => {
+      const next = [...prev, { id: 'ev' + Date.now(), ...evento }]
+      sv('edufam_eventos', next)
+      return next
+    })
+  }, [])
+
+  const editarEvento = useCallback((id, dados) => {
+    setEventos(prev => {
+      const next = prev.map(e => e.id === id ? { ...e, ...dados } : e)
+      sv('edufam_eventos', next)
+      return next
+    })
+  }, [])
+
+  const removerEvento = useCallback((id) => {
+    setEventos(prev => {
+      const next = prev.filter(e => e.id !== id)
+      sv('edufam_eventos', next)
+      return next
+    })
+  }, [])
+
   return (
-    <DataContext.Provider value={{ chamadas, atividades, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida }}>
+    <DataContext.Provider value={{ chamadas, atividades, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida, eventos, adicionarEvento, editarEvento, removerEvento }}>
       {children}
     </DataContext.Provider>
   )
