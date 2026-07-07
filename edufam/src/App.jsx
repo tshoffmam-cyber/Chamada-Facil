@@ -19,6 +19,7 @@ import VidaEscolarScreen from './pages/professor/VidaEscolarScreen'
 import ComunicacaoScreen from './pages/professor/ComunicacaoScreen'
 import IAScreen from './pages/professor/IAScreen'
 import PerfilScreen from './pages/professor/PerfilScreen'
+import AgendaScreen from './pages/professor/AgendaScreen'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -36,6 +37,7 @@ export default function App() {
               <Route index element={<Navigate to="/home" replace />} />
               <Route path="home" element={<HomeProfessor />} />
               <Route path="organizacoes" element={<OrganizacoesProfessor />} />
+              <Route path="agenda" element={<AgendaScreen />} />
               <Route path="turma/:turmaId" element={<ModoAula />} />
               <Route path="turma/:turmaId/chamada" element={<ChamadaScreen />} />
               <Route path="turma/:turmaId/atividade" element={<AtividadeScreen />} />
