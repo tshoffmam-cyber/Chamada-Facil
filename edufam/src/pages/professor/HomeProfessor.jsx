@@ -5,7 +5,7 @@ import { mockTurmas, proximaAulaHoje } from '../../data/mockData'
 function getSaudacao(){const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'}
 export default function HomeProfessor() {
   const {user} = useAuth()
-  const {mensagens} = useData()
+  const {mensagens, eventos} = useData()
   const navigate = useNavigate()
   const nome = user?.name?.split(' ')[1] || user?.name?.split(' ')[0] || 'Professor'
   const hoje = new Date().getDay()
@@ -15,6 +15,8 @@ export default function HomeProfessor() {
   const naoLidas = mensagens.filter(m => !m.lida && m.para === user?.id).length
   const proxima = proximaAulaHoje(user?.id)
   const totalAlunos = minhasTurmas.reduce((acc,t)=>acc+t.totalAlunos,0)
+  const hojeISO = new Date().toISOString().slice(0,10)
+  const eventosHoje = eventos.filter(e => e.data === hojeISO).length
   return (
     <div style={{paddingBottom:24}}>
       <div style={{padding:'20px 20px 0'}}>
@@ -27,6 +29,15 @@ export default function HomeProfessor() {
             {user?.avatar||'P'}
           </button>
         </div>
+      </div>
+      <div style={{padding:'0 20px 16px'}}>
+        <button onClick={()=>navigate('/agenda')} className="card card-padding" style={{width:'100%',display:'flex',alignItems:'center',gap:12,border:'none',cursor:'pointer',textAlign:'left'}}>
+          <div style={{width:44,height:44,borderRadius:14,background:'var(--color-primary-light)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:20}}>📅</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--color-text-primary)'}}>Agenda</div>
+            <div style={{fontSize:13,color:'var(--color-text-secondary)'}}>{eventosHoje>0?(eventosHoje+' compromisso(s) hoje'):'Ver aulas e compromissos'}</div>
+          </div>
+        </button>
       </div>
       {proxima && (
         <div style={{padding:'16px 20px 0'}}>
