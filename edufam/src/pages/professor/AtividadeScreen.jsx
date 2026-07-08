@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { mockTurmas } from '../../data/mockData'
 import { useData } from '../../context/DataContext'
 export default function AtividadeScreen() {
   const {turmaId}=useParams(); const navigate=useNavigate()
-  const {atividades, adicionarAtividade}=useData()
-  const turma=mockTurmas.find(t=>t.id===turmaId)
+  const {atividades, adicionarAtividade, turmas}=useData()
+  const turma=turmas.find(t=>t.id===turmaId)
   const minhasAtividades=atividades.filter(a=>a.turmaId===turmaId)
   const [showNova,setShowNova]=useState(false)
   const [titulo,setTitulo]=useState('')
