@@ -1,19 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { mockTurmas, mockAlunos } from '../../data/mockData'
-
+import { useData } from '../../context/DataContext'
 export default function PerfilScreen() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-
-  function handleLogout() {
-    logout()
-    navigate('/login', { replace: true })
-  }
-
-  const totalAlunos = mockAlunos.length
-  const totalTurmas = mockTurmas.length
-
+  const { alunos, turmas } = useData()
+    function handleLogout() {
+      logout()
+      navigate('/login', { replace: true })
+    }
+  const totalAlunos = alunos.length
+  const totalTurmas = turmas.length
   return (
     <div style={{ padding: '20px 20px 24px' }}>
       {/* Avatar e nome */}
