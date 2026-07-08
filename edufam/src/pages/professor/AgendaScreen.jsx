@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
-import { mockTurmas } from '../../data/mockData'
 
 const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 const TIPOS = [
@@ -32,13 +31,12 @@ function tipoInfo(tipoId) {
 export default function AgendaScreen() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { eventos, adicionarEvento, removerEvento } = useData()
+  const { eventos, adicionarEvento, removerEvento, turmas } = useData()
   const dias = gerarDias(14)
   const [selecionado, setSelecionado] = useState(toISO(dias[0]))
   const [mostrarForm, setMostrarForm] = useState(false)
   const [novo, setNovo] = useState({ titulo: '', inicio: '08:00', fim: '09:00', tipo: 'compromisso', descricao: '' })
-  const minhasTurmas = mockTurmas.filter(t => t.professorId === user?.id)
-
+  const minhasTurmas = turmas.filter(t => t.professorId === user?.id)
   function aulasDoDia(dataISO) {
     const diaSemana = new Date(dataISO + 'T00:00:00').getDay()
     const aulas = []
