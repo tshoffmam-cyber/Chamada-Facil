@@ -1,11 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { mockAlunos, mockTurmas } from '../../data/mockData'
 import { useData } from '../../context/DataContext'
 export default function AlunoPerfilScreen() {
   const {alunoId}=useParams(); const navigate=useNavigate()
-  const {vidaEscolar}=useData()
-  const aluno=mockAlunos.find(a=>a.id===alunoId)
-  const turma=aluno?mockTurmas.find(t=>t.id===aluno.turmaId):null
+    const {vidaEscolar, alunos: todosAlunos, turmas}=useData()
+  const aluno=todosAlunos.find(a=>a.id===alunoId)
+  const turma=aluno?turmas.find(t=>t.id===aluno.turmaId):null
   const registros=(vidaEscolar[alunoId]||[]).sort((a,b)=>new Date(b.data)-new Date(a.data))
   if(!aluno) return <div style={{padding:24,textAlign:'center'}}><p>Aluno não encontrado</p><button onClick={()=>navigate(-1)} className="btn btn-primary" style={{marginTop:16}}>Voltar</button></div>
   // ✅ Corrigido: campo correto é presencas, com proteção contra divisão por zero
