@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { mockTurmas, mockAlunos } from '../../data/mockData'
 import { useData } from '../../context/DataContext'
 const STATUS_ORDEM = [null, 'presente', 'falta', 'justificado']
 const STATUS_CONFIG = {
@@ -11,9 +10,9 @@ const STATUS_CONFIG = {
 }
 export default function ChamadaScreen() {
   const {turmaId}=useParams(); const navigate=useNavigate()
-  const {salvarChamada}=useData()
-  const turma=mockTurmas.find(t=>t.id===turmaId)
-  const alunos=mockAlunos.filter(a=>a.turmaId===turmaId)
+  const {salvarChamada, turmas, alunos: todosAlunos}=useData()
+  const turma=turmas.find(t=>t.id===turmaId)
+  const alunos=todosAlunos.filter(a=>a.turmaId===turmaId)
   const [registros,setRegistros]=useState({})
   const [finalizada,setFinalizada]=useState(false)
   const [showTutorial,setShowTutorial]=useState(()=>!localStorage.getItem('edufam_tutorial_chamada'))
