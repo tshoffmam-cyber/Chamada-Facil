@@ -7,6 +7,13 @@ const acoes = [
 {id:'vida',label:'Vida Escolar',cor:'#7C3AED',path:'vida-escolar'},
 {id:'comunicar',label:'Comunicar Resp.',cor:'#0891B2',path:'comunicacao'},
 ]
+const AVATAR_CORES = [
+{bg:'var(--color-primary-light)',cor:'var(--color-primary)'},
+{bg:'var(--color-success-light)',cor:'var(--color-success)'},
+{bg:'var(--color-ia-light)',cor:'var(--color-ia)'},
+{bg:'var(--color-warning-light)',cor:'#B45309'},
+{bg:'var(--color-danger-light)',cor:'var(--color-danger)'},
+]
 export default function ModoAula() {
 const {turmaId}=useParams(); const navigate=useNavigate()
 const {turmas, alunos: todosAlunos, adicionarAluno} = useData()
@@ -17,8 +24,12 @@ const [novoNome, setNovoNome] = useState('')
 const [novaMatricula, setNovaMatricula] = useState('')
 const [novoNascimento, setNovoNascimento] = useState('')
 const [novoResponsavel, setNovoResponsavel] = useState('')
+const [busca, setBusca] = useState('')
 const estiloInput = {width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid var(--color-border)',fontSize:14,fontFamily:'var(--font-family)'}
 if(!turma) return <div style={{padding:24,textAlign:'center'}}><p>Turma não encontrada</p><button onClick={()=>navigate('/home')} className="btn btn-primary" style={{marginTop:16}}>Voltar</button></div>
+const limiteFaltas = turma.limiteFaltas || 15
+const alunosEmAlerta = alunos.filter(a => a.faltas >= limiteFaltas)
+const alunosFiltrados = alunos.filter(a => a.nome.toLowerCase().includes(busca.toLowerCase()))
 function salvarNovoAluno(){
 if(!novoNome.trim()) return
 adicionarAluno({nome:novoNome.trim(), matricula:novaMatricula.trim(), dataNascimento:novoNascimento, responsavel:novoResponsavel.trim(), turmaId})
@@ -42,6 +53,12 @@ return (
 ))}
 </div>
 </div>
+{alunosEmAlerta.length > 0 && (
+<div style={{margin:'16px 20px 0',background:'var(--color-danger-light)',border:'1px solid #FCA5A5',borderRadius:14,padding:'12px 14px',display:'flex',alignItems:'center',gap:10}}>
+<span style={{fontSize:18}}>⚠️</span>
+<div style={{fontSize:13,color:'var(--color-danger)',fontWeight:600}}>{alunosEmAlerta.length} aluno{alunosEmAlerta.length!==1?'s':''} atingiu o limite de {limiteFaltas} faltas</div>
+</div>
+)}
 <div style={{padding:'20px 20px 0'}}>
 <p className="section-label">O QUE DESEJA FAZER?</p>
 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
@@ -73,17 +90,28 @@ else if(a.path==='comunicacao')navigate('/comunicacao')
 <button onClick={salvarNovoAluno} className="btn btn-primary" style={{width:'100%'}}>Salvar aluno</button>
 </div>
 )}
+{alunos.length > 5 && (
+<input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Buscar aluno pelo nome..." className="input" style={{marginBottom:10,fontSize:13}} />
+)}
 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-{alunos.map(a=>(
-<div key={a.id} className="card" style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:12,cursor:'pointer'}} onClick={()=>navigate('/turma/'+turmaId+'/aluno/'+a.id)}>
-<div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#2563EB,#7C3AED)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:700,fontSize:14,flexShrink:0}}>{a.avatar}</div>
+{alunosFiltrados.length===0 && (
+<div style={{fontSize:13,color:'var(--color-text-muted)',padding:'8px 4px'}}>Nenhum aluno encontrado.</div>
+)}
+{alunosFiltrados.map((a,i)=>{
+const emAlerta = a.faltas >= limiteFaltas
+const avatarCor = AVATAR_CORES[i%5]
+return (
+<div key={a.id} className="card" style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:12,cursor:'pointer',borderLeft: emAlerta ? '3px solid var(--color-danger)' : undefined}} onClick={()=>navigate('/turma/'+turmaId+'/aluno/'+a.id)}>
+<div style={{width:40,height:40,borderRadius:'50%',background:avatarCor.bg,display:'flex',alignItems:'center',justifyContent:'center',color:avatarCor.cor,fontWeight:700,fontSize:14,flexShrink:0}}>{a.avatar}</div>
 <div style={{flex:1}}>
 <div style={{fontWeight:600,fontSize:14}}>{a.nome}</div>
 <div style={{fontSize:12,color:'var(--color-text-secondary)'}}>Mat. {a.matricula}</div>
 </div>
 {a.perfilPedagogico && <span className="badge badge-ia">{a.perfilPedagogico.tipo}</span>}
+{emAlerta && <span className="badge badge-danger">{a.faltas} faltas</span>}
 </div>
-))}
+)
+})}
 </div>
 </div>
 </div>
