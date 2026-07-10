@@ -67,3 +67,31 @@ Foram concluidas as correcoes do Fase 1 do roadmap: o BrowserRouter passou a usa
 A agenda pedida pelo usuario foi construida e publicada: existe agora uma tela Agenda em src/pages/professor/AgendaScreen.jsx, acessivel por um card na Home, com selecao de dia, lista de aulas geradas automaticamente a partir dos horarios das turmas e compromissos que o professor pode cadastrar, editar e remover. Os compromissos ficam salvos no DataContext, em localStorage, com as novas funcoes adicionarEvento, editarEvento e removerEvento, e a Home mostra quantos compromissos existem no dia atual.
 
 Proximo passo do roadmap: completar as acoes do Modo Aula que ainda faltam, Registro Positivo, Ocorrencia e Arquivos, e depois iniciar a fase de aplicar o design system oficial.
+
+
+## Atualizacao de progresso (10/07/2026)
+
+Nesta sessao foi analisado um segundo prototipo standalone (HTML/JS puro, sem React) que o usuario havia desenvolvido em paralelo, chamado 'Chamada Facil v2'. Apos comparacao tecnica, decidiu-se manter a arquitetura React/Vite/DataContext ja em andamento como base do app oficial (por ser mais sustentavel e escalavel), mas incorporar as melhores ideias funcionais e visuais desse prototipo ao EduFam, evitando duplicar o que ja existia.
+
+Foram adicionadas as seguintes funcionalidades novas, mantendo a paleta oficial (azul 2563EB, roxo IA 7C3AED, Inter, radius 24px) em vez da paleta verde do prototipo de referencia:
+
+- Limite de faltas configuravel por turma (campo ao criar turma em NovaTurmaScreen, com alerta visual em ModoAula e no Perfil do Aluno quando o limite e atingido).
+- Busca por nome nas listas de turmas (Organizacoes) e de alunos (Modo Aula), exibida automaticamente quando ha mais itens que cabem confortavelmente na tela.
+- Cores de avatar variadas para alunos (rotacao entre azul, verde, roxo, ambar e vermelho da paleta oficial), substituindo o gradiente unico anterior.
+- Notas por atividade: o professor agora pode lancar uma nota (0-10) por aluno em cada atividade da aba Atividades, ver a media da turma, e o aluno passa a ter um card de 'Desempenho em Atividades' e uma estatistica de media no seu perfil.
+- Exportar relatorio do aluno em PDF: novo botao no Perfil do Aluno que abre uma janela formatada (presencas, faltas, frequencia, perfil pedagogico, notas de atividades e vida escolar recente) pronta para impressao ou salvar como PDF via o navegador.
+- Feriados nacionais reais na Agenda, via integracao com a BrasilAPI (endpoint publico e gratuito), marcando visualmente os dias de feriado no seletor de datas com um aviso destacado.
+
+Foi identificada e descartada uma ideia do prototipo de referencia por contrariar a visao de produto ja definida: comunicacao via WhatsApp/telefone pessoal do professor. O PRD determina que toda comunicacao com responsaveis deve ocorrer dentro do proprio app, entao nenhuma integracao de WhatsApp foi adicionada.
+
+Ideias identificadas mas deliberadamente adiadas para quando as fases de Diretor e ADM forem construidas (fazem parte do roadmap de 'usuarios: diretor, responsavel, aluno, administrador global' ja descrito acima), registradas aqui para nao se perderem:
+
+- Modelo de planos pagos com paywall (ex: recursos como boletim liberados apenas em planos superiores).
+- Painel administrativo com MRR, grafico de distribuicao de assinantes por plano e deteccao de risco de churn.
+- Pesquisa de satisfacao (NPS) com avaliacao por emoji e comentarios dos professores.
+- Banner de patrocinadores/anuncios rotativo (visivel apenas em planos gratuitos).
+- Configuracao de marca pelo ADM (nome do app, cor principal, texto de login, limite padrao de faltas).
+
+Tambem foi observado, durante os testes no site publicado, que a navegacao direta por URL (digitar o endereco ou dar F5 em uma rota aninhada como /turma/t1) ainda retorna 404 no GitHub Pages, pois falta um arquivo 404.html de fallback para SPAs. A navegacao funciona normalmente quando feita por cliques dentro do app. Fica registrado como proximo ajuste tecnico a fazer.
+
+Proximo passo do roadmap: continuar completando as acoes do Modo Aula (Arquivos) e avaliar a migracao para Tailwind CSS e Framer Motion conforme a visao de design ja definida.
