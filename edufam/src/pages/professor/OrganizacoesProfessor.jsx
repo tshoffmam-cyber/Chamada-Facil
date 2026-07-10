@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 
 export default function OrganizacoesProfessor() {
 const navigate = useNavigate()
 const { organizacoes, turmas, alunos } = useData()
+const [busca, setBusca] = useState('')
 
 return (
 <div style={{ padding: '20px 20px 8px' }}>
@@ -11,16 +13,21 @@ return (
 <h1 style={{ fontSize: 22, fontWeight: 800 }}>Minhas Escolas</h1>
 <button onClick={() => navigate('/nova-escola')} className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}>+ Escola</button>
 </div>
-<p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 24 }}>
+<p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 20 }}>
 Todas as organizacoes e turmas
 </p>
+
+{turmas.length > 5 && (
+<input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Buscar turma pelo nome..." className="input" style={{ marginBottom: 20, fontSize: 13 }} />
+)}
 
 {organizacoes.length === 0 && (
 <div className="empty-state"><div className="empty-state-icon">🏫</div><div className="empty-state-title">Nenhuma escola cadastrada</div></div>
 )}
 
 {organizacoes.map(org => {
-const turmasEscola = turmas.filter(t => t.organizacaoId === org.id)
+const turmasEscola = turmas.filter(t => t.organizacaoId === org.id && t.nome.toLowerCase().includes(busca.toLowerCase()))
+if (busca && turmasEscola.length === 0) return null
 return (
 <div key={org.id} style={{ marginBottom: 24 }}>
 <div style={{
@@ -60,6 +67,8 @@ fontSize: 20,
 {turmasEscola.map(turma => {
 const alunosTurma = alunos.filter(a => a.turmaId === turma.id)
 const comPerfil = alunosTurma.filter(a => a.perfilPedagogico).length
+const limiteFaltas = turma.limiteFaltas || 15
+const emAlerta = alunosTurma.filter(a => a.faltas >= limiteFaltas).length
 return (
 <div
 key={turma.id}
@@ -73,10 +82,13 @@ onClick={() => navigate(`/turma/${turma.id}`)}
 <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 2 }}>
 {turma.disciplina} • Turno {turma.turno} • Sala {turma.sala}
 </div>
-<div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+<div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
 <span className="badge badge-primary">{alunosTurma.length} alunos</span>
 {comPerfil > 0 && (
 <span className="badge badge-ia">{comPerfil} Perfil Pedagogico</span>
+)}
+{emAlerta > 0 && (
+<span className="badge badge-danger">{emAlerta} em alerta de faltas</span>
 )}
 </div>
 </div>
