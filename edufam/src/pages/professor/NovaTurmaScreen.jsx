@@ -13,11 +13,12 @@ const [nome, setNome] = useState('')
 const [disciplina, setDisciplina] = useState('')
 const [turno, setTurno] = useState('Manhã')
 const [sala, setSala] = useState('')
+const [limiteFaltas, setLimiteFaltas] = useState('15')
 const estiloInput = {width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid var(--color-border)',fontSize:14,fontFamily:'var(--font-family)'}
 
 function salvar(){
 if(!nome.trim()) return
-criarTurma({ nome: nome.trim(), disciplina: disciplina.trim(), turno, sala: sala.trim(), organizacaoId, professorId: user?.id, horarios: [] })
+criarTurma({ nome: nome.trim(), disciplina: disciplina.trim(), turno, sala: sala.trim(), organizacaoId, professorId: user?.id, horarios: [], limiteFaltas: parseInt(limiteFaltas) || 15 })
 navigate('/organizacoes')
 }
 
@@ -50,6 +51,11 @@ return (
 <div>
 <label style={{fontSize:13,fontWeight:600,color:'var(--color-text-secondary)',marginBottom:6,display:'block'}}>Sala</label>
 <input value={sala} onChange={e=>setSala(e.target.value)} placeholder="Ex: 12" style={estiloInput} />
+</div>
+<div>
+<label style={{fontSize:13,fontWeight:600,color:'var(--color-text-secondary)',marginBottom:6,display:'block'}}>Limite de faltas (alerta)</label>
+<input value={limiteFaltas} onChange={e=>setLimiteFaltas(e.target.value)} type="number" min="1" placeholder="Ex: 15" style={estiloInput} />
+<p style={{fontSize:12,color:'var(--color-text-muted)',marginTop:4}}>O professor sera avisado quando um aluno atingir esse numero de faltas.</p>
 </div>
 <button onClick={salvar} className="btn btn-primary" style={{width:'100%',marginTop:8}}>Salvar turma</button>
 </div>
