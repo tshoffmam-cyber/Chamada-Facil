@@ -95,3 +95,12 @@ Ideias identificadas mas deliberadamente adiadas para quando as fases de Diretor
 Tambem foi observado, durante os testes no site publicado, que a navegacao direta por URL (digitar o endereco ou dar F5 em uma rota aninhada como /turma/t1) ainda retorna 404 no GitHub Pages, pois falta um arquivo 404.html de fallback para SPAs. A navegacao funciona normalmente quando feita por cliques dentro do app. Fica registrado como proximo ajuste tecnico a fazer.
 
 Proximo passo do roadmap: continuar completando as acoes do Modo Aula (Arquivos) e avaliar a migracao para Tailwind CSS e Framer Motion conforme a visao de design ja definida.
+
+
+Atualizacao de progresso (10/07/2026, parte 2)
+
+Foram corrigidos os dois proximos itens do roteiro tecnico. Primeiro, o 404 em navegacao direta/F5 em rotas aninhadas do GitHub Pages: foi criado o arquivo edufam/public/404.html com a tecnica padrao de fallback para SPA (redireciona a rota nao encontrada de volta para a raiz do app, codificando o caminho original), e o edufam/index.html passou a ter um script que decodifica esse redirecionamento e restaura a URL certa via history.replaceState. Testado e confirmado: acessar diretamente uma rota como /turma/t1 agora carrega a tela correta em vez do 404 do GitHub Pages.
+
+Segundo, a pedido do usuario, a Agenda deixou de usar a tira horizontal de 14 dias e passou a usar uma grade de mes completo (calendario visual), com navegacao por mes (setas e atalho 'Hoje'), mantendo tudo que ja existia: selecao de dia mostrando aulas e compromissos, feriados nacionais via BrasilAPI marcados com um ponto laranja diferenciado dos dias com aula/compromisso (ponto azul), e o formulario de novo compromisso inalterado. Dias fora do mes atual aparecem esmaecidos e desabilitados. Testado navegando entre meses (Julho e Setembro de 2026) e confirmando o aviso de feriado (Independencia do Brasil, 7 de setembro).
+
+Proximo passo do roadmap: continue completando as acoes do Modo Aula (Arquivos) e avalie a migracao para Tailwind CSS e Framer Motion conforme a visao de design ja definida.
