@@ -127,3 +127,65 @@ Arquitetura atual: React 19 + Vite + React Router, sem Tailwind/Framer Motion ai
 Para tirar do papel de prototipo: (1) construir o backend (FastAPI + PostgreSQL, conforme o PRD original) com endpoints equivalentes a cada funcao do DataContext (ex: POST /turmas, GET /alunos, etc), mantendo os mesmos nomes/formatos quando possivel para minimizar mudancas nas telas; (2) trocar a autenticacao mockada (data/mockData.js autenticar()) por login real com token/sessao, mantendo o formato do objeto 'user' (name, email, role, avatar) para nao quebrar as telas; (3) mover os calculos do painel ADM (mockAdmStats) para consultas reais num banco de assinaturas/pagamentos, provavelmente integrado a um gateway de cobranca; (4) implementar de verdade os tickets de suporte (hoje mockSuporteTickets) como uma fila criada automaticamente pelo backend quando a IA falhar; (5) o banner de parceiros e as feature flags ja estao estruturados para virar tabelas reais com o minimo de mudanca de UI.
 
 Proximo passo do roadmap: continuar completando a acao "Arquivos" do Modo Aula, avaliar a migracao para Tailwind CSS e Framer Motion, e iniciar os fluxos de responsavel e aluno quando o usuario priorizar.
+
+
+## Atualização de progresso (11/07/2026) — Painel do Diretor
+
+Nesta rodada, o papel **Diretor** deixou de compartilhar telas com o Professor e
+ganhou area propria, separada e com navegacao inferior propria (max. 5 itens,
+regra do PRD): **Painel, Professores, Recados, Alunos, Perfil** (rotas `/diretor/*`,
+layout em `layouts/AppLayoutDiretor.jsx`).
+
+Motivacao: o Diretor tem um papel de **gestao da escola**, nao de sala de aula.
+Na maioria dos casos ele nao da aula (nao faz chamada); quando tiver uma turma
+propria (campo opcional `turmas` no usuario, como o professor), o Painel exibe
+um atalho "Minha Turma" que reaproveita o mesmo fluxo de chamada do professor
+(`/turma/:turmaId`) — nao foi necessario duplicar essa tela.
+
+### O que foi construido
+- **Painel do Diretor** (`DiretorPainelScreen.jsx`): KPIs da escola (alunos,
+  frequencia media, professores ativos, alunos em alerta de falta), resultados
+  por turma (frequencia real, calculada a partir de presencas/faltas dos
+  alunos, + media geral mockada) e resultados por professor (indicadores
+  mockados em `mockIndicadoresProfessor`: aulas registradas no mes, chamada em
+  dia, % de notas lancadas). Alertas de falta agora sao calculados para a
+  **escola inteira**, nao so para as turmas de 1 professor.
+- **Professores** (`DiretorProfessoresScreen.jsx`): lista com busca, indicadores
+  e turmas de cada professor da escola.
+- **Recados** (`DiretorRecadosScreen.jsx`): 3 abas — Mural (aviso publicado pelo
+  Diretor e visivel a TODOS os professores, usando `para:'todos'` no array de
+  `mensagens`), Mensagens (conversa individual Diretor↔professor) e Recados dos
+  pais (visao agregada, somente leitura, de todos os recados que responsaveis
+  mandaram aos professores da escola — reaproveita a mesma fonte de dados que
+  `ComunicacaoScreen.jsx` usa por professor).
+- **Alunos** (`DiretorAlunosScreen.jsx` + `DiretorAlunoDetalheScreen.jsx`): lista
+  de todos os alunos da escola com busca, e historico completo por aluno
+  (frequencia, responsavel, perfil pedagogico, linha do tempo de `vidaEscolar`).
+- `DataContext.jsx` ganhou `enviarMensagem()` para o Diretor postar no mural ou
+  mandar mensagem individual (mesmo array `mensagens` usado pelo professor).
+- `mockData.js` ganhou 2 professores extras (`u4`, `u5`), 2 turmas extras
+  (`t3`, `t4`) e alunos correspondentes, so para o Painel do Diretor ter mais de
+  1 professor pra mostrar — **eles nao tem senha em `_creds`** (nao logam no
+  prototipo, so existem para popular as telas de gestao).
+
+### Decisao de arquitetura confirmada com o usuario: comunicacao com os pais
+Ficou reconfirmado que o EduFam **nao usa WhatsApp nem telefone pessoal** para
+falar com os pais/responsaveis — mesma regra ja valida para o professor. A
+ideia de negocio original (pais assinando um plano pago para acompanhar o
+filho) continua valida, mas o canal tecnico deve ser **sempre dentro do
+proprio app** (ex: um futuro Portal dos Pais, com login e assinatura), nunca
+por API externa de WhatsApp. Hoje isso e representado apenas pelo campo
+`tipo:'responsavel'` em `mensagens` (recados que os pais mandaram, exibidos
+para o professor e agregados para o Diretor) — nao existe ainda um login real
+para os pais neste prototipo.
+
+### Para um backend real (handoff)
+- Filtrar `turmas`/`alunos`/`mensagens` por escola/organizacao real do usuario
+  logado (hoje so existe 1 escola mockada, entao nenhuma tela filtra de fato
+  por `organizacaoId`).
+- Trocar `mockIndicadoresProfessor` por uma consulta agregada real as tabelas
+  de chamada/notas.
+- Modelar "turmas passadas"/matriculas por ano letivo, para o historico do
+  aluno (`DiretorAlunoDetalheScreen.jsx`) mostrar anos anteriores de verdade.
+- Construir o Portal dos Pais real (login, assinatura, visualizacao de dados
+  do filho e recebimento de recados) quando o negocio decidir priorizar isso.
