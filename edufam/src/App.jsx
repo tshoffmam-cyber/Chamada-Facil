@@ -5,6 +5,7 @@ import { DataProvider } from './context/DataContext'
 // Layouts
 import AppLayout from './layouts/AppLayout'
 import AppLayoutAdm from './layouts/AppLayoutAdm'
+import AppLayoutDiretor from './layouts/AppLayoutDiretor'
 
 // Auth
 import LoginScreen from './pages/auth/LoginScreen'
@@ -31,6 +32,13 @@ import AdmSuporteScreen from './pages/adm/AdmSuporteScreen'
 import AdmConfiguracoesScreen from './pages/adm/AdmConfiguracoesScreen'
 import AdmConfigAvancadaScreen from './pages/adm/AdmConfigAvancadaScreen'
 
+// Diretor (gestao da escola: nao da aula, acompanha professores/turmas/alunos)
+import DiretorPainelScreen from './pages/diretor/DiretorPainelScreen'
+import DiretorProfessoresScreen from './pages/diretor/DiretorProfessoresScreen'
+import DiretorRecadosScreen from './pages/diretor/DiretorRecadosScreen'
+import DiretorAlunosScreen from './pages/diretor/DiretorAlunosScreen'
+import DiretorAlunoDetalheScreen from './pages/diretor/DiretorAlunoDetalheScreen'
+
 // Rota privada: exige login. Quando 'somenteRole' e informado, exige
 // tambem que o usuario tenha aquele papel especifico — caso contrario,
 // manda o usuario de volta para a home certa do seu proprio papel (em
@@ -39,7 +47,7 @@ function PrivateRoute({ children, somenteRole }) {
 const { user } = useAuth()
 if (!user) return <Navigate to="/login" replace />
 if (somenteRole && user.role !== somenteRole) {
-return <Navigate to={user.role === 'adm' ? '/adm/home' : '/home'} replace />
+return <Navigate to={user.role === 'adm' ? '/adm/home' : user.role === 'diretor' ? '/diretor/home' : '/home'} replace />
 }
 return children
 }
@@ -49,7 +57,7 @@ return children
 function RedirecionarPorPapel() {
 const { user } = useAuth()
 if (!user) return <Navigate to="/login" replace />
-return <Navigate to={user.role === 'adm' ? '/adm/home' : '/home'} replace />
+return <Navigate to={user.role === 'adm' ? '/adm/home' : user.role === 'diretor' ? '/diretor/home' : '/home'} replace />
 }
 
 export default function App() {
@@ -61,7 +69,7 @@ return (
 <Route path="/login" element={<LoginScreen />} />
 
 {/* Area do professor/diretor */}
-<Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+<Route path="/" element={<PrivateRoute somenteRole="professor"><AppLayout /></PrivateRoute>}>
 <Route index element={<Navigate to="/home" replace />} />
 <Route path="home" element={<HomeProfessor />} />
 <Route path="organizacoes" element={<OrganizacoesProfessor />} />
@@ -75,6 +83,17 @@ return (
 <Route path="turma/:turmaId/vida-escolar" element={<VidaEscolarScreen />} />
 <Route path="comunicacao" element={<ComunicacaoScreen />} />
 <Route path="ia" element={<IAScreen />} />
+<Route path="perfil" element={<PerfilScreen />} />
+</Route>
+
+{/* Area do Diretor (gestao da escola — nao da aula por padrao) */}
+<Route path="/diretor" element={<PrivateRoute somenteRole="diretor"><AppLayoutDiretor /></PrivateRoute>}>
+<Route index element={<Navigate to="/diretor/home" replace />} />
+<Route path="home" element={<DiretorPainelScreen />} />
+<Route path="professores" element={<DiretorProfessoresScreen />} />
+<Route path="recados" element={<DiretorRecadosScreen />} />
+<Route path="alunos" element={<DiretorAlunosScreen />} />
+<Route path="alunos/:alunoId" element={<DiretorAlunoDetalheScreen />} />
 <Route path="perfil" element={<PerfilScreen />} />
 </Route>
 
