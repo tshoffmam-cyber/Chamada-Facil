@@ -16,6 +16,11 @@ export const mockUsers=[
   {id:'u1',name:'Prof. Carlos Silva',email:'professor@escola.com',password:'demo123',role:'professor',avatar:'CS',escola:'Escola Estadual Esperança',disciplina:'Matemática',turmas:['t1','t2']},
   {id:'u2',name:'Ana Diretora',email:'diretor@escola.com',password:'demo123',role:'diretor',avatar:'AD',escola:'Escola Estadual Esperança'},
   {id:'u3',name:'ADM Sistema',email:'adm@edufam.com',password:'admin123',role:'adm',avatar:'AS'},
+  // u4 e u5 nao tem senha em _creds de proposito: neste prototipo eles so
+  // existem para popular as telas de acompanhamento do Diretor (nao logam
+  // no sistema). Em producao, todo professor teria login real tambem.
+  {id:'u4',name:'Profa. Juliana Alves',email:'juliana.alves@escola.com',role:'professor',avatar:'JA',escola:'Escola Estadual Esperança',disciplina:'Português',turmas:['t3']},
+  {id:'u5',name:'Prof. Marcos Pereira',email:'marcos.pereira@escola.com',role:'professor',avatar:'MP',escola:'Escola Estadual Esperança',disciplina:'História',turmas:['t4']},
   ]
 export const mockOrganizacoes=[
   {id:'org1',nome:'Escola Estadual Esperança'},
@@ -23,6 +28,8 @@ export const mockOrganizacoes=[
 export const mockTurmas=[
   {id:'t1',nome:'9º Ano A',disciplina:'Matemática',organizacaoId:'org1',turno:'Manhã',sala:'12',horarios:[{dia:1,inicio:'07:30',fim:'08:20'},{dia:3,inicio:'07:30',fim:'08:20'},{dia:5,inicio:'09:30',fim:'10:20'}],professorId:'u1'},
   {id:'t2',nome:'8º Ano B',disciplina:'Matemática',organizacaoId:'org1',turno:'Manhã',sala:'08',horarios:[{dia:2,inicio:'08:20',fim:'09:10'},{dia:4,inicio:'08:20',fim:'09:10'}],professorId:'u1'},
+  {id:'t3',nome:'7º Ano C',disciplina:'Português',organizacaoId:'org1',turno:'Tarde',sala:'05',horarios:[{dia:2,inicio:'13:30',fim:'14:20'},{dia:4,inicio:'13:30',fim:'14:20'}],professorId:'u4',limiteFaltas:15,mediaGeral:7.4},
+  {id:'t4',nome:'6º Ano A',disciplina:'História',organizacaoId:'org1',turno:'Tarde',sala:'03',horarios:[{dia:1,inicio:'14:20',fim:'15:10'},{dia:3,inicio:'14:20',fim:'15:10'}],professorId:'u5',limiteFaltas:15,mediaGeral:6.8},
   ]
 export const mockAlunos=[
   {id:'a1',nome:'Lucas Oliveira',turmaId:'t1',avatar:'LO',matricula:'2024001',dataNascimento:'2010-03-15',responsavel:{nome:'Maria Oliveira',telefone:'(11) 98765-4321',parentesco:'Mãe'},perfilPedagogico:null,presencas:85,faltas:3,situacao:'regular'},
@@ -32,6 +39,10 @@ export const mockAlunos=[
   {id:'a5',nome:'Pedro Alves',turmaId:'t1',avatar:'PA',matricula:'2024005',dataNascimento:'2010-05-14',responsavel:{nome:'Ana Alves',telefone:'(11) 94321-0987',parentesco:'Mãe'},perfilPedagogico:{tipo:'Altas Habilidades',descricao:'Demonstra capacidade acima da média.',adaptacoes:['Atividades complementares','Projetos de extensão']},presencas:95,faltas:0,situacao:'regular'},
   {id:'a6',nome:'Beatriz Lima',turmaId:'t2',avatar:'BL',matricula:'2024006',dataNascimento:'2011-02-20',responsavel:{nome:'Carlos Lima',telefone:'(11) 93210-9876',parentesco:'Pai'},perfilPedagogico:null,presencas:70,faltas:8,situacao:'atencao'},
   {id:'a7',nome:'Rafael Souza',turmaId:'t2',avatar:'RS',matricula:'2024007',dataNascimento:'2011-08-11',responsavel:{nome:'Fernanda Souza',telefone:'(11) 92109-8765',parentesco:'Mãe'},perfilPedagogico:null,presencas:80,faltas:4,situacao:'regular'},
+  {id:'a8',nome:'Beatriz Rocha',turmaId:'t3',avatar:'BR',matricula:'2024008',dataNascimento:'2012-02-10',responsavel:{nome:'Camila Rocha',telefone:'(11) 91234-5678',parentesco:'Mãe'},perfilPedagogico:null,presencas:88,faltas:2,situacao:'regular'},
+  {id:'a9',nome:'Thiago Almeida',turmaId:'t3',avatar:'TA',matricula:'2024009',dataNascimento:'2012-05-19',responsavel:{nome:'Eduardo Almeida',telefone:'(11) 90123-4567',parentesco:'Pai'},perfilPedagogico:null,presencas:50,faltas:16,situacao:'atencao'},
+  {id:'a10',nome:'Larissa Fernandes',turmaId:'t4',avatar:'LF',matricula:'2024010',dataNascimento:'2013-09-25',responsavel:{nome:'Patricia Fernandes',telefone:'(11) 98888-7777',parentesco:'Mãe'},perfilPedagogico:null,presencas:95,faltas:1,situacao:'regular'},
+  {id:'a11',nome:'Enzo Barbosa',turmaId:'t4',avatar:'EB',matricula:'2024011',dataNascimento:'2013-12-03',responsavel:{nome:'Renata Barbosa',telefone:'(11) 97777-6666',parentesco:'Mãe'},perfilPedagogico:null,presencas:55,faltas:17,situacao:'atencao'},
   ]
 export const mockAtividades=[
   {id:'av1',turmaId:'t1',titulo:'Lista de Equações do 1º Grau',descricao:'Resolver exercícios 1 ao 15, capítulo 4.',dataEntrega:'2025-05-10',status:'aberta',criadaEm:'2025-05-02T08:00:00'},
@@ -42,6 +53,9 @@ export const mockMensagens=[
   {id:'m1',de:'Responsável — Maria Oliveira',para:'u1',assunto:'Falta por motivo de saúde',texto:'Lucas ficou doente com febre. Segue atestado.',data:'2025-05-04T10:00:00',tipo:'responsavel',lida:false},
   {id:'m2',de:'Responsável — Paulo Mendes',para:'u1',assunto:'Solicitação de reunião',texto:'Gostaria de marcar reunião sobre o desempenho da Sofia.',data:'2025-05-04T09:00:00',tipo:'responsavel',lida:false},
   {id:'m3',de:'Direção — EE Esperança',para:'u1',assunto:'Reunião Pedagógica',texto:'Reunião pedagógica na sexta-feira às 18h no auditório.',data:'2025-05-03T08:00:00',tipo:'direcao',lida:true},
+  {id:'m4',de:'Responsável — Camila Rocha',para:'u4',assunto:'Atraso na entrega de atividade',texto:'Beatriz estava doente e vai entregar a atividade amanhã.',data:'2025-05-05T08:30:00',tipo:'responsavel',lida:false},
+  {id:'m5',de:'Responsável — Renata Barbosa',para:'u5',assunto:'Falta justificada',texto:'Enzo faltou por consulta médica, segue atestado em anexo.',data:'2025-05-05T09:10:00',tipo:'responsavel',lida:false},
+  {id:'m6',de:'Direção — EE Esperança',para:'todos',assunto:'Reunião de pais',texto:'Reunião de pais e mestres marcada para o dia 20/05, às 19h no pátio.',data:'2025-05-02T10:00:00',tipo:'direcao',lida:true},
   ]
 export const mockVidaEscolar={
   'a1':[
@@ -136,3 +150,14 @@ export const mockFeatureFlags = {
   corPrimaria: '#2563EB',
   textoBoasVindasLogin: 'A vida escolar na palma da mão.',
 }
+
+// Indicadores usados no Painel do Diretor para acompanhar cada professor
+// da escola. MOCKADO: em producao esses numeros viriam de uma consulta
+// real as tabelas de chamada/notas (aulas registradas no periodo,
+// percentual de chamadas em dia, percentual de atividades com notas
+// lancadas), agregada no backend — nao calculada no navegador.
+export const mockIndicadoresProfessor = [
+  { professorId: 'u1', aulasRegistradasMes: 18, chamadaEmDia: true, notasLancadasPercent: 90 },
+  { professorId: 'u4', aulasRegistradasMes: 14, chamadaEmDia: true, notasLancadasPercent: 75 },
+  { professorId: 'u5', aulasRegistradasMes: 9, chamadaEmDia: false, notasLancadasPercent: 40 },
+]
