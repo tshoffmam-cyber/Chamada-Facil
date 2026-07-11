@@ -3,6 +3,7 @@ const _creds = [
   {id:'u1',email:'professor@escola.com',password:'demo123'},
   {id:'u2',email:'diretor@escola.com',password:'demo123'},
   {id:'u3',email:'adm@edufam.com',password:'admin123'},
+  {id:'u6',email:'responsavel@escola.com',password:'demo123'},
   ]
 export function autenticar(email,password){
   const c=_creds.find(x=>x.email===email&&x.password===password)
@@ -21,6 +22,12 @@ export const mockUsers=[
   // no sistema). Em producao, todo professor teria login real tambem.
   {id:'u4',name:'Profa. Juliana Alves',email:'juliana.alves@escola.com',role:'professor',avatar:'JA',escola:'Escola Estadual Esperança',disciplina:'Português',turmas:['t3']},
   {id:'u5',name:'Prof. Marcos Pereira',email:'marcos.pereira@escola.com',role:'professor',avatar:'MP',escola:'Escola Estadual Esperança',disciplina:'História',turmas:['t4']},
+  // u6: primeiro papel 'responsavel' (pai/mae/responsavel legal). Vinculado
+  // por 'alunosIds' aos filhos matriculados na escola — hoje so suporta
+  // 1 escola por responsavel, o que cobre o caso comum. Reaproveita o
+  // responsavel ja existente no mock do aluno a2 (Sofia Mendes) para os
+  // dados baterem entre as telas do professor/diretor e o novo portal.
+  {id:'u6',name:'Paulo Mendes',email:'responsavel@escola.com',password:'demo123',role:'responsavel',avatar:'PM',escola:'Escola Estadual Esperança',alunosIds:['a2']},
   ]
 export const mockOrganizacoes=[
   {id:'org1',nome:'Escola Estadual Esperança'},
@@ -49,6 +56,25 @@ export const mockAtividades=[
   {id:'av2',turmaId:'t1',titulo:'Trabalho sobre Frações',descricao:'Pesquisa em duplas sobre frações equivalentes.',dataEntrega:'2025-04-28',status:'encerrada',criadaEm:'2025-04-15T09:30:00'},
   {id:'av3',turmaId:'t2',titulo:'Exercícios de Geometria',descricao:'Calcular área e perímetro das figuras da apostila.',dataEntrega:'2025-05-12',status:'aberta',criadaEm:'2025-05-03T07:45:00'},
   ]
+// Notas lancadas por atividade, por aluno: { atividadeId: { alunoId: nota } }.
+// Serve de seed inicial (antes o estado comecava vazio {}), para o Portal
+// do Responsavel (e as demais telas que leem notasAtividades) ja terem
+// conteudo de exemplo mesmo num navegador novo, sem precisar o professor
+// lancar nota manualmente primeiro. Cobre as atividades av1/av2 (turma t1,
+// que inclui a Sofia Mendes/a2) e av3 (turma t2).
+export const mockNotasAtividades={
+  av1:{a1:8.5,a2:7.0,a3:9.0,a4:6.5,a5:8.0},
+  av2:{a1:7.0,a2:8.5,a3:8.0,a4:7.5,a5:6.0},
+  av3:{a6:7.5,a7:8.0},
+  }
+// Eventos da agenda escolar (compromissos/eventos gerais da escola, nao
+// amarrados a uma turma especifica hoje). Serve de seed inicial (antes o
+// estado comecava vazio []), para a Agenda do professor e o Portal do
+// Responsavel ja mostrarem algo real num navegador novo.
+export const mockEventos=[
+  {id:'ev1',titulo:'Reunião de Pais e Mestres',data:'2026-07-20',inicio:'19:00',fim:'20:30',tipo:'compromisso',descricao:'Pátio da escola'},
+  {id:'ev2',titulo:'Feira de Ciências',data:'2026-07-25',inicio:'08:00',fim:'12:00',tipo:'evento',descricao:'Apresentação dos projetos dos alunos, ginásio'},
+  ]
 export const mockMensagens=[
   {id:'m1',de:'Responsável — Maria Oliveira',para:'u1',assunto:'Falta por motivo de saúde',texto:'Lucas ficou doente com febre. Segue atestado.',data:'2025-05-04T10:00:00',tipo:'responsavel',lida:false},
   {id:'m2',de:'Responsável — Paulo Mendes',para:'u1',assunto:'Solicitação de reunião',texto:'Gostaria de marcar reunião sobre o desempenho da Sofia.',data:'2025-05-04T09:00:00',tipo:'responsavel',lida:false},
@@ -56,6 +82,12 @@ export const mockMensagens=[
   {id:'m4',de:'Responsável — Camila Rocha',para:'u4',assunto:'Atraso na entrega de atividade',texto:'Beatriz estava doente e vai entregar a atividade amanhã.',data:'2025-05-05T08:30:00',tipo:'responsavel',lida:false},
   {id:'m5',de:'Responsável — Renata Barbosa',para:'u5',assunto:'Falta justificada',texto:'Enzo faltou por consulta médica, segue atestado em anexo.',data:'2025-05-05T09:10:00',tipo:'responsavel',lida:false},
   {id:'m6',de:'Direção — EE Esperança',para:'todos',assunto:'Reunião de pais',texto:'Reunião de pais e mestres marcada para o dia 20/05, às 19h no pátio.',data:'2025-05-02T10:00:00',tipo:'direcao',lida:true},
+  // m7/m8: recados individuais recebidos por um responsavel (u6/Paulo
+  // Mendes) — resposta do professor ao pedido de reuniao (m2) e um
+  // recado individual da direcao. Mostram os dois canais que o Portal
+  // do Responsavel precisa: professor->responsavel e direcao->responsavel.
+  {id:'m7',de:'Prof. Carlos Silva',para:'u6',assunto:'Re: Solicitação de reunião',texto:'Claro, Sr. Paulo! Podemos conversar na sexta após as 17h na sala 12.',data:'2025-05-04T14:00:00',tipo:'professor',lida:false},
+  {id:'m8',de:'Direção — EE Esperança',para:'u6',assunto:'Convocação individual',texto:'Gostaríamos de conversar sobre a frequência da Sofia. Pode passar na direção nesta semana?',data:'2025-05-06T09:00:00',tipo:'direcao',lida:false},
   ]
 export const mockVidaEscolar={
   'a1':[
