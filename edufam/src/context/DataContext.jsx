@@ -75,6 +75,16 @@ return next
 })
 }, [])
 
+const enviarMensagem = useCallback((dados) => {
+const nova = { id: 'm' + Date.now(), data: new Date().toISOString(), lida: false, tipo: 'direcao', ...dados }
+setMensagens(prev => {
+const next = [nova, ...prev]
+sv('edufam_mensagens', next)
+return next
+})
+return nova
+}, [])
+
 const adicionarEvento = useCallback((evento) => {
 setEventos(prev => {
 const next = [...prev, { id: 'ev' + Date.now(), ...evento }]
@@ -244,7 +254,7 @@ return next
 }, [])
 
 return (
-<DataContext.Provider value={{ chamadas, atividades, notasAtividades, lancarNota, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida, marcarMensagemLida, eventos, adicionarEvento, editarEvento, removerEvento, organizacoes, turmas, alunos, criarOrganizacao, editarOrganizacao, removerOrganizacao, criarTurma, editarTurma, removerTurma, adicionarAluno, editarAluno, removerAluno, parceiros, adicionarParceiro, editarParceiro, removerParceiro, suporteTickets, resolverTicket, featureFlags, atualizarFeatureFlags }}>
+<DataContext.Provider value={{ chamadas, atividades, notasAtividades, lancarNota, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida, marcarMensagemLida, eventos, enviarMensagem, adicionarEvento, editarEvento, removerEvento, organizacoes, turmas, alunos, criarOrganizacao, editarOrganizacao, removerOrganizacao, criarTurma, editarTurma, removerTurma, adicionarAluno, editarAluno, removerAluno, parceiros, adicionarParceiro, editarParceiro, removerParceiro, suporteTickets, resolverTicket, featureFlags, atualizarFeatureFlags }}>
 {children}
 </DataContext.Provider>
 )
