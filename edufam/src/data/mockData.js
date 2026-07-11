@@ -64,3 +64,75 @@ export function proximaAulaHoje(professorId,turmasList){
   for(const t of turmas){for(const h of t.horarios){if(h.dia===dia){cands.push({turma:t,horario:h,ini:horaParaMin(h.inicio),fim:horaParaMin(h.fim)})}}}
   return cands.filter(c=>c.fim>min).sort((a,b)=>a.ini-b.ini)[0]||null;
 }
+
+
+// ---------------------------------------------------------------------------
+// Dados mockados do painel ADM (administrador global da plataforma EduFam)
+//
+// Tudo abaixo e fake, apenas para prototipagem visual e funcional da area
+// de administracao. Em producao, cada bloco deve virar uma fonte de dados
+// real — comentado individualmente abaixo o que cada um deveria ser.
+// ---------------------------------------------------------------------------
+
+// Parceiros exibidos no banner rotativo no rodape da Home do professor.
+// PRODUCAO: CRUD real gerenciado pelo ADM (tela Configuracoes), com upload
+// de imagem, link, periodo de veiculacao e aprovacao. Regra fixa do PRD:
+// nunca pode anunciar apostas, jogos de azar ou conteudo invasivo.
+export const mockParceiros = [
+  { id: 'pc1', nome: 'Editora Aprender+', mensagem: 'Materiais didaticos com 20% de desconto para professores EduFam', link: 'https://example.com', cor: '#2563EB' },
+  { id: 'pc2', nome: 'Univest Cursos', mensagem: 'Pos-graduacao em Educacao com bolsa parceira EduFam', link: 'https://example.com', cor: '#7C3AED' },
+  { id: 'pc3', nome: 'Papelaria Escolar Kids', mensagem: 'Kit de material escolar com frete gratis para escolas parceiras', link: 'https://example.com', cor: '#16A34A' },
+]
+
+// Indicadores do dashboard ADM: assinantes por plano, MRR dos ultimos
+// meses, churn e contagens gerais.
+// PRODUCAO: viria de uma tabela de assinaturas/pagamentos, provavelmente
+// integrada a um gateway de cobranca (ex: Stripe), com jobs agendados
+// calculando MRR e churn a partir de eventos reais de cobranca.
+export const mockAdmStats = {
+  assinantesPorPlano: [
+    { plano: 'Gratuito', quantidade: 812, cor: 'var(--color-text-muted)' },
+    { plano: 'Pro', quantidade: 341, cor: 'var(--color-primary)' },
+    { plano: 'Escola', quantidade: 58, cor: 'var(--color-ia)' },
+  ],
+  mrrUltimosMeses: [
+    { mes: 'Fev', valor: 18400 },
+    { mes: 'Mar', valor: 21200 },
+    { mes: 'Abr', valor: 24100 },
+    { mes: 'Mai', valor: 27600 },
+    { mes: 'Jun', valor: 31900 },
+    { mes: 'Jul', valor: 35200 },
+  ],
+  churnMensal: 2.4,
+  escolasAtivas: 47,
+  professoresAtivos: 1211,
+  alunosAtivos: 28430,
+}
+
+// Tickets de suporte, incluindo casos em que a IA EduFam nao conseguiu
+// ajudar e escalou para um humano do time.
+// PRODUCAO: criados automaticamente pelo backend quando a IA falhar ou
+// quando o usuario pedir ajuda humana explicitamente, alimentando uma
+// fila real de atendimento (com SLA, notificacoes para o time, etc).
+export const mockSuporteTickets = [
+  { id: 'tk1', usuario: 'Prof. Carlos Silva', assunto: 'IA não gerou a atividade de geometria corretamente', status: 'aberto', prioridade: 'alta', criadoEm: '2026-07-09T14:20:00' },
+  { id: 'tk2', usuario: 'Ana Diretora', assunto: 'Dúvida sobre exportar relatório da escola', status: 'aberto', prioridade: 'media', criadoEm: '2026-07-10T09:05:00' },
+  { id: 'tk3', usuario: 'Prof. Carlos Silva', assunto: 'IA sugeriu comunicado com tom inadequado', status: 'resolvido', prioridade: 'alta', criadoEm: '2026-07-05T11:40:00' },
+]
+
+// "Feature flags" / configuracoes avancadas que o ADM pode ajustar sem
+// precisar de um novo deploy do app.
+//
+// IMPORTANTE (decisao de arquitetura): isto e a forma responsavel de
+// entregar "mexer em funcionalidades pelo painel" sem ser um editor de
+// codigo-fonte real rodando no navegador. Alterar codigo de verdade deve
+// sempre passar por repositorio, revisao e pipeline de deploy (CI/CD) —
+// nunca por execucao direta de codigo enviado pelo cliente, por seguranca
+// e estabilidade da plataforma. Ver painel ADM > Configuracoes Avancadas.
+export const mockFeatureFlags = {
+  limiteFaltasPadrao: 15,
+  bannerParceirosAtivo: true,
+  nomeApp: 'EduFam',
+  corPrimaria: '#2563EB',
+  textoBoasVindasLogin: 'A vida escolar na palma da mão.',
+}
