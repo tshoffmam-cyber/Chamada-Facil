@@ -51,7 +51,7 @@ export default function DiretorAlunoDetalheScreen() {
         <div style={{width:44,height:44,borderRadius:'50%',background:'var(--color-primary-light)',color:'var(--color-primary)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:15}}>{aluno.avatar}</div>
         <div>
           <div style={{fontWeight:800,fontSize:17}}>{aluno.nome}</div>
-          <div style={{fontSize:12,color:'var(--color-text-muted)'}}>{turma?.nome} · {turma?.disciplina} · Prof. {professor?.name}</div>
+          <div style={{fontSize:12,color:'var(--color-text-muted)'}}>{turma?.nome} · {turma?.disciplina} · {professor?.name}</div>
         </div>
       </div>
 
