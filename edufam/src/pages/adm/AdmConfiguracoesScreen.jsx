@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 
 // ---------------------------------------------------------------------------
@@ -18,6 +19,7 @@ import { useData } from '../../context/DataContext'
 const CORES_OFICIAIS = ['#2563EB', '#7C3AED', '#16A34A', '#F59E0B', '#DC2626']
 
 export default function AdmConfiguracoesScreen() {
+const navigate = useNavigate()
 const { featureFlags, atualizarFeatureFlags, parceiros, adicionarParceiro, editarParceiro, removerParceiro } = useData()
 const [novo, setNovo] = useState({ nome: '', mensagem: '', link: '', cor: CORES_OFICIAIS[0] })
 const [editandoId, setEditandoId] = useState(null)
@@ -102,6 +104,16 @@ return (
 </div>
 <button className="btn btn-primary w-full" onClick={salvarNovoParceiro}>Adicionar parceiro</button>
 </div>
+</div>
+
+<div style={{padding:'20px 20px 0'}}>
+<button className="card card-padding" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',border:'none',cursor:'pointer',textAlign:'left'}} onClick={()=>navigate('/adm/configuracoes-avancadas')}>
+<div>
+<div style={{fontWeight:700,fontSize:14}}>Configurações avançadas</div>
+<div style={{fontSize:12,color:'var(--color-text-secondary)',marginTop:2}}>Feature flags do app (JSON)</div>
+</div>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
 </div>
 </div>
 )
