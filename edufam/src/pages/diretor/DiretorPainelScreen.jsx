@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
 import { mockUsers, mockIndicadoresProfessor } from '../../data/mockData'
+import BannerParceiros from '../../components/BannerParceiros'
 
 // ---------------------------------------------------------------------------
 // pages/diretor/DiretorPainelScreen.jsx
@@ -22,7 +23,7 @@ import { mockUsers, mockIndicadoresProfessor } from '../../data/mockData'
 export default function DiretorPainelScreen() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { turmas, alunos } = useData()
+  const { turmas, alunos, parceiros, featureFlags } = useData()
 
   const turmasEscola = turmas
   const professoresIds = [...new Set(turmasEscola.map(t => t.professorId))]
@@ -166,6 +167,16 @@ export default function DiretorPainelScreen() {
           })}
         </div>
       </div>
+
+      {/* Banner de parceiros: mesma feature flag do ADM usada na Home do
+          professor. Confirmado com o usuario que faz sentido exibir para
+          todos os papeis (nao atrapalha: banner clicavel no rodape, sem
+          bloquear a tela). */}
+      {featureFlags?.bannerParceirosAtivo && (
+        <div style={{padding:'20px 20px 0'}}>
+          <BannerParceiros parceiros={parceiros} />
+        </div>
+      )}
     </div>
   )
 }
