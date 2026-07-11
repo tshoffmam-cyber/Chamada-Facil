@@ -14,17 +14,17 @@
 // minimo de mudanca nas telas que já consomem este contexto.
 // ---------------------------------------------------------------------------
 import { createContext, useContext, useState, useCallback } from 'react'
-import { mockOrganizacoes, mockTurmas, mockAlunos, mockAtividades, mockVidaEscolar, mockMensagens, mockParceiros, mockSuporteTickets, mockFeatureFlags } from '../data/mockData'
+import { mockOrganizacoes, mockTurmas, mockAlunos, mockAtividades, mockVidaEscolar, mockMensagens, mockParceiros, mockSuporteTickets, mockFeatureFlags, mockNotasAtividades, mockEventos } from '../data/mockData'
 const DataContext = createContext(null)
 const ls = (k, d) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : d } catch { return d } }
 const sv = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
 export function DataProvider({ children }) {
 const [chamadas, setChamadas] = useState(() => ls('edufam_chamadas', {}))
 const [atividades, setAtividades] = useState(() => ls('edufam_atividades', mockAtividades))
-const [notasAtividades, setNotasAtividades] = useState(() => ls('edufam_notas_atividades', {}))
+const [notasAtividades, setNotasAtividades] = useState(() => ls('edufam_notas_atividades', mockNotasAtividades))
 const [vidaEscolar, setVidaEscolar] = useState(() => ls('edufam_vida_escolar', mockVidaEscolar))
 const [mensagens, setMensagens] = useState(() => ls('edufam_mensagens', mockMensagens))
-const [eventos, setEventos] = useState(() => ls('edufam_eventos', []))
+const [eventos, setEventos] = useState(() => ls('edufam_eventos', mockEventos))
 const [organizacoes, setOrganizacoes] = useState(() => ls('edufam_organizacoes', mockOrganizacoes))
 const [turmas, setTurmas] = useState(() => ls('edufam_turmas', mockTurmas))
 const [alunos, setAlunos] = useState(() => ls('edufam_alunos', mockAlunos))
