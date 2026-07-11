@@ -7,7 +7,7 @@ export default function ComunicacaoScreen() {
   const [aba,setAba]=useState('recebidas')
   const [selecionada,setSelecionada]=useState(null)
   const [resposta,setResposta]=useState('')
-  const recebidas=mensagens.filter(m=>m.para===user?.id)
+  const recebidas=mensagens.filter(m=>m.para===user?.id||m.para==='todos') // 'todos' = avisos de mural do Diretor (ver DiretorRecadosScreen.jsx)
   const naoLidas=recebidas.filter(m=>!m.lida).length
   // ✅ CORRIGIDO: era .('pt-BR') — erro de sintaxe
   function formatarData(dataStr){
