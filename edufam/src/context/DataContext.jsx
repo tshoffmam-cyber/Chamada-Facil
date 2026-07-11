@@ -1,5 +1,20 @@
+// ---------------------------------------------------------------------------
+// context/DataContext.jsx
+//
+// Fonte central de dados do app (fora da autenticacao, que fica no
+// AuthContext). Hoje tudo e mockado e persistido em localStorage — serve
+// para prototipar o produto inteiro no navegador, sem backend.
+//
+// PARA UM BACKEND REAL: cada 'state + funcao' abaixo deveria virar uma
+// chamada de API para um backend real (ex: FastAPI + PostgreSQL, como
+// planejado no PRD), com o localStorage substituido por dados vindos do
+// servidor e cache local apenas para uso offline/otimista. As funcoes
+// foram mantidas com nomes e assinaturas estaveis de proposito, para que
+// a troca da implementacao interna (localStorage -> fetch/API) exija o
+// minimo de mudanca nas telas que já consomem este contexto.
+// ---------------------------------------------------------------------------
 import { createContext, useContext, useState, useCallback } from 'react'
-import { mockOrganizacoes, mockTurmas, mockAlunos, mockAtividades, mockVidaEscolar, mockMensagens } from '../data/mockData'
+import { mockOrganizacoes, mockTurmas, mockAlunos, mockAtividades, mockVidaEscolar, mockMensagens, mockParceiros, mockSuporteTickets, mockFeatureFlags } from '../data/mockData'
 const DataContext = createContext(null)
 const ls = (k, d) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : d } catch { return d } }
 const sv = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
@@ -13,6 +28,12 @@ const [eventos, setEventos] = useState(() => ls('edufam_eventos', []))
 const [organizacoes, setOrganizacoes] = useState(() => ls('edufam_organizacoes', mockOrganizacoes))
 const [turmas, setTurmas] = useState(() => ls('edufam_turmas', mockTurmas))
 const [alunos, setAlunos] = useState(() => ls('edufam_alunos', mockAlunos))
+// Estado usado pelo painel ADM (ver pages/adm/*). Fica no mesmo contexto
+// porque hoje e tudo client-side; em producao provavelmente viraria um
+// contexto/servico separado com permissao restrita a usuarios 'adm'.
+const [parceiros, setParceiros] = useState(() => ls('edufam_parceiros', mockParceiros))
+const [suporteTickets, setSuporteTickets] = useState(() => ls('edufam_suporte_tickets', mockSuporteTickets))
+const [featureFlags, setFeatureFlags] = useState(() => ls('edufam_feature_flags', mockFeatureFlags))
 
 const salvarChamada = useCallback((turmaId, data, registros) => {
 setChamadas(prev => {
@@ -173,8 +194,57 @@ return next
 })
 }, [])
 
+// --- Painel ADM: parceiros do banner rotativo -----------------------------
+const adicionarParceiro = useCallback((dados) => {
+const novo = { id: 'pc' + Date.now(), ...dados }
+setParceiros(prev => {
+const next = [...prev, novo]
+sv('edufam_parceiros', next)
+return next
+})
+return novo
+}, [])
+
+const editarParceiro = useCallback((id, dados) => {
+setParceiros(prev => {
+const next = prev.map(p => p.id === id ? { ...p, ...dados } : p)
+sv('edufam_parceiros', next)
+return next
+})
+}, [])
+
+const removerParceiro = useCallback((id) => {
+setParceiros(prev => {
+const next = prev.filter(p => p.id !== id)
+sv('edufam_parceiros', next)
+return next
+})
+}, [])
+
+// --- Painel ADM: tickets de suporte / IA que falhou -----------------------
+const resolverTicket = useCallback((id) => {
+setSuporteTickets(prev => {
+const next = prev.map(t => t.id === id ? { ...t, status: 'resolvido' } : t)
+sv('edufam_suporte_tickets', next)
+return next
+})
+}, [])
+
+// --- Painel ADM: configuracoes avancadas / feature flags ------------------
+// Substitui a necessidade de 'codar dentro do app': o ADM ajusta estes
+// valores por um formulario (ver AdmConfigAvancadaScreen), sem precisar de
+// um novo deploy. Mudancas de codigo de verdade continuam exigindo
+// repositorio + revisao + pipeline de deploy, por seguranca.
+const atualizarFeatureFlags = useCallback((dados) => {
+setFeatureFlags(prev => {
+const next = { ...prev, ...dados }
+sv('edufam_feature_flags', next)
+return next
+})
+}, [])
+
 return (
-<DataContext.Provider value={{ chamadas, atividades, notasAtividades, lancarNota, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida, marcarMensagemLida, eventos, adicionarEvento, editarEvento, removerEvento, organizacoes, turmas, alunos, criarOrganizacao, editarOrganizacao, removerOrganizacao, criarTurma, editarTurma, removerTurma, adicionarAluno, editarAluno, removerAluno }}>
+<DataContext.Provider value={{ chamadas, atividades, notasAtividades, lancarNota, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida, marcarMensagemLida, eventos, adicionarEvento, editarEvento, removerEvento, organizacoes, turmas, alunos, criarOrganizacao, editarOrganizacao, removerOrganizacao, criarTurma, editarTurma, removerTurma, adicionarAluno, editarAluno, removerAluno, parceiros, adicionarParceiro, editarParceiro, removerParceiro, suporteTickets, resolverTicket, featureFlags, atualizarFeatureFlags }}>
 {children}
 </DataContext.Provider>
 )
