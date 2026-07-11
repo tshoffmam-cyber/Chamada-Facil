@@ -18,7 +18,7 @@ if (result.ok) {
 // App.jsx: professor usa o layout principal, Diretor usa /diretor/*
 // (AppLayoutDiretor) e ADM usa /adm/* (AppLayoutAdm) — cada um com
 // layout e navegacao proprios.
-const destino = result.user?.role === 'adm' ? '/adm/home' : result.user?.role === 'diretor' ? '/diretor/home' : '/home'
+const destino = result.user?.role === 'adm' ? '/adm/home' : result.user?.role === 'diretor' ? '/diretor/home' : result.user?.role === 'responsavel' ? '/responsavel/home' : '/home'
 navigate(destino, { replace: true })
 }
 else { setErro(result.error) }
@@ -49,7 +49,7 @@ return (
 <div style={{marginTop:32,width:'100%',background:'var(--color-surface)',border:'1px solid var(--color-border)',borderRadius:16,padding:16}}>
 <p style={{fontSize:12,fontWeight:700,color:'var(--color-text-muted)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:12}}>ACESSO DEMO</p>
 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-{[{label:'👨‍🏫 Professor',email:'professor@escola.com',senha:'demo123'},{label:'🏫 Diretor',email:'diretor@escola.com',senha:'demo123'},{label:'⚙️ ADM',email:'adm@edufam.com',senha:'admin123'}].map(d=>(
+{[{label:'👨‍🏫 Professor',email:'professor@escola.com',senha:'demo123'},{label:'🏫 Diretor',email:'diretor@escola.com',senha:'demo123'},{label:'👪 Responsável',email:'responsavel@escola.com',senha:'demo123'},{label:'⚙️ ADM',email:'adm@edufam.com',senha:'admin123'}].map(d=>(
 <button key={d.email} onClick={()=>{setEmail(d.email);setSenha(d.senha)}} style={{background:'var(--color-bg)',border:'1px solid var(--color-border)',borderRadius:10,padding:'10px 14px',fontSize:13,fontWeight:600,cursor:'pointer',textAlign:'left',fontFamily:'var(--font-family)',color:'var(--color-text-primary)'}}>
 {d.label} — {d.email}
 </button>
