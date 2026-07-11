@@ -15,9 +15,10 @@ const result = login(email, senha)
 setLoading(false)
 if (result.ok) {
 // Redireciona para a area certa conforme o perfil do usuario. Ver
-// App.jsx: professor/diretor usam o layout principal, ADM usa
-// /adm/* com layout e navegacao proprios.
-const destino = result.user?.role === 'adm' ? '/adm/home' : '/home'
+// App.jsx: professor usa o layout principal, Diretor usa /diretor/*
+// (AppLayoutDiretor) e ADM usa /adm/* (AppLayoutAdm) — cada um com
+// layout e navegacao proprios.
+const destino = result.user?.role === 'adm' ? '/adm/home' : result.user?.role === 'diretor' ? '/diretor/home' : '/home'
 navigate(destino, { replace: true })
 }
 else { setErro(result.error) }
