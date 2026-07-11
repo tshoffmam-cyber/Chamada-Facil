@@ -4,6 +4,7 @@ import { DataProvider } from './context/DataContext'
 
 // Layouts
 import AppLayout from './layouts/AppLayout'
+import AppLayoutAdm from './layouts/AppLayoutAdm'
 
 // Auth
 import LoginScreen from './pages/auth/LoginScreen'
@@ -23,9 +24,32 @@ import IAScreen from './pages/professor/IAScreen'
 import PerfilScreen from './pages/professor/PerfilScreen'
 import AgendaScreen from './pages/professor/AgendaScreen'
 
-function PrivateRoute({ children }) {
+// ADM (administrador global da plataforma)
+import AdmHomeScreen from './pages/adm/AdmHomeScreen'
+import AdmUsuariosScreen from './pages/adm/AdmUsuariosScreen'
+import AdmSuporteScreen from './pages/adm/AdmSuporteScreen'
+import AdmConfiguracoesScreen from './pages/adm/AdmConfiguracoesScreen'
+import AdmConfigAvancadaScreen from './pages/adm/AdmConfigAvancadaScreen'
+
+// Rota privada: exige login. Quando 'somenteRole' e informado, exige
+// tambem que o usuario tenha aquele papel especifico — caso contrario,
+// manda o usuario de volta para a home certa do seu proprio papel (em
+// vez de so bloquear), para nao deixar a pessoa numa tela sem saida.
+function PrivateRoute({ children, somenteRole }) {
 const { user } = useAuth()
-return user ? children : <Navigate to="/login" replace />
+if (!user) return <Navigate to="/login" replace />
+if (somenteRole && user.role !== somenteRole) {
+return <Navigate to={user.role === 'adm' ? '/adm/home' : '/home'} replace />
+}
+return children
+}
+
+// Usado no catch-all ('*'): manda quem digitar uma URL invalida para a
+// home certa conforme o papel do usuario logado (ou para o login).
+function RedirecionarPorPapel() {
+const { user } = useAuth()
+if (!user) return <Navigate to="/login" replace />
+return <Navigate to={user.role === 'adm' ? '/adm/home' : '/home'} replace />
 }
 
 export default function App() {
@@ -35,6 +59,8 @@ return (
 <BrowserRouter basename="/Chamada-Facil">
 <Routes>
 <Route path="/login" element={<LoginScreen />} />
+
+{/* Area do professor/diretor */}
 <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
 <Route index element={<Navigate to="/home" replace />} />
 <Route path="home" element={<HomeProfessor />} />
@@ -51,7 +77,19 @@ return (
 <Route path="ia" element={<IAScreen />} />
 <Route path="perfil" element={<PerfilScreen />} />
 </Route>
-<Route path="*" element={<Navigate to="/home" replace />} />
+
+{/* Area do ADM (administrador global da plataforma) */}
+<Route path="/adm" element={<PrivateRoute somenteRole="adm"><AppLayoutAdm /></PrivateRoute>}>
+<Route index element={<Navigate to="/adm/home" replace />} />
+<Route path="home" element={<AdmHomeScreen />} />
+<Route path="usuarios" element={<AdmUsuariosScreen />} />
+<Route path="suporte" element={<AdmSuporteScreen />} />
+<Route path="configuracoes" element={<AdmConfiguracoesScreen />} />
+<Route path="configuracoes-avancadas" element={<AdmConfigAvancadaScreen />} />
+<Route path="perfil" element={<PerfilScreen />} />
+</Route>
+
+<Route path="*" element={<RedirecionarPorPapel />} />
 </Routes>
 </BrowserRouter>
 </DataProvider>
