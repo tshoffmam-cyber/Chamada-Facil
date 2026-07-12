@@ -189,3 +189,43 @@ para os pais neste prototipo.
   aluno (`DiretorAlunoDetalheScreen.jsx`) mostrar anos anteriores de verdade.
 - Construir o Portal dos Pais real (login, assinatura, visualizacao de dados
   do filho e recebimento de recados) quando o negocio decidir priorizar isso.
+
+
+## Desenho de acesso por papel (auditoria de escopo de dados) — 11/07/2026
+
+Antes de expandir o produto, fizemos uma auditoria de todas as telas de cada papel (Professor, Diretor, Responsavel, ADM) para checar se os dados exibidos realmente pertencem a quem esta logado.
+
+### Professor
+| Tela | Rota | Escopo esperado | Status |
+|---|---|---|---|
+| Home | /home | somente turmas do professor logado | OK - ja filtra por `turma.professorId === user.id` |
+| Agenda | /agenda | somente turmas do professor logado | OK - mesmo filtro |
+| Minhas Escolas | /organizacoes | somente turmas do professor logado | INCONSISTENTE - mostra todas as turmas da escola, inclusive de outros professores |
+| Modo Aula | /turma/:turmaId | so deveria abrir se a turma for do professor logado | INCONSISTENTE - sem verificacao, abre a turma de qualquer professor via URL |
+| Chamada | /turma/:turmaId/chamada | mesma turma acima | INCONSISTENTE - mesmo problema |
+| Atividade | /turma/:turmaId/atividade | mesma turma acima | INCONSISTENTE - mesmo problema |
+| Aluno (perfil) | /turma/:turmaId/aluno/:alunoId | aluno de uma turma do professor | INCONSISTENTE - mesmo problema |
+| Vida Escolar | /turma/:turmaId/vida-escolar | mesma turma acima | INCONSISTENTE - mesmo problema |
+| Comunicacao | /comunicacao | mensagens onde para === user.id ou mural | OK - ja filtra por usuario |
+| Perfil | /perfil | "meus alunos"/"minhas turmas" | INCONSISTENTE - mostra total da escola inteira (alunos.length, turmas.length), nao so do professor |
+
+### Diretor
+Todas as telas mostram dados da escola inteira por design - e o papel de gestao. Ja existe comentario no codigo reconhecendo que hoje so ha 1 escola mockada e que um backend real filtraria por organizacaoId.
+
+| Painel | Professores | Alunos | Recados | Perfil (compartilhado) |
+|---|---|---|---|---|
+| OK (limitacao do mock documentada no codigo) | OK (idem) | OK (idem) | OK (idem) | OK - faz sentido o diretor ver o total da escola |
+
+### Responsavel (Portal criado nesta sessao)
+Todas as 5 telas ja filtram pelos alunosIds do responsavel logado - nenhuma inconsistencia encontrada.
+
+### ADM
+Todas as telas sao intencionalmente globais (visao da plataforma inteira) - correto por design.
+
+### Causa raiz das inconsistencias do Professor
+O campo `professorId` ja existe em cada turma no mock, mas 3 pontos do professor nao usam esse filtro: `OrganizacoesProfessor.jsx` (lista todas as turmas da escola, nao so as do professor), as 5 telas de dentro de uma turma (`ModoAula`, `ChamadaScreen`, `AtividadeScreen`, `AlunoPerfilScreen`, `VidaEscolarScreen` - nenhuma verifica se a turma pertence ao professor logado) e `PerfilScreen.jsx` (mostra total da escola ao inves do total do professor). Na pratica, isso permite que um professor acesse e ate edite a chamada e as notas da turma de outro professor digitando a URL diretamente.
+
+### Proximo passo (aguardando aprovacao para iniciar as correcoes)
+1. Filtrar turmas por professorId em OrganizacoesProfessor.jsx.
+2. Adicionar verificacao de posse da turma (redirecionar se turma.professorId !== user.id) em ModoAula.jsx, ChamadaScreen.jsx, AtividadeScreen.jsx, AlunoPerfilScreen.jsx e VidaEscolarScreen.jsx.
+3. Ajustar o PerfilScreen para mostrar "minhas turmas/meus alunos" quando o papel for professor, mantendo o total da escola para Diretor/ADM.
