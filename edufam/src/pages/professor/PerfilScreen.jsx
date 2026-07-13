@@ -9,8 +9,20 @@ export default function PerfilScreen() {
       logout()
       navigate('/login', { replace: true })
     }
-  const totalAlunos = alunos.length
-  const totalTurmas = turmas.length
+  // Para o Professor mostramos apenas os dados das SUAS turmas (nao da
+  // escola inteira) - antes esta tela mostrava o total da escola tambem
+  // para o professor, o que era confuso/incorreto. Para Diretor e ADM
+  // continua fazendo sentido mostrar o total da escola/plataforma.
+  // PARA UM BACKEND REAL: a API ja deveria devolver os numeros certos por
+  // papel (ex.: endpoint /me/stats), em vez de calcular no frontend a
+  // partir da lista inteira.
+  const ehProfessor = user?.role === 'professor'
+  const minhasTurmas = ehProfessor ? turmas.filter(t => t.professorId === user?.id) : turmas
+  const idsDasMinhasTurmas = new Set(minhasTurmas.map(t => t.id))
+  const totalTurmas = minhasTurmas.length
+  const totalAlunos = ehProfessor ? alunos.filter(a => idsDasMinhasTurmas.has(a.turmaId)).length : alunos.length
+  const labelTurmas = ehProfessor ? 'Minhas Turmas' : 'Turmas'
+  const labelAlunos = ehProfessor ? 'Meus Alunos' : 'Alunos'
   return (
     <div style={{ padding: '20px 20px 24px' }}>
       {/* Avatar e nome */}
@@ -43,8 +55,8 @@ export default function PerfilScreen() {
       {/* Estatisticas */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'Turmas', value: totalTurmas, color: 'var(--color-primary)' },
-          { label: 'Alunos', value: totalAlunos, color: 'var(--color-success)' },
+          { label: labelTurmas, value: totalTurmas, color: 'var(--color-primary)' },
+          { label: labelAlunos, value: totalAlunos, color: 'var(--color-success)' },
         ].map(s => (
           <div key={s.label} className="card card-padding" style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 32, fontWeight: 800, color: s.color }}>{s.value}</div>
