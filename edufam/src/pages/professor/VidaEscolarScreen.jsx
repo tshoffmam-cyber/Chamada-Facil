@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 
 const TIPOS = [
 { id: 'todos', label: 'Todos' },
@@ -18,6 +19,7 @@ atividade: { label: 'Atividade', bg: '#DBEAFE', color: '#2563EB', border: '#93C5
 export default function VidaEscolarScreen() {
 const { turmaId } = useParams()
 const navigate = useNavigate()
+const { user } = useAuth()
 const { turmas, alunos: todosAlunos, vidaEscolar, adicionarRegistroVida } = useData()
 const turma = turmas.find(t => t.id === turmaId)
 const alunosTurma = todosAlunos.filter(a => a.turmaId === turmaId)
@@ -33,7 +35,8 @@ const registros = (vidaEscolar[alunoId] || [])
 .filter(v => filtro === 'todos' || v.tipo === filtro)
 .sort((a, b) => new Date(b.data) - new Date(a.data))
 
-if (!turma) return <div style={{padding:24,textAlign:'center'}}><p>Turma não encontrada</p><button onClick={()=>navigate('/home')} className="btn btn-primary" style={{marginTop:16}}>Voltar</button></div>
+// Guarda de posse (ver ModoAula.jsx para detalhes do motivo/handoff de backend)
+if (!turma || turma.professorId !== user?.id) return <div style={{padding:24,textAlign:'center'}}><p>Turma não encontrada</p><button onClick={()=>navigate('/home')} className="btn btn-primary" style={{marginTop:16}}>Voltar</button></div>
 
 function salvarRegistro(){
 if(!novoTitulo.trim() || !alunoId) return
