@@ -13,16 +13,22 @@ import { mockAdmStats } from '../../data/mockData'
 // o app leve — trocar por uma lib real (ex: Recharts) e uma boa evolucao
 // futura, mas nao e necessario para o prototipo.
 //
-// PARA UM BACKEND REAL: ver mockAdmStats em data/mockData.js — cada
-// numero aqui deveria vir de uma consulta real ao banco de assinaturas/
-// pagamentos, calculada no backend (nao no navegador).
+// PARA UM BACKEND REAL: Assinantes/MRR/Churn ainda vem de mockAdmStats
+// (nao ha sistema de pagamento real neste prototipo) e deveriam vir de uma
+// consulta real ao banco de assinaturas/pagamentos, calculada no backend
+// (nao no navegador). Escolas ativas/Professores/Alunos ja usam os dados
+// reais do DataContext (organizacoes/turmas/alunos), entao esses 3 numeros
+// refletem o que esta cadastrado de verdade no app.
 // ---------------------------------------------------------------------------
 export default function AdmHomeScreen() {
 const { user } = useAuth()
-const { suporteTickets } = useData()
+const { suporteTickets, organizacoes, turmas, alunos } = useData()
 const navigate = useNavigate()
 const stats = mockAdmStats
 const ticketsAbertos = suporteTickets.filter(t => t.status === 'aberto').length
+// PARA UM BACKEND REAL: numero de professores unicos calculado aqui a
+// partir das turmas; em producao viria de uma tabela de usuarios com role='professor'.
+const professoresAtivos = new Set(turmas.map(t => t.professorId)).size
 const maiorPlano = Math.max(...stats.assinantesPorPlano.map(p => p.quantidade))
 const maiorMrr = Math.max(...stats.mrrUltimosMeses.map(m => m.valor))
 const totalAssinantes = stats.assinantesPorPlano.reduce((s, p) => s + p.quantidade, 0)
@@ -89,7 +95,7 @@ return (
 </div>
 
 <div style={{padding:'20px 20px 0',display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
-{[{label:'Escolas ativas',valor:stats.escolasAtivas},{label:'Professores',valor:stats.professoresAtivos},{label:'Alunos',valor:stats.alunosAtivos}].map(s=>(
+{[{label:'Escolas ativas',valor:organizacoes.length},{label:'Professores',valor:professoresAtivos},{label:'Alunos',valor:alunos.length}].map(s=>(
 <div key={s.label} className="card card-padding" style={{textAlign:'center'}}>
 <div style={{fontSize:18,fontWeight:800}}>{s.valor.toLocaleString('pt-BR')}</div>
 <div style={{fontSize:11,color:'var(--color-text-muted)',marginTop:2}}>{s.label}</div>
