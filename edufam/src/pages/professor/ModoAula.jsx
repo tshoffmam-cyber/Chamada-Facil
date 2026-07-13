@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 const acoes = [
 {id:'chamada',label:'Chamada',cor:'#2563EB',path:'chamada'},
 {id:'atividade',label:'Atividade',cor:'#16A34A',path:'atividade'},
@@ -16,6 +17,7 @@ const AVATAR_CORES = [
 ]
 export default function ModoAula() {
 const {turmaId}=useParams(); const navigate=useNavigate()
+const {user}=useAuth()
 const {turmas, alunos: todosAlunos, adicionarAluno} = useData()
 const turma=turmas.find(t=>t.id===turmaId)
 const alunos=todosAlunos.filter(a=>a.turmaId===turmaId)
@@ -26,7 +28,14 @@ const [novoNascimento, setNovoNascimento] = useState('')
 const [novoResponsavel, setNovoResponsavel] = useState('')
 const [busca, setBusca] = useState('')
 const estiloInput = {width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid var(--color-border)',fontSize:14,fontFamily:'var(--font-family)'}
-if(!turma) return <div style={{padding:24,textAlign:'center'}}><p>Turma não encontrada</p><button onClick={()=>navigate('/home')} className="btn btn-primary" style={{marginTop:16}}>Voltar</button></div>
+// Guarda de posse: a turma so pode ser aberta pelo professor dono dela.
+// Mostra a mesma mensagem tanto se a turma nao existe quanto se pertence
+// a outro professor, para nao revelar a outros usuarios quais turmas
+// existem no sistema.
+// PARA UM BACKEND REAL: isso deve ser reforcado tambem no servidor (a API
+// nao deveria nem retornar dados de uma turma que nao e do professor
+// autenticado) — esta checagem no frontend e so uma camada de UX.
+if(!turma || turma.professorId !== user?.id) return <div style={{padding:24,textAlign:'center'}}><p>Turma não encontrada</p><button onClick={()=>navigate('/home')} className="btn btn-primary" style={{marginTop:16}}>Voltar</button></div>
 const limiteFaltas = turma.limiteFaltas || 15
 const alunosEmAlerta = alunos.filter(a => a.faltas >= limiteFaltas)
 const alunosFiltrados = alunos.filter(a => a.nome.toLowerCase().includes(busca.toLowerCase()))
