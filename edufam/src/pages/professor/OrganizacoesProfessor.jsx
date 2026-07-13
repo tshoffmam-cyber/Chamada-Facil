@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 
 export default function OrganizacoesProfessor() {
 const navigate = useNavigate()
+const { user } = useAuth()
 const { organizacoes, turmas, alunos } = useData()
 const [busca, setBusca] = useState('')
+
+// Antes esta tela mostrava TODAS as turmas da escola, inclusive de
+// outros professores (bug de escopo). Agora so mostra as turmas do
+// professor logado.
+// PARA UM BACKEND REAL: essa filtragem deve acontecer no servidor (a API
+// so retorna as turmas do professor autenticado); o filtro aqui e so a
+// camada de exibicao/UX, nao deve ser a unica barreira de seguranca.
+const minhasTurmas = turmas.filter(t => t.professorId === user?.id)
 
 return (
 <div style={{ padding: '20px 20px 8px' }}>
@@ -14,20 +24,20 @@ return (
 <button onClick={() => navigate('/nova-escola')} className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}>+ Escola</button>
 </div>
 <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 20 }}>
-Todas as organizacoes e turmas
+Suas turmas, organizadas por escola
 </p>
 
-{turmas.length > 5 && (
+{minhasTurmas.length > 5 && (
 <input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Buscar turma pelo nome..." className="input" style={{ marginBottom: 20, fontSize: 13 }} />
 )}
 
-{organizacoes.length === 0 && (
-<div className="empty-state"><div className="empty-state-icon">🏫</div><div className="empty-state-title">Nenhuma escola cadastrada</div></div>
+{minhasTurmas.length === 0 && (
+<div className="empty-state"><div className="empty-state-icon">🏫</div><div className="empty-state-title">Voce ainda nao tem turmas</div></div>
 )}
 
 {organizacoes.map(org => {
-const turmasEscola = turmas.filter(t => t.organizacaoId === org.id && t.nome.toLowerCase().includes(busca.toLowerCase()))
-if (busca && turmasEscola.length === 0) return null
+const turmasEscola = minhasTurmas.filter(t => t.organizacaoId === org.id && t.nome.toLowerCase().includes(busca.toLowerCase()))
+if (turmasEscola.length === 0) return null
 return (
 <div key={org.id} style={{ marginBottom: 24 }}>
 <div style={{
