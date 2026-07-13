@@ -4,7 +4,7 @@ import { useData } from '../../context/DataContext'
 export default function PerfilScreen() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const { alunos, turmas } = useData()
+  const { alunos, turmas, featureFlags } = useData()
     function handleLogout() {
       logout()
       navigate('/login', { replace: true })
@@ -108,8 +108,8 @@ export default function PerfilScreen() {
             </svg>
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>EduFam</div>
-            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Versao 1.0 • A vida escolar na palma da mao.</div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>{featureFlags.nomeApp}</div>
+            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Versao 1.0 • {featureFlags.textoBoasVindasLogin}</div>
           </div>
         </div>
       </div>
