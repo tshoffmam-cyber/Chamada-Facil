@@ -35,10 +35,43 @@ const [parceiros, setParceiros] = useState(() => ls('edufam_parceiros', mockParc
 const [suporteTickets, setSuporteTickets] = useState(() => ls('edufam_suporte_tickets', mockSuporteTickets))
 const [featureFlags, setFeatureFlags] = useState(() => ls('edufam_feature_flags', mockFeatureFlags))
 
+// PARA UM BACKEND REAL: em producao isso seria uma transacao no banco
+// (ex: UPDATE alunos SET presencas = presencas + .. WHERE id = ..), feita
+// no servidor dentro da mesma operacao que grava a chamada — aqui, no
+// prototipo client-side, replicamos o efeito comparando o registro novo
+// com o registro anterior daquele mesmo dia (se a chamada for refeita/
+// editada, a diferenca e ajustada em vez de contar em dobro).
 const salvarChamada = useCallback((turmaId, data, registros) => {
+const chave = `${turmaId}_${data}`
 setChamadas(prev => {
-const next = { ...prev, [`${turmaId}_${data}`]: registros }
+const anterior = prev[chave] || {}
+const next = { ...prev, [chave]: registros }
 sv('edufam_chamadas', next)
+
+setAlunos(prevAlunos => {
+const idsAfetados = new Set([...Object.keys(anterior), ...Object.keys(registros)])
+let mudou = false
+const alunosNext = prevAlunos.map(a => {
+if (!idsAfetados.has(a.id)) return a
+const statusAntigo = anterior[a.id] ?? null
+const statusNovo = registros[a.id] ?? null
+if (statusAntigo === statusNovo) return a
+mudou = true
+let presencas = a.presencas
+let faltas = a.faltas
+// desfaz a contagem do status anterior (se a chamada estiver sendo refeita)
+if (statusAntigo === 'presente') presencas -= 1
+if (statusAntigo === 'falta') faltas -= 1
+// aplica a contagem do novo status ('justificado' nao soma em nenhum dos dois)
+if (statusNovo === 'presente') presencas += 1
+if (statusNovo === 'falta') faltas += 1
+return { ...a, presencas, faltas }
+})
+if (!mudou) return prevAlunos
+sv('edufam_alunos', alunosNext)
+return alunosNext
+})
+
 return next
 })
 }, [])
