@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useData } from '../../context/DataContext'
 export default function LoginScreen() {
 const [email, setEmail] = useState('')
 const [senha, setSenha] = useState('')
@@ -8,6 +9,7 @@ const [erro, setErro] = useState('')
 const [loading, setLoading] = useState(false)
 const { login } = useAuth()
 const navigate = useNavigate()
+const { featureFlags } = useData()
 async function handleLogin(e) {
 e.preventDefault(); setErro(''); setLoading(true)
 await new Promise(r => setTimeout(r, 500))
@@ -29,8 +31,8 @@ return (
 <div style={{width:72,height:72,background:'linear-gradient(135deg,#2563EB 0%,#7C3AED 100%)',borderRadius:24,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',boxShadow:'0 8px 24px rgba(37,99,235,.3)'}}>
 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
 </div>
-<h1 style={{fontSize:28,fontWeight:800,margin:0}}>EduFam</h1>
-<p style={{fontSize:14,color:'var(--color-text-secondary)',marginTop:4}}>A vida escolar na palma da mão.</p>
+<h1 style={{fontSize:28,fontWeight:800,margin:0}}>{featureFlags.nomeApp}</h1>
+<p style={{fontSize:14,color:'var(--color-text-secondary)',marginTop:4}}>{featureFlags.textoBoasVindasLogin}</p>
 </div>
 <form onSubmit={handleLogin} style={{width:'100%'}}>
 <div style={{marginBottom:16}}>
