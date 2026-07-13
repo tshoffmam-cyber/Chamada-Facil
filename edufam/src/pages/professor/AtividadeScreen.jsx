@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 export default function AtividadeScreen() {
 const {turmaId}=useParams(); const navigate=useNavigate()
+const {user}=useAuth()
 const {atividades, adicionarAtividade, turmas, alunos: todosAlunos, notasAtividades, lancarNota}=useData()
 const turma=turmas.find(t=>t.id===turmaId)
 const minhasAtividades=atividades.filter(a=>a.turmaId===turmaId)
@@ -25,6 +27,8 @@ const notas=alunosTurma.map(a=>notasAtividades?.[atividadeId]?.[a.id]).filter(n=
 if(!notas.length)return null
 return notas.reduce((s,n)=>s+parseFloat(n),0)/notas.length
 }
+// Guarda de posse (ver ModoAula.jsx para detalhes do motivo/handoff de backend)
+if(!turma || turma.professorId !== user?.id) return <div style={{padding:24,textAlign:'center'}}><p>Turma não encontrada</p><button onClick={()=>navigate('/home')} className="btn btn-primary" style={{marginTop:16}}>Voltar</button></div>
 return (
 <div style={{paddingBottom:24}}>
 <div style={{padding:'16px 20px',background:'var(--color-surface)',borderBottom:'1px solid var(--color-border)',display:'flex',alignItems:'center',gap:12,position:'sticky',top:0,zIndex:50}}>
