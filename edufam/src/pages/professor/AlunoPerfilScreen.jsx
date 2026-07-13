@@ -34,6 +34,12 @@ const [editMatricula, setEditMatricula] = useState(aluno?.matricula || '')
 const [editRespNome, setEditRespNome] = useState(aluno?.responsavel?.nome || '')
 const [editRespParentesco, setEditRespParentesco] = useState(aluno?.responsavel?.parentesco || '')
 const [editRespTelefone, setEditRespTelefone] = useState(aluno?.responsavel?.telefone || '')
+// Perfil Pedagogico (etiqueta de observacao para alunos com TDAH, TEA, altas habilidades etc.)
+// Antes isso vinha fixo do mock e nao podia ser editado pelo professor - agora fica editavel aqui.
+const [editTemPerfil, setEditTemPerfil] = useState(!!aluno?.perfilPedagogico)
+const [editPerfilTipo, setEditPerfilTipo] = useState(aluno?.perfilPedagogico?.tipo || '')
+const [editPerfilDescricao, setEditPerfilDescricao] = useState(aluno?.perfilPedagogico?.descricao || '')
+const [editAdaptacoesTexto, setEditAdaptacoesTexto] = useState((aluno?.perfilPedagogico?.adaptacoes || []).join('\n'))
 
 // Guarda de posse: o aluno so pode ser aberto se pertencer a uma turma
 // do professor logado (ver ModoAula.jsx para detalhes do motivo/handoff de backend).
@@ -49,12 +55,22 @@ function salvarRegistroVida(){
 
 function salvarEdicaoAluno(){
   if(!editNome.trim()) return
+  // Perfil Pedagogico e dado sensivel (ligado a laudo/observacao do aluno). Mantemos a mesma logica de
+  // "tudo ou nada": se a caixa estiver marcada, salvamos tipo+descricao+adaptacoes; se desmarcada, vira null
+  // (etiqueta removida do perfil). PARA UM BACKEND REAL: campos sensiveis como este devem ter log de auditoria
+  // (quem editou e quando), pois envolvem dados de saude/pedagogicos protegidos por lei (LGPD).
+  const perfilPedagogico = editTemPerfil ? {
+    tipo: editPerfilTipo.trim(),
+    descricao: editPerfilDescricao.trim(),
+    adaptacoes: editAdaptacoesTexto.split('\n').map(s=>s.trim()).filter(Boolean),
+  } : null
   // PARA UM BACKEND REAL: PATCH autenticado no aluno, com o servidor validando novamente
   // a posse (professor so pode editar aluno de turma sua) e validando os campos.
   editarAluno(aluno.id, {
     nome: editNome.trim(),
     matricula: editMatricula.trim(),
     responsavel: { ...aluno.responsavel, nome: editRespNome.trim(), parentesco: editRespParentesco.trim(), telefone: editRespTelefone.trim() },
+    perfilPedagogico,
   })
   setShowEdit(false)
 }
@@ -136,6 +152,24 @@ return (
 <input className="input" value={editRespParentesco} onChange={e=>setEditRespParentesco(e.target.value)} style={{marginBottom:10}} />
 <p style={{fontSize:12,fontWeight:700,color:'var(--color-text-secondary)',marginBottom:4}}>Responsavel - Telefone</p>
 <input className="input" value={editRespTelefone} onChange={e=>setEditRespTelefone(e.target.value)} style={{marginBottom:14}} />
+
+<div style={{borderTop:'1px solid var(--color-border)',marginTop:4,paddingTop:14,marginBottom:14}}>
+<label style={{display:'flex',alignItems:'center',gap:8,marginBottom:12,cursor:'pointer'}}>
+<input type="checkbox" checked={editTemPerfil} onChange={e=>setEditTemPerfil(e.target.checked)} />
+<span style={{fontSize:13,fontWeight:700}}>Aluno possui Perfil Pedagogico (etiqueta de observacao)</span>
+</label>
+{editTemPerfil && (
+<div style={{background:'var(--color-ia-light)',border:'1px solid #DDD6FE',borderRadius:12,padding:12}}>
+<p style={{fontSize:12,fontWeight:700,color:'var(--color-text-secondary)',marginBottom:4}}>Tipo (ex: TDAH, TEA, Altas Habilidades)</p>
+<input className="input" value={editPerfilTipo} onChange={e=>setEditPerfilTipo(e.target.value)} style={{marginBottom:10}} />
+<p style={{fontSize:12,fontWeight:700,color:'var(--color-text-secondary)',marginBottom:4}}>Descricao</p>
+<textarea className="input" rows={3} value={editPerfilDescricao} onChange={e=>setEditPerfilDescricao(e.target.value)} style={{resize:'none',marginBottom:10}} />
+<p style={{fontSize:12,fontWeight:700,color:'var(--color-text-secondary)',marginBottom:4}}>Adaptacoes (uma por linha)</p>
+<textarea className="input" rows={3} value={editAdaptacoesTexto} onChange={e=>setEditAdaptacoesTexto(e.target.value)} style={{resize:'none'}} />
+</div>
+)}
+</div>
+
 <div style={{display:'flex',gap:8}}>
 <button className="btn btn-ghost btn-sm" style={{flex:1}} onClick={()=>setShowEdit(false)}>Cancelar</button>
 <button className="btn btn-primary btn-sm" style={{flex:1}} onClick={salvarEdicaoAluno}>Salvar</button>
