@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 const STATUS_ORDEM = [null, 'presente', 'falta', 'justificado']
 const STATUS_CONFIG = {
   null: {label:'',bg:'#F1F5F9',cor:'#64748B',borda:'#E2E8F0'},
@@ -10,6 +11,7 @@ const STATUS_CONFIG = {
 }
 export default function ChamadaScreen() {
   const {turmaId}=useParams(); const navigate=useNavigate()
+  const {user}=useAuth()
   const {salvarChamada, turmas, alunos: todosAlunos}=useData()
   const turma=turmas.find(t=>t.id===turmaId)
   const alunos=todosAlunos.filter(a=>a.turmaId===turmaId)
@@ -35,7 +37,8 @@ export default function ChamadaScreen() {
   const faltas=alunos.filter(a=>registros[a.id]==='falta').length
   const justificados=alunos.filter(a=>registros[a.id]==='justificado').length
   const naoMarcados=alunos.filter(a=>!registros[a.id]).length
-  if(!turma)return null
+  // Guarda de posse (ver ModoAula.jsx para detalhes do motivo/handoff de backend)
+  if(!turma || turma.professorId !== user?.id)return null
   return (
     <div style={{paddingBottom:24}}>
       {showTutorial&&(
