@@ -229,3 +229,13 @@ O campo `professorId` ja existe em cada turma no mock, mas 3 pontos do professor
 1. Filtrar turmas por professorId em OrganizacoesProfessor.jsx.
 2. Adicionar verificacao de posse da turma (redirecionar se turma.professorId !== user.id) em ModoAula.jsx, ChamadaScreen.jsx, AtividadeScreen.jsx, AlunoPerfilScreen.jsx e VidaEscolarScreen.jsx.
 3. Ajustar o PerfilScreen para mostrar "minhas turmas/meus alunos" quando o papel for professor, mantendo o total da escola para Diretor/ADM.
+
+
+### Atualizacao (11/07/2026) — correcoes aplicadas
+
+As 3 inconsistencias do Professor listadas acima foram corrigidas:
+1. `OrganizacoesProfessor.jsx` agora filtra turmas por `professorId === user.id` (so mostra escolas/turmas onde o professor de fato leciona).
+2. `ModoAula.jsx`, `ChamadaScreen.jsx`, `AtividadeScreen.jsx`, `AlunoPerfilScreen.jsx` e `VidaEscolarScreen.jsx` agora tem guarda de posse: se a turma (ou o aluno) nao pertencer ao professor logado, a tela redireciona/bloqueia em vez de abrir os dados.
+3. `PerfilScreen.jsx` agora mostra "Minhas Turmas"/"Meus Alunos" com os numeros corretos quando o papel e professor, e mantem o total da escola para Diretor/ADM (que e o comportamento correto para esses papeis).
+
+IMPORTANTE para o programador que for plugar um backend real: todas essas guardas hoje sao só uma camada de UX no frontend (comparando `professorId` no mock). Em producao, a API precisa fazer a mesma checagem de autorizacao no servidor (nunca confiar so no frontend), e nem deveria retornar dados de uma turma/aluno que nao pertence ao usuario autenticado.
