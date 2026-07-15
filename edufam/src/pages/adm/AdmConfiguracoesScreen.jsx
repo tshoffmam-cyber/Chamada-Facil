@@ -114,6 +114,20 @@ return (
 </div>
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 </button>
+<button className="card card-padding" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',border:'none',cursor:'pointer',textAlign:'left',marginTop:12}} onClick={()=>navigate('/adm/planos')}>
+<div>
+<div style={{fontWeight:700,fontSize:14}}>Planos e assinaturas</div>
+<div style={{fontSize:12,color:'var(--color-text-secondary)',marginTop:2}}>Placeholder de planos pagos/paywall</div>
+</div>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
+<button className="card card-padding" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',border:'none',cursor:'pointer',textAlign:'left',marginTop:12}} onClick={()=>navigate('/adm/nps')}>
+<div>
+<div style={{fontWeight:700,fontSize:14}}>Pesquisa de satisfacao (NPS)</div>
+<div style={{fontSize:12,color:'var(--color-text-secondary)',marginTop:2}}>Dados de exemplo, sem coleta real ainda</div>
+</div>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
 </div>
 </div>
 )
