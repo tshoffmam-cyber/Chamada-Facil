@@ -4,6 +4,7 @@ const _creds = [
   {id:'u2',email:'diretor@escola.com',password:'demo123'},
   {id:'u3',email:'adm@edufam.com',password:'admin123'},
   {id:'u6',email:'responsavel@escola.com',password:'demo123'},
+  {id:'u7',email:'aluno@escola.com',password:'demo123'},
   ]
 export function autenticar(email,password){
   const c=_creds.find(x=>x.email===email&&x.password===password)
@@ -28,6 +29,10 @@ export const mockUsers=[
   // responsavel ja existente no mock do aluno a2 (Sofia Mendes) para os
   // dados baterem entre as telas do professor/diretor e o novo portal.
   {id:'u6',name:'Paulo Mendes',email:'responsavel@escola.com',password:'demo123',role:'responsavel',avatar:'PM',escola:'Escola Estadual Esperança',alunosIds:['a2']},
+  // u7: primeiro papel 'aluno'. Vinculado por 'alunoId' ao proprio
+  // registro em mockAlunos (reaproveita a2/Sofia Mendes, mesmo aluno ja
+  // usado pelo responsavel u6, para os dados baterem entre os portais).
+  {id:'u7',name:'Sofia Mendes',email:'aluno@escola.com',password:'demo123',role:'aluno',avatar:'SM',escola:'Escola Estadual Esperança',alunoId:'a2'},
   ]
 export const mockOrganizacoes=[
   {id:'org1',nome:'Escola Estadual Esperança'},
