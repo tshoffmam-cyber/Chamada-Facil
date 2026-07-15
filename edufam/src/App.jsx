@@ -7,6 +7,7 @@ import AppLayout from './layouts/AppLayout'
 import AppLayoutAdm from './layouts/AppLayoutAdm'
 import AppLayoutDiretor from './layouts/AppLayoutDiretor'
 import AppLayoutResponsavel from './layouts/AppLayoutResponsavel'
+import AppLayoutAluno from './layouts/AppLayoutAluno'
 
 // Auth
 import LoginScreen from './pages/auth/LoginScreen'
@@ -47,6 +48,13 @@ import ResponsavelNotasScreen from './pages/responsavel/ResponsavelNotasScreen'
 import ResponsavelRecadosScreen from './pages/responsavel/ResponsavelRecadosScreen'
 import ResponsavelPerfilScreen from './pages/responsavel/ResponsavelPerfilScreen'
 
+// Aluno (aluno logado: acompanha a propria vida escolar, somente leitura)
+import AlunoHomeScreen from './pages/aluno/AlunoHomeScreen'
+import AlunoAgendaScreen from './pages/aluno/AlunoAgendaScreen'
+import AlunoNotasScreen from './pages/aluno/AlunoNotasScreen'
+import AlunoVidaEscolarScreen from './pages/aluno/AlunoVidaEscolarScreen'
+import AlunoMeuPerfilScreen from './pages/aluno/AlunoPerfilScreen'
+
 // Rota privada: exige login. Quando 'somenteRole' e informado, exige
 // tambem que o usuario tenha aquele papel especifico — caso contrario,
 // manda o usuario de volta para a home certa do seu proprio papel (em
@@ -55,7 +63,7 @@ function PrivateRoute({ children, somenteRole }) {
 const { user } = useAuth()
 if (!user) return <Navigate to="/login" replace />
 if (somenteRole && user.role !== somenteRole) {
-return <Navigate to={user.role === 'adm' ? '/adm/home' : user.role === 'diretor' ? '/diretor/home' : user.role === 'responsavel' ? '/responsavel/home' : '/home'} replace />
+return <Navigate to={user.role === 'adm' ? '/adm/home' : user.role === 'diretor' ? '/diretor/home' : user.role === 'responsavel' ? '/responsavel/home' : user.role === 'aluno' ? '/aluno/home' : '/home'} replace />
 }
 return children
 }
@@ -65,7 +73,7 @@ return children
 function RedirecionarPorPapel() {
 const { user } = useAuth()
 if (!user) return <Navigate to="/login" replace />
-return <Navigate to={user.role === 'adm' ? '/adm/home' : user.role === 'diretor' ? '/diretor/home' : user.role === 'responsavel' ? '/responsavel/home' : '/home'} replace />
+return <Navigate to={user.role === 'adm' ? '/adm/home' : user.role === 'diretor' ? '/diretor/home' : user.role === 'responsavel' ? '/responsavel/home' : user.role === 'aluno' ? '/aluno/home' : '/home'} replace />
 }
 
 export default function App() {
@@ -113,6 +121,16 @@ return (
 <Route path="notas" element={<ResponsavelNotasScreen />} />
 <Route path="recados" element={<ResponsavelRecadosScreen />} />
 <Route path="perfil" element={<ResponsavelPerfilScreen />} />
+</Route>
+
+{/* Area do Aluno (aluno logado, somente leitura) */}
+<Route path="/aluno" element={<PrivateRoute somenteRole="aluno"><AppLayoutAluno /></PrivateRoute>}>
+<Route index element={<Navigate to="/aluno/home" replace />} />
+<Route path="home" element={<AlunoHomeScreen />} />
+<Route path="agenda" element={<AlunoAgendaScreen />} />
+<Route path="notas" element={<AlunoNotasScreen />} />
+<Route path="vida-escolar" element={<AlunoVidaEscolarScreen />} />
+<Route path="perfil" element={<AlunoMeuPerfilScreen />} />
 </Route>
 
 {/* Area do ADM (administrador global da plataforma) */}
