@@ -239,3 +239,20 @@ As 3 inconsistencias do Professor listadas acima foram corrigidas:
 3. `PerfilScreen.jsx` agora mostra "Minhas Turmas"/"Meus Alunos" com os numeros corretos quando o papel e professor, e mantem o total da escola para Diretor/ADM (que e o comportamento correto para esses papeis).
 
 IMPORTANTE para o programador que for plugar um backend real: todas essas guardas hoje sao só uma camada de UX no frontend (comparando `professorId` no mock). Em producao, a API precisa fazer a mesma checagem de autorizacao no servidor (nunca confiar so no frontend), e nem deveria retornar dados de uma turma/aluno que nao pertence ao usuario autenticado.
+
+
+### Atualizacao de progresso (15/07/2026) — Preparacao para as proximas fases
+
+A pedido do usuario, esta sessao teve foco em deixar o projeto organizado e com pontos de encaixe claros para as proximas fases do roadmap (backend real, IA real, portal do aluno, monetizacao), sem alterar o comportamento das telas que ja funcionavam em producao. Cada item abaixo foi commitado separadamente e o deploy automatico (GitHub Pages) foi conferido apos cada mudanca.
+
+1. Portal do Aluno construido do zero: novo `layouts/AppLayoutAluno.jsx` (badge "ALUNO", navegacao inferior) e as telas `pages/aluno/AlunoHomeScreen.jsx`, `AlunoAgendaScreen.jsx`, `AlunoNotasScreen.jsx`, `AlunoVidaEscolarScreen.jsx` e `AlunoPerfilScreen.jsx`, todas somente leitura e seguindo o mesmo padrao visual do Portal do Responsavel. As rotas `/aluno/*` foram adicionadas em `App.jsx`, incluindo o redirecionamento por papel. Foi criado um usuario de demonstracao (`aluno@escola.com` / `demo123`) ligado a um aluno ja existente no mock.
+
+2. Camada de servico para o backend futuro: `src/services/api.js` com um stub documentado para cada funcao hoje existente no `DataContext` (organizacoes, turmas, alunos, chamadas, atividades, notas, vida escolar, mensagens, eventos, parceiros, suporte, feature flags, estatisticas do ADM), alem de assinaturas novas para IA (`iaGerarAtividade`, `iaGerarResumoTurma`, `iaSugerirComunicado`, `iaPerguntar`) e para autenticacao real. Esse arquivo ainda nao e usado pelo app (que continua 100% sobre o mock) - ele serve como contrato pronto para quando o backend existir.
+
+3. Esqueleto de backend de referencia (pasta `backend/`, fora do build do frontend): `README.md` explicando o que falta para virar um backend real, `requirements.txt` com as dependencias basicas (FastAPI, Pydantic, uvicorn) e comentarios sobre as futuras (banco, autenticacao), e `app/main.py` com rotas em FastAPI espelhando o `api.js`, usando dados em memoria. Este backend NAO foi implantado em nenhum servico - e apenas codigo de referencia para acelerar a implementacao futura.
+
+4. IA do EduFam evoluida: `IAScreen.jsx` foi refeita com uma interface de chat, quatro atalhos rapidos (criar atividade, resumo da turma, analisar aluno, escrever comunicado) e respostas simuladas, com comentarios no codigo indicando exatamente onde cada chamada deve ser trocada pelas funcoes de IA reais do `services/api.js`.
+
+5. Itens do roadmap marcados como adiados ganharam um primeiro recorte visual no painel ADM, sem nenhuma logica real de cobranca ou coleta de dados: `AdmPlanosScreen.jsx` (planos Gratuito/Pro/Escola) e `AdmNpsScreen.jsx` (pesquisa de satisfacao com dados fake), acessiveis a partir de `AdmConfiguracoesScreen.jsx`.
+
+Proximo passo sugerido: quando o backend real existir, trocar as chamadas do `DataContext` para usar `services/api.js` (que ja aponta para os endpoints certos) e entao plugar a IA e o modulo de planos/NPS nas telas ja preparadas acima.
