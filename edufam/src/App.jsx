@@ -33,6 +33,8 @@ import AdmUsuariosScreen from './pages/adm/AdmUsuariosScreen'
 import AdmSuporteScreen from './pages/adm/AdmSuporteScreen'
 import AdmConfiguracoesScreen from './pages/adm/AdmConfiguracoesScreen'
 import AdmConfigAvancadaScreen from './pages/adm/AdmConfigAvancadaScreen'
+import AdmPlanosScreen from './pages/adm/AdmPlanosScreen'
+import AdmNpsScreen from './pages/adm/AdmNpsScreen'
 
 // Diretor (gestao da escola: nao da aula, acompanha professores/turmas/alunos)
 import DiretorPainelScreen from './pages/diretor/DiretorPainelScreen'
@@ -141,6 +143,8 @@ return (
 <Route path="suporte" element={<AdmSuporteScreen />} />
 <Route path="configuracoes" element={<AdmConfiguracoesScreen />} />
 <Route path="configuracoes-avancadas" element={<AdmConfigAvancadaScreen />} />
+<Route path="planos" element={<AdmPlanosScreen />} />
+<Route path="nps" element={<AdmNpsScreen />} />
 <Route path="perfil" element={<PerfilScreen />} />
 </Route>
 
