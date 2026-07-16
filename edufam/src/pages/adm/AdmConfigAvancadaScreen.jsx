@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 
 // ---------------------------------------------------------------------------
@@ -22,6 +23,7 @@ import { useData } from '../../context/DataContext'
 // Remote Config) tambem oferecem, com o mesmo principio de seguranca.
 // ---------------------------------------------------------------------------
 export default function AdmConfigAvancadaScreen() {
+const navigate = useNavigate()
 const { featureFlags, atualizarFeatureFlags } = useData()
 const [texto, setTexto] = useState(() => JSON.stringify(featureFlags, null, 2))
 const [erro, setErro] = useState('')
@@ -42,6 +44,7 @@ setErro('JSON inválido. Confira vírgulas e aspas antes de salvar.')
 return (
 <div style={{paddingBottom:24}}>
 <div style={{padding:'20px 20px 0'}}>
+<button onClick={()=>navigate('/adm/configuracoes')} style={{background:'none',border:'none',fontSize:13,color:'var(--color-text-secondary)',cursor:'pointer',marginBottom:8,padding:0}}>← Voltar</button>
 <h1 style={{fontSize:20,fontWeight:800}}>Configurações avançadas</h1>
 <p style={{fontSize:13,color:'var(--color-text-secondary)',marginTop:2}}>Feature flags do app, sem precisar de um novo deploy</p>
 </div>
