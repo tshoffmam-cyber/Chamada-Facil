@@ -128,6 +128,20 @@ return (
 </div>
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 </button>
+<button className="card card-padding" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',border:'none',cursor:'pointer',textAlign:'left',marginTop:12}} onClick={()=>navigate('/adm/tema')}>
+<div>
+<div style={{fontWeight:700,fontSize:14}}>Temas e campanhas</div>
+<div style={{fontSize:12,color:'var(--color-text-secondary)',marginTop:2}}>Cor do app automatica por mes (Setembro Amarelo, Outubro Rosa, etc)</div>
+</div>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
+<button className="card card-padding" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',border:'none',cursor:'pointer',textAlign:'left',marginTop:12}} onClick={()=>navigate('/adm/churn')}>
+<div>
+<div style={{fontWeight:700,fontSize:14}}>Usuarios em risco (churn)</div>
+<div style={{fontSize:12,color:'var(--color-text-secondary)',marginTop:2}}>Enviar mensagens de retencao com um clique</div>
+</div>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
 </div>
 </div>
 )
