@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { DataProvider } from './context/DataContext'
+import { DataProvider, useData } from './context/DataContext'
+import { useEffect } from 'react'
+import { calcularCampanhaAtiva, aplicarCorTema } from './utils/tema'
 
 // Layouts
 import AppLayout from './layouts/AppLayout'
@@ -35,6 +37,8 @@ import AdmConfiguracoesScreen from './pages/adm/AdmConfiguracoesScreen'
 import AdmConfigAvancadaScreen from './pages/adm/AdmConfigAvancadaScreen'
 import AdmPlanosScreen from './pages/adm/AdmPlanosScreen'
 import AdmNpsScreen from './pages/adm/AdmNpsScreen'
+import AdmTemaScreen from './pages/adm/AdmTemaScreen'
+import AdmChurnScreen from './pages/adm/AdmChurnScreen'
 
 // Diretor (gestao da escola: nao da aula, acompanha professores/turmas/alunos)
 import DiretorPainelScreen from './pages/diretor/DiretorPainelScreen'
@@ -78,10 +82,22 @@ if (!user) return <Navigate to="/login" replace />
 return <Navigate to={user.role === 'adm' ? '/adm/home' : user.role === 'diretor' ? '/diretor/home' : user.role === 'responsavel' ? '/responsavel/home' : user.role === 'aluno' ? '/aluno/home' : '/home'} replace />
 }
 
+// Aplica automaticamente a cor da campanha de conscientizacao ativa (ou a
+// cor oficial fixa, se nenhuma campanha estiver ativa) no app inteiro,
+// sobrescrevendo as variaveis CSS globais. Ver src/utils/tema.js.
+function AplicarTemaGlobal() {
+const { configTema } = useData()
+useEffect(() => {
+aplicarCorTema(calcularCampanhaAtiva(configTema))
+}, [configTema])
+return null
+}
+
 export default function App() {
 return (
 <AuthProvider>
 <DataProvider>
+<AplicarTemaGlobal />
 <BrowserRouter basename="/Chamada-Facil">
 <Routes>
 <Route path="/login" element={<LoginScreen />} />
@@ -145,6 +161,8 @@ return (
 <Route path="configuracoes-avancadas" element={<AdmConfigAvancadaScreen />} />
 <Route path="planos" element={<AdmPlanosScreen />} />
 <Route path="nps" element={<AdmNpsScreen />} />
+<Route path="tema" element={<AdmTemaScreen />} />
+<Route path="churn" element={<AdmChurnScreen />} />
 <Route path="perfil" element={<PerfilScreen />} />
 </Route>
 
