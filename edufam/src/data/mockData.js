@@ -184,7 +184,6 @@ export const mockFeatureFlags = {
   limiteFaltasPadrao: 15,
   bannerParceirosAtivo: true,
   nomeApp: 'EduFam',
-  corPrimaria: '#2563EB',
   textoBoasVindasLogin: 'A vida escolar na palma da mão.',
 }
 
@@ -197,4 +196,15 @@ export const mockIndicadoresProfessor = [
   { professorId: 'u1', aulasRegistradasMes: 18, chamadaEmDia: true, notasLancadasPercent: 90 },
   { professorId: 'u4', aulasRegistradasMes: 14, chamadaEmDia: true, notasLancadasPercent: 75 },
   { professorId: 'u5', aulasRegistradasMes: 9, chamadaEmDia: false, notasLancadasPercent: 40 },
+]
+
+// Lista mockada de escolas/professores com risco de cancelamento (churn),
+// usada pela tela ADM > Usuarios em risco (ver AdmChurnScreen.jsx). MOCKADO:
+// em producao isso viria de um calculo real no backend (ex: baixo uso nos
+// ultimos 30 dias, fatura em atraso, queda de frequencia de acesso).
+export const mockChurnRisco = [
+  { id: 'cr1', nome: 'Escola Colibri', tipo: 'escola', risco: 'alto', motivo: 'Sem acesso ha 24 dias', ultimoAcesso: '2026-06-22', email: 'contato@colibri.com.br' },
+  { id: 'cr2', nome: 'Prof. Marcos Pereira', tipo: 'professor', risco: 'alto', motivo: 'Uso baixo (2 acessos no mes) e pendencias de notas', ultimoAcesso: '2026-07-01', email: 'marcos.pereira@escola.com' },
+  { id: 'cr3', nome: 'Escola Novo Saber', tipo: 'escola', risco: 'medio', motivo: 'Fatura em atraso ha 5 dias', ultimoAcesso: '2026-07-10', email: 'financeiro@novosaber.com.br' },
+  { id: 'cr4', nome: 'Profa. Juliana Alves', tipo: 'professor', risco: 'baixo', motivo: 'Queda de 30% no uso comparado ao mes anterior', ultimoAcesso: '2026-07-14', email: 'juliana.alves@escola.com' },
 ]
