@@ -14,7 +14,7 @@
 // minimo de mudanca nas telas que já consomem este contexto.
 // ---------------------------------------------------------------------------
 import { createContext, useContext, useState, useCallback } from 'react'
-import { mockOrganizacoes, mockTurmas, mockAlunos, mockAtividades, mockVidaEscolar, mockMensagens, mockParceiros, mockSuporteTickets, mockFeatureFlags, mockNotasAtividades, mockEventos } from '../data/mockData'
+import { mockOrganizacoes, mockTurmas, mockAlunos, mockAtividades, mockVidaEscolar, mockMensagens, mockParceiros, mockSuporteTickets, mockFeatureFlags, mockNotasAtividades, mockEventos, mockChurnRisco } from '../data/mockData'
 const DataContext = createContext(null)
 const ls = (k, d) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : d } catch { return d } }
 const sv = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
@@ -34,6 +34,9 @@ const [alunos, setAlunos] = useState(() => ls('edufam_alunos', mockAlunos))
 const [parceiros, setParceiros] = useState(() => ls('edufam_parceiros', mockParceiros))
 const [suporteTickets, setSuporteTickets] = useState(() => ls('edufam_suporte_tickets', mockSuporteTickets))
 const [featureFlags, setFeatureFlags] = useState(() => ls('edufam_feature_flags', mockFeatureFlags))
+const [configTema, setConfigTema] = useState(() => ls('edufam_config_tema', { modo: 'automatico', campanhaManualId: null }))
+const [churnRisco] = useState(() => ls('edufam_churn_risco', mockChurnRisco))
+const [mensagensRetencao, setMensagensRetencao] = useState(() => ls('edufam_mensagens_retencao', []))
 
 // PARA UM BACKEND REAL: em producao isso seria uma transacao no banco
 // (ex: UPDATE alunos SET presencas = presencas + .. WHERE id = ..), feita
@@ -286,8 +289,32 @@ return next
 })
 }, [])
 
+// --- Painel ADM: tema/campanha de conscientizacao (ver src/data/campanhas.js e src/utils/tema.js) ---
+// 'automatico' segue o mes atual; 'manual' forca uma campanha especifica;
+// 'padrao' desliga qualquer campanha e usa a cor oficial fixa do app.
+const atualizarConfigTema = useCallback((dados) => {
+setConfigTema(prev => {
+const next = { ...prev, ...dados }
+sv('edufam_config_tema', next)
+return next
+})
+}, [])
+
+// --- Painel ADM: mensagens para usuarios em risco de cancelamento (churn) ---
+// PLACEHOLDER: registra a 'mensagem enviada' apenas no navegador, para
+// demonstrar o fluxo do painel. PARA UM BACKEND REAL: precisa virar uma
+// chamada de API que dispara e-mail/SMS/notificacao push de verdade, a
+// partir de uma fila processada no servidor — nao ha envio real aqui.
+const enviarMensagemRetencao = useCallback((alvoId, alvoNome, mensagem) => {
+setMensagensRetencao(prev => {
+const next = [...prev, { id: 'msg' + Date.now(), alvoId, alvoNome, mensagem, enviadaEm: new Date().toISOString() }]
+sv('edufam_mensagens_retencao', next)
+return next
+})
+}, [])
+
 return (
-<DataContext.Provider value={{ chamadas, atividades, notasAtividades, lancarNota, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida, marcarMensagemLida, eventos, enviarMensagem, adicionarEvento, editarEvento, removerEvento, organizacoes, turmas, alunos, criarOrganizacao, editarOrganizacao, removerOrganizacao, criarTurma, editarTurma, removerTurma, adicionarAluno, editarAluno, removerAluno, parceiros, adicionarParceiro, editarParceiro, removerParceiro, suporteTickets, resolverTicket, featureFlags, atualizarFeatureFlags }}>
+<DataContext.Provider value={{ chamadas, atividades, notasAtividades, lancarNota, vidaEscolar, mensagens, salvarChamada, adicionarAtividade, adicionarRegistroVida, marcarMensagemLida, eventos, enviarMensagem, adicionarEvento, editarEvento, removerEvento, organizacoes, turmas, alunos, criarOrganizacao, editarOrganizacao, removerOrganizacao, criarTurma, editarTurma, removerTurma, adicionarAluno, editarAluno, removerAluno, parceiros, adicionarParceiro, editarParceiro, removerParceiro, suporteTickets, resolverTicket, featureFlags, atualizarFeatureFlags, configTema, atualizarConfigTema, churnRisco, mensagensRetencao, enviarMensagemRetencao }}>
 {children}
 </DataContext.Provider>
 )
